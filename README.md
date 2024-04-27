@@ -46,3 +46,6 @@ local b = int.new("10")
 
 print(a + b) -- output: 30
 ```
+## limit
+- maximum digit of integer is 9223372036854775806
+- maximum digit of decimal is 9223372036854775808
