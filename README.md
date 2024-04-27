@@ -33,7 +33,7 @@ to use this module you should to make a **new** object
 ```lua
 local int = require("int")
 
-int.new("13") -- input can be a number or string!
+int.new("13") -- input can be a number or string! *recommend to use string*
 ```
 
 you can use **Calculation operators** to calculate math. 
