@@ -1,16 +1,16 @@
 # int
 
 math and calculate for large data in Lua
-**waring this module is in beta**
+**waring this module is in beta!**
 
 ## Feature
 
 - **calculate**
-    - addition
-    - subtraction
-    - multiplication
-    - division
-    - modulo
+    - addition `+`
+    - subtraction `-`
+    - multiplication `*`
+    - division `\, \\`
+    - modulo `%`
 - **equation**
     - equal
     - less than
