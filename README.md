@@ -21,7 +21,7 @@ math and calculate for large data in Lua
     - sign
     - abs
     - floor
-    - fdigitlen `INTEGER + DECIMAL`
+    - fdigitlen `INTEGER LEN + DECIMAL LEN`
 
 ## How to use
 
@@ -46,6 +46,21 @@ local a = int.new("20")
 local b = int.new("10")
 
 print(a + b) -- output: 30
+```
+## Design
+```lua
+local example_int_table = {
+    -- digit --
+    [1] = 1, -- this a digit block
+    [0] = 0,
+    [-1] = 1,
+
+    -- table info --
+    sign = "+",
+
+    _dlen = -1, -- digit of decimal *this for calculate a decimal* **DO NOT CHANGE. HAVE LIMIT!!**
+    _size = 1 -- mean per size of block *just maximum digit per value in the digit block* **DO NOT CHANGE. HAVE LIMIT!!**
+}
 ```
 ## limit
 - maximum digit of integer is 9223372036854775806
