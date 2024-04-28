@@ -65,7 +65,7 @@ local example_int_table = {
 ```
 ## limit
 - maximum digit of integer is 9223372036854775806
-    - if you set `_size` to 9 **maximum digit of integer is 83010348331692982254!** *unstable?*
+    - if you set `_size` to 9 **maximum digit of integer is 83010348331692982254!** *(9223372036854775806 * 9)*
 
 - maximum digit of decimal is 9223372036854775808
-    - if you set `_size` to 9 **maximum decimal of integer is 83010348331692982272!** *unstable?*
+    - if you set `_size` to 9 **maximum decimal of integer is 83010348331692982272!** *(9223372036854775808 * 9)*
