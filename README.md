@@ -10,6 +10,7 @@ math and calculate for large data in Lua
     - subtraction
     - multiplication
     - division
+    - modulo
 - **equation**
     - equal
     - less than
