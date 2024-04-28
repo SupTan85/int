@@ -48,6 +48,7 @@ local b = int.new("10")
 print(a + b) -- output: 30
 ```
 ## Design
+this inside of *table*, and this mean 101 **if you use "tostring" function**
 ```lua
 local example_int_table = {
     -- digit --
