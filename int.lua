@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 139 beta!
+    ||  Module version 142 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -9,9 +9,11 @@
 local master = {
     _config = {
         SETINTEGER_PERBLOCK = {
-            MINI = 1,
-            BASIC = 9,
+            STABLE = 1,
+            BALANCE = 4,
             FULL = 9,
+
+            DEFAULT = 9,
         },
         --[[
         MAXIMUM_PERTABLE = {
@@ -20,7 +22,7 @@ local master = {
         },
         ]]
     },
-    _version = "139"
+    _version = "142"
 }
 
 master.convert = function(st, s)
@@ -340,22 +342,46 @@ master.calculate = {
     end,
 }
 
-master.floor = function(a) -- Returns the largest integral value smaller than or equal to `x`.
-    for i = a._dlen or 1, 0 do
-        a[i] = nil
+master.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
+    for i = x._dlen or 1, 0 do
+        x[i] = nil
     end
-    a._dlen = 1
-    return a
+    x._dlen = 1
+    return x
 end
 
 do
     -- Build ENV --
     local _ENV <const> = {
-        m_sub = function(reg, b)
-            return (b.sign == "+" and reg or not reg) and "+" or "-"
+        smul = function(x, y)
+            return (x.sign or "+") == (y.sign or "+") and "+" or "-"
         end,
-        m_mul = function(a, b)
-            return (a.sign or "+") == (b.sign or "+") and "+" or "-"
+        vtype = function(...)
+            local stack, v = {}, {...}
+            local SOFT, INTEGER = {table = 1, string = 2, number = 3}, master._config.SETINTEGER_PERBLOCK.DEFAULT
+            table.sort(v, function(a, b) return (SOFT[type(a)] or 0) < (SOFT[type(b)] or 0) end)
+            for i, s in ipairs(v) do
+                if type(s) == "table" then
+                    stack[i], INTEGER = s, s._size or INTEGER
+                else
+                    local c = master.convert(math.abs(type(s) == "string" and s:match("^[+-]?(%d+)%s*$") or s), INTEGER)
+                    c.sign = type(s) == "string" and (s:match("^[+-]") or "+") or math.sign(s) < 1 and "-" or "+"
+                    stack[i] = setmetatable(c, master._metatable)
+                end
+            end
+            return table.unpack(stack)
+        end,
+        vpow = function(self, x, y)
+            if tostring(y) == "0" then
+                return 1
+            elseif tostring(y) == "1" then
+                return x
+            elseif tostring(y % 2) == "0" then
+                local half_power = self:vpow(x, y // 2)
+                return half_power * half_power
+            end
+            local half_power = self:vpow(x, (y - 1) // 2)
+            return x * half_power * half_power
         end,
         ifloor = master.floor,
 
@@ -375,63 +401,66 @@ do
     master._metatable = {
 
         -- Calculation operators --
-        __add = function(a, b)
-            if a.sign or "+" == b.sign or "+" then
-                local raw = add(a, b)
-                raw.sign = a.sign or "+"
+        __add = function(x, y)
+            x, y = vtype(x, y)
+            if x.sign or "+" == y.sign or "+" then
+                local raw = add(x, y)
+                raw.sign = x.sign or "+"
                 return setmetatable(raw, master._metatable)
             end
-            local reg = more(a, b)
-            local raw = sub(reg and a or b, reg and b or a)
-            raw.sign = (reg and a or b).sign or "+"
+            local reg = more(x, y)
+            local raw = sub(reg and x or y, reg and y or x)
+            raw.sign = (reg and x or y).sign or "+"
             return setmetatable(raw, master._metatable)
         end,
-        __sub = function (a, b)
-            local reg = more(a, b)
-            local raw = (a.sign or "+" == b.sign or "+") and sub(reg and a or b, reg and b or a) or add(a, b)
-            raw.sign = m_sub(reg, b)
+        __sub = function (x, y)
+            x, y = vtype(x, y)
+            local reg = more(x, y)
+            local raw = (x.sign or "+" == y.sign or "+") and sub(reg and x or y, reg and y or x) or add(x, y)
+            raw.sign = (y.sign == "+" and reg or not reg) and "+" or "-"
             return setmetatable(raw, master._metatable)
         end,
-        __mul = function(a, b)
-            local raw = mul(a, b)
-            raw.sign = m_mul(a, b)
+        __mul = function(x, y)
+            x, y = vtype(x, y)
+            local raw = mul(x, y)
+            raw.sign = smul(x, y)
             return setmetatable(raw, master._metatable)
         end,
-        __div = function(a, b)
-            local raw = div(a, b)
-            raw.sign = m_mul(a, b)
+        __div = function(x, y)
+            x, y = vtype(x, y)
+            local raw = div(x, y)
+            raw.sign = smul(x, y)
             return setmetatable(raw, master._metatable)
         end,
-        __mod = function(a, b)
-            local raw = ifloor(div(a, b))
-            raw.sign = m_mul(a, b)
-            raw = mul(raw, b)
-            raw.sign = m_mul(raw, b)
-            local reg = more(a, raw)
-            raw = (a.sign or "+" == raw.sign or "+") and sub(reg and a or raw, reg and raw or a) or add(a, raw)
-            raw.sign = m_sub(reg, b)
-            return setmetatable(raw, master._metatable)
+        __mod = function(x, y)
+            x, y = vtype(x, y)
+            return x - ((x // y) * y)
         end,
-        __idiv = function(a, b)
-            local raw = ifloor(div(a, b))
-            raw.sign = m_mul(a, b)
+        __pow = function(x, y)
+            x, y = vtype(x, y)
+            return _ENV:vpow(x, y)
+        end,
+        __idiv = function(x, y)
+            x, y = vtype(x, y)
+            local raw = ifloor(div(x, y))
+            raw.sign = smul(x, y)
             return setmetatable(raw, master._metatable)
         end,
 
         -- Equation operators --
-        __eq = function(a, b)
-            return equal(a, b)
+        __eq = function(x, y)
+            return equal(vtype(x, y))
         end,
-        __lt = function(a, b)
-            return less(a, b)
+        __lt = function(x, y)
+            return less(vtype(x, y))
         end,
-        __le = function(a, b)
-            return equal(a, b) or less(a, b)
+        __le = function(x, y)
+            return equal(vtype(x, y)) or less(vtype(x, y))
         end,
 
         -- Misc --
-        __tostring = function(a)
-            return (a.sign == "-" and "-" or "")..master.deconvert(a)
+        __tostring = function(x)
+            return (x.sign == "-" and "-" or "")..master.deconvert(x)
         end
     }
 end
@@ -445,7 +474,7 @@ math.sign = function(number) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
     return 0
 end
 
-local int = {_advanced = master, _defaultmode = master._config.SETINTEGER_PERBLOCK.FULL}
+local int = {_advanced = master, _defaultmode = master._config.SETINTEGER_PERBLOCK.DEFAULT}
 
 int.new = function(...) -- (string|number) For only create. alway use default mode! **when calculate block size SHOULD BE SAME**
     local stack = {}
@@ -463,37 +492,42 @@ int.cnew = function(number, mode) -- (string|number, mode) For setting mode **wh
     return setmetatable(t, master._metatable)
 end
 
-int.abs = function(int) -- Returns the absolute value of `x`.
-    int.sign = "+"
-    return setmetatable(int, master._metatable)
+int.abs = function(x) -- Returns the absolute value of `x`.
+    x.sign = "+"
+    return setmetatable(x, master._metatable)
 end
 
-int.sign = function(int) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
-    local siz = int._size or 1
+int.sign = function(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
+    local siz = x._size or 1
     local zeo = master.convert(0, siz)
-    local reg, req = master.equation.more(int, zeo), master.equation.equal(int, zeo)
+    local reg, req = master.equation.more(x, zeo), master.equation.equal(x, zeo)
     local t = req and zeo or master.convert(1, siz)
     t.sign = reg or req and "+" or "-"
     return setmetatable(t, master._metatable)
 end
 
-int.floor = function(int) -- Returns the largest integral value smaller than or equal to `x`.
-    return setmetatable(master.floor(int), master._metatable)
+int.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
+    return setmetatable(master.floor(x), master._metatable)
 end
 
-int.tostring = function(int) -- Returns string
-    return (int.sign == "-" and "-" or "")..master.deconvert(int)
+int.tostring = function(x) -- Returns string
+    return (x.sign == "-" and "-" or "")..master.deconvert(x)
 end
 
-int.tonumber = function(int) -- Returns number
-    return tonumber(int.tostring(int))
+int.tonumber = function(x) -- Returns number
+    return tonumber(int.tostring(x))
 end
 
-int.fdigitlen = function(int) -- Returns `INTEGER + DECIMAL` len **do not use `#` to get a digit len.**
-    return #int + math.abs((int._dlen or 1) - 1)
+int.fdigitlen = function(x) -- Returns `INTEGER + DECIMAL` len **do not use `#` to get a digit len.**
+    return #x + math.abs((x._dlen or 1) - 1)
 end
+--[[
+local x, y = int.new(99, 99)
 
--- print(("MODULE LOADED\nMEMORY USAGE: %s B"):format(math.floor(collectgarbage("count") * 1024)))
+print(x ^ y)
+
+print(("MODULE LOADED\nMEMORY USAGE: %s B"):format(math.floor(collectgarbage("count") * 1024)))
+]]
 return int
 --[[
 

@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1714203082433,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1714490957166,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,6 +1,9 @@\n {\r\n     \"workbench.colorCustomizations\": {\r\n         \"minimap.background\": \"#22222250\",\r\n         \"scrollbar.shadow\": \"#22222250\"\r\n-    }\r\n+    },\r\n+    \"Lua.diagnostics.disable\": [\r\n+        \"param-type-mismatch\"\r\n+    ]\r\n }\n\\ No newline at end of file\n"
                 }
             ],
             "date": 1714203082433,
