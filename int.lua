@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 138 beta!
+    ||  Module version 139 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -20,7 +20,7 @@ local master = {
         },
         ]]
     },
-    _version = "138"
+    _version = "139"
 }
 
 master.convert = function(st, s)
@@ -340,6 +340,14 @@ master.calculate = {
     end,
 }
 
+master.floor = function(a) -- Returns the largest integral value smaller than or equal to `x`.
+    for i = a._dlen or 1, 0 do
+        a[i] = nil
+    end
+    a._dlen = 1
+    return a
+end
+
 do
     -- Build ENV --
     local _ENV <const> = {
@@ -349,13 +357,7 @@ do
         m_mul = function(a, b)
             return (a.sign or "+") == (b.sign or "+") and "+" or "-"
         end,
-        ifloor = function(raw)
-            for i = raw._dlen, 0 do
-                raw[i] = nil
-            end
-            raw._dlen = 1
-            return raw
-        end,
+        ifloor = master.floor,
 
         add = master.calculate.add,
         sub = master.calculate.sub,
@@ -443,17 +445,27 @@ math.sign = function(number) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
     return 0
 end
 
-local int = {_advanced = master, _mode = master._config.SETINTEGER_PERBLOCK}
+local int = {_advanced = master, _defaultmode = master._config.SETINTEGER_PERBLOCK.FULL}
 
-int.new = function(number, mode) -- (string|number, mode) **when calculate block size SHOULD BE SAME**
-    local t = master.convert(math.abs(type(number) == "string" and number:match("^[+-]?(%d+)%s*$") or number), mode and master._config.SETINTEGER_PERBLOCK[mode:upper()] or master._config.SETINTEGER_PERBLOCK.FULL)
-    t.sign = type(number) == "string" and number:match("^[+-]") or "+" or math.sign(number) < 1 and "-" or "+"
+int.new = function(...) -- (string|number) For only create. alway use default mode! **when calculate block size SHOULD BE SAME**
+    local stack = {}
+    for _, s in ipairs({...}) do
+        local c = master.convert(math.abs(type(s) == "string" and s:match("^[+-]?(%d+)%s*$") or s), int._defaultmode)
+        c.sign = type(s) == "string" and (s:match("^[+-]") or "+") or math.sign(s) < 1 and "-" or "+"
+        table.insert(stack, setmetatable(c, master._metatable))
+    end
+    return table.unpack(stack)
+end
+
+int.cnew = function(number, mode) -- (string|number, mode) For setting mode **when calculate block size SHOULD BE SAME**
+    local t = master.convert(math.abs(type(number) == "string" and number:match("^[+-]?(%d+)%s*$") or number), mode and master._config.SETINTEGER_PERBLOCK[mode:upper()] or int._defaultmode)
+    t.sign = type(number) == "string" and (number:match("^[+-]") or "+") or math.sign(number) < 1 and "-" or "+"
     return setmetatable(t, master._metatable)
 end
 
 int.abs = function(int) -- Returns the absolute value of `x`.
     int.sign = "+"
-    return int
+    return setmetatable(int, master._metatable)
 end
 
 int.sign = function(int) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
@@ -466,11 +478,7 @@ int.sign = function(int) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
 end
 
 int.floor = function(int) -- Returns the largest integral value smaller than or equal to `x`.
-    for i = int._dlen or 1, 0 do
-        int[i] = nil
-    end
-    int._dlen = 1
-    return int
+    return setmetatable(master.floor(int), master._metatable)
 end
 
 int.tostring = function(int) -- Returns string
