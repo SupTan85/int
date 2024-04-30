@@ -11,6 +11,7 @@ math and calculate for large data in Lua
     - multiplication `*`
     - division `\, \\`
     - modulo `%`
+    - power `^`
 - **equation**
     - equal
     - less than
