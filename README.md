@@ -1,22 +1,22 @@
-# int
+### Int
 
-math and calculate for large data in Lua
-**waring this module is in beta!**
+This Project is math and calculate for large data in Lua. **Waring this module is in beta !!** 
 
 ## Feature
 
-- **calculate**
+- **Calculate**
     - addition `+`
     - subtraction `-`
     - multiplication `*`
     - division `\, \\`
     - modulo `%`
     - power `^`
-- **equation**
+
+- **Equation**
     - equal
     - less than
     - more than
-- **other**
+- **Other**
     - tostring
     - tonumber
     - sign
@@ -26,19 +26,19 @@ math and calculate for large data in Lua
 
 ## How to use
 
-you can require a module with *require* function in Lua
+Require a module with *require* function in Lua
 ```lua
 local int = require("int")
 ```
 
-to use this module you should to make a **new** object
+Use this module you should to make a **new** object
 ```lua
 local int = require("int")
 
 int.new("13") -- input can be a number or string! *recommend to use string*
 ```
 
-you can use **Calculation operators** to calculate math. 
+Use **Calculation operators** to calculate math.
 **note: only operator that in support**
 ```lua
 local int = require("int")
@@ -49,7 +49,9 @@ local b = int.new("10")
 print(a + b) -- output: 30
 ```
 ## Design
-this is inside of *table*, and this is number 101 **if you use "int.tonumber" function**
+
+This inside of *table*, and this mean 101 **if you use `tostring` function**
+
 ```lua
 local example_int_table = {
     -- digit --
@@ -64,9 +66,10 @@ local example_int_table = {
     _size = 1 -- mean per size of block *just maximum digit per value in the digit block* **DO NOT CHANGE. HAVE LIMIT!!**
 }
 ```
-## limit
-- maximum digit of integer is 9223372036854775806
-    - if you set `_size` to 9 **maximum digit of integer is 83010348331692982254** (9223372036854775806 * 9)
 
-- maximum digit of decimal is 9223372036854775808
-    - if you set `_size` to 9 **maximum decimal of integer is 83010348331692982272** (9223372036854775808 * 9)
+## Limit
+- Maximum digit of integer is 9223372036854775806
+    - Set `_size` to `9` maximum digit of integer is `83010348331692982254! (9223372036854775806 * 9)`
+
+- Maximum digit of decimal is 9223372036854775808
+    - Set `_size` to `9` maximum decimal of integer is `83010348331692982272!** (9223372036854775808 * 9)`
