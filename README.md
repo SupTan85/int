@@ -2,7 +2,9 @@
 
 # int
 
-This Project is math and calculate for large data in Lua. **Waring this module is in beta !!** 
+This Project is math and calculate for large data in Lua. **Waring this module is in beta !!**
+
+why this module name is "int"? because in this module alway use integer to calculate math!
 
 ## Feature
 
@@ -88,3 +90,5 @@ local example_int_table = {
 
 - Maximum digit of decimal is 9223372036854775808
     - Set `_size` to `9` maximum decimal of integer is `83010348331692982272!** (9223372036854775808 * 9)`
+
+![](image-d.png)
