@@ -89,6 +89,6 @@ local example_int_table = {
     - Set `_size` to `9` maximum digit of integer is `83010348331692982254! (9223372036854775806 * 9)`
 
 - Maximum digit of decimal is 9223372036854775808
-    - Set `_size` to `9` maximum decimal of integer is `83010348331692982272!** (9223372036854775808 * 9)`
+    - Set `_size` to `9` maximum decimal of integer is `83010348331692982272! (9223372036854775808 * 9)`
 
 ![](image-d.png)
