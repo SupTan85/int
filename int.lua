@@ -521,12 +521,13 @@ end
 int.fdigitlen = function(x) -- Returns `INTEGER + DECIMAL` len **do not use `#` to get a digit len.**
     return #x + math.abs((x._dlen or 1) - 1)
 end
-
+--[[
 local x, y = int.new(99, 99)
 
 print(x ^ y)
 
 print(("MODULE LOADED\nMEMORY USAGE: %s B"):format(math.floor(collectgarbage("count") * 1024)))
+]]
 return int
 --[[
 

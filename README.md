@@ -11,6 +11,7 @@ This Project is math and calculate for large data in Lua. **Waring this module i
     - division `\, \\`
     - modulo `%`
     - power `^`
+
 - **Equation**
     - equal
     - less than
@@ -48,7 +49,9 @@ local b = int.new("10")
 print(a + b) -- output: 30
 ```
 ## Design
+
 This inside of *table*, and this mean 101 **if you use `tostring` function**
+
 ```lua
 local example_int_table = {
     -- digit --
@@ -63,6 +66,7 @@ local example_int_table = {
     _size = 1 -- mean per size of block *just maximum digit per value in the digit block* **DO NOT CHANGE. HAVE LIMIT!!**
 }
 ```
+
 ## Limit
 - Maximum digit of integer is 9223372036854775806
     - Set `_size` to `9` maximum digit of integer is `83010348331692982254! (9223372036854775806 * 9)`
