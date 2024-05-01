@@ -26,31 +26,44 @@ This Project is math and calculate for large data in Lua. **Waring this module i
 
 ## How to use
 
-Require a module with *require* function in Lua
+Require a module with `require` function in Lua
 ```lua
 local int = require("int")
 ```
 
-Use this module you should to make a **new** object
+Use this module you should to make a new object
 ```lua
 local int = require("int")
 
-int.new("13") -- input can be a number or string! *recommend to use string*
+local x = int.new("13") -- input can be a number or string! *recommend to use string*
+
+print(x) -- output: "13"
 ```
 
 Use **Calculation operators** to calculate math.
-**note: only operator that in support**
+
+**Note:** only operator that in support
 ```lua
 local int = require("int")
 
-local a = int.new("20")
-local b = int.new("10")
+local x = int.new("20")
+local y = int.new("10")
 
-print(a + b) -- output: 30
+print(x + y) -- output: 30
+```
+-----
+**Note:** in version 148. you can calculate **int table** with number without using `int.new`
+```lua
+local int = require("int")
+
+local x = int.new("2")
+
+print(x + 2) -- output: 4
+
 ```
 ## Design
 
-This inside of *table*, and this mean 101 **if you use `tostring` function**
+This inside of **int table**, and this mean "101" if you use `tostring` function.
 
 ```lua
 local example_int_table = {

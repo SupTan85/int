@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 142 beta!
+    ||  Module version 148 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -22,7 +22,7 @@ local master = {
         },
         ]]
     },
-    _version = "142"
+    _version = "148"
 }
 
 master.convert = function(st, s)
@@ -49,14 +49,14 @@ end
 
 master.deconvert = function(a, s)
     if type(a) ~= "table" then
-        error(("[deconvert] attempt to deconvert with a '%s'"):format(type(a)))
+        error(("[DECONVERT] attempt to deconvert with a '%s'"):format(type(a)))
     end
     s = a._size or s or 1
     local result, cd = "", false
     for i = (a._dlen or 1), #a do
         local v = a[i]
         if not v then
-            error("[deconvert] missing value in index = "..i)
+            error("[DECONVERT] missing value in index = "..i)
         end
         v = tostring(v)
         if v:len() ~= s and i ~= #a then
@@ -358,15 +358,25 @@ do
         end,
         vtype = function(...)
             local stack, v = {}, {...}
-            local SOFT, INTEGER = {table = 1, string = 2, number = 3}, master._config.SETINTEGER_PERBLOCK.DEFAULT
+            local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERBLOCK.DEFAULT
             table.sort(v, function(a, b) return (SOFT[type(a)] or 0) < (SOFT[type(b)] or 0) end)
-            for i, s in ipairs(v) do
+            for _, s in ipairs(v) do
                 if type(s) == "table" then
-                    stack[i], INTEGER = s, s._size or INTEGER
+                    INTEGER = s._size or INTEGER
                 else
+                    break
+                end
+            end
+            for i, s in ipairs({...}) do
+                local ty = type(s)
+                if ty == "string" or ty =="number" then
                     local c = master.convert(math.abs(type(s) == "string" and s:match("^[+-]?(%d+)%s*$") or s), INTEGER)
                     c.sign = type(s) == "string" and (s:match("^[+-]") or "+") or math.sign(s) < 1 and "-" or "+"
                     stack[i] = setmetatable(c, master._metatable)
+                elseif ty == "table" then
+                    stack[i] = s
+                else
+                    error(("[VTYPE] attempt to perform arithmetic on a (%s) value"):format(ty))
                 end
             end
             return table.unpack(stack)
@@ -438,7 +448,7 @@ do
         end,
         __pow = function(x, y)
             x, y = vtype(x, y)
-            return _ENV:vpow(x, y)
+            return y.sign == "-" and 1 / _ENV:vpow(x, y) or _ENV:vpow(x, y)
         end,
         __idiv = function(x, y)
             x, y = vtype(x, y)
@@ -460,7 +470,8 @@ do
 
         -- Misc --
         __tostring = function(x)
-            return (x.sign == "-" and "-" or "")..master.deconvert(x)
+            local str = master.deconvert(x)
+            return (x.sign == "-" and str ~= "0" and "-" or "")..str
         end
     }
 end
@@ -521,13 +532,13 @@ end
 int.fdigitlen = function(x) -- Returns `INTEGER + DECIMAL` len **do not use `#` to get a digit len.**
     return #x + math.abs((x._dlen or 1) - 1)
 end
---[[
-local x, y = int.new(99, 99)
 
-print(x ^ y)
+local x, y = int.new(2, -2)
+
+print(x ^ y + true)
 
 print(("MODULE LOADED\nMEMORY USAGE: %s B"):format(math.floor(collectgarbage("count") * 1024)))
-]]
+
 return int
 --[[
 
