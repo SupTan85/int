@@ -1,4 +1,6 @@
-# Int
+![https://github.com/SupTan85/int](cover.png)
+
+# int
 
 This Project is math and calculate for large data in Lua. **Waring this module is in beta !!** 
 
