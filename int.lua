@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 156-1 beta!
+    ||  Module version 156-2 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -15,6 +15,14 @@ local master = {
 
             DEFAULT = 9,
         },
+        ACCURACY_LIMIT = {
+            -- MASTER --
+            MASTER_CALCULATE_DIV = 15,
+
+            -- MEDIA --
+            MEDIA_NATURAL_LOGARITHM = 15,
+            MEDIA_EXPONENTIAL_FUNCTION = 15,
+        },
         --[[
         MAXIMUM_PERTABLE = {
             INTEGER = 9223372036854775806,
@@ -22,7 +30,7 @@ local master = {
         },
         ]]
     },
-    _version = "156-1"
+    _version = "156-2"
 }
 
 master.convert = function(st, s)
@@ -297,7 +305,7 @@ master.calculate = {
     div = function(a, b, s, l) -- _size maxiumum 9 ("l" mean limit of accuracy value and decimal. default is 15) **block size should be same**
         master.calculate._assets.VERIFY(a, b, 9, "DIV")
         local s, b_dlen, max, min = a._size or s or 1, b._dlen, math.max, math.min
-        local accuracy = (l or 15) + 2
+        local accuracy = (l or master._config.ACCURACY_LIMIT.MASTER_CALCULATE_DIV) + 2
         local d
         b = master.calculate.mul(b, master.convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local function check(n)
@@ -401,7 +409,7 @@ local media = {
         result.sign = "+"
         -- taylor series of logarithms --
         local X1 = (x - 1) / (x + 1)
-        for n = 1, 1 + (2 * (l or 14)), 2 do
+        for n = 1, 1 + (2 * (l or master._config.ACCURACY_LIMIT.MEDIA_NATURAL_LOGARITHM)), 2 do
             result = result + ((1 / n) * (X1 ^ n))
         end
         return setmetatable(master.cfloor(result * 2, 15), master._metatable)
@@ -426,10 +434,10 @@ local media = {
 function media.exp(x, l) -- Exponential function
     local result = setmetatable(master.convert("0", x._size), master._metatable)
     result.sign = "+"
-    for n = 0, (l or 14) - 1 do
+    for n = 0, (l or master._config.ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION) - 1 do
         result = result + ((x ^ n) / media.fact(n, x._size))
     end
-    return master.cfloor(result, l or 14)
+    return master.cfloor(result, l or master._config.ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION)
 end
 
 do 
