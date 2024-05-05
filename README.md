@@ -59,7 +59,7 @@ local y = int.new("10")
 print(x + y) -- output: 30
 ```
 -----
-**Note:** in version 148. you can calculate **int table** with number without using `int.new`
+**Note:** in version 148 or latest version. you can calculate **int table** with number without using `int.new`
 ```lua
 local int = require("int")
 
