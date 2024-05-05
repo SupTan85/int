@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 148 beta!
+    ||  Module version 156 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -22,7 +22,7 @@ local master = {
         },
         ]]
     },
-    _version = "148"
+    _version = "156"
 }
 
 master.convert = function(st, s)
@@ -74,12 +74,38 @@ master.deconvert = function(a, s)
     return #result > 0 and result or "0"
 end
 
+master.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
+    for i = x._dlen or 1, 0 do
+        x[i] = nil
+    end
+    x._dlen = 1
+    return x
+end
+
+master.cfloor = function(x, large) -- Custom a `x` decimal.
+    large = - math.abs(large or 0)
+    if math.ceil(large / (x._size or 1)) > (x._dlen or 1) - 1 then
+        local size = (x._size or 1)
+        local endp = math.ceil(large / size)
+        for i = x._dlen or 1, endp do
+            if i == endp then
+                local shift = tostring(x[i]):sub(1, large % size)
+                x[i] = tonumber(shift..("0"):rep(size - shift:len()))
+            else
+                x[i] = nil
+            end
+        end
+        x._dlen = endp
+    end
+    return x
+end
+
 master.equation = {
-    equal = function(a, b) -- block size should be same
-        if (a._size or 1) ~= (b._size or 1) then error(("BLOCK_SIZE_ISSUE (%s, %s)"):format(a._size or 1, b._size or 1)) end
-        if #a == #b and (a._dlen or 1) == (b._dlen or 1) then
-            for i = a._dlen or 1, #a do
-                if a[i] ~= b[i] then
+    equal = function(x, y) -- block size should be same
+        if (x._size or 1) ~= (y._size or 1) then error(("BLOCK_SIZE_ISSUE (%s, %s)"):format(x._size or 1, y._size or 1)) end
+        if #x == #y and (x._dlen or 1) == (y._dlen or 1) then
+            for i = x._dlen or 1, #x do
+                if x[i] ~= y[i] then
                     return false
                 end
             end
@@ -87,19 +113,19 @@ master.equation = {
         end
         return false
     end,
-    less = function(a, b) -- block size should be same
-        if (a._size or 1) ~= (b._size or 1) then error(("BLOCK_SIZE_ISSUE (%s, %s)"):format(a._size or 1, b._size or 1)) end
-        if #a < #b then
+    less = function(x, y) -- block size should be same
+        if (x._size or 1) ~= (y._size or 1) then error(("BLOCK_SIZE_ISSUE (%s, %s)"):format(x._size or 1, y._size or 1)) end
+        if #x < #y then
             return true
-        elseif #a == #b then
-            if (a._dlen or 1) < (b._dlen or 1) then
+        elseif #x == #y then
+            if (x._dlen or 1) < (y._dlen or 1) then
                 return true
-            elseif (a._dlen or 1) == (b._dlen or 1) then
+            elseif (x._dlen or 1) == (y._dlen or 1) then
                 local e = true
-                for i = a._dlen or 1, #a do
-                    if a[i] > b[i] then
+                for i = x._dlen or 1, #x do
+                    if x[i] > y[i] then
                         return false
-                    elseif e and a[i] ~= b[i] then
+                    elseif e and x[i] ~= y[i] then
                         e = false
                     end
                 end
@@ -108,8 +134,8 @@ master.equation = {
         end
         return false
     end,
-    more = function(a, b) -- block size should be same
-        return not master.equation.less(a, b)
+    more = function(x, y) -- block size should be same
+        return not master.equation.less(x, y)
     end
 }
 
@@ -126,10 +152,10 @@ master.roll = {
         end,
 
         c_empty = function(atable_int, dlen, dc)
-            for i = math.abs(dc - 1), math.abs(dlen) do
-                atable_int[-i] = nil
+            for i = dlen, dc do
+                atable_int[i] = nil
             end
-            return atable_int
+            return atable_int, dc + 1
         end,
 
         c_process = function(atable_int, to_int, time, lastcut, startfront, nofilter, size, _side)
@@ -138,8 +164,8 @@ master.roll = {
             local s, dlen, time = atable_int._size or size or 1, atable_int._dlen or 1, time or 1
             to_int = _side and ((to_int and tostring(to_int)) or "0"):reverse() or ((to_int and tostring(to_int)) or "0")
             local to, tolen, len = to_int:rep(math.ceil(s / to_int:len())), to_int:len(), ((_side and not startfront or startfront) and #atable_int) or dlen
-            local last, _tolen, i, dc = 0, to_int:len(), -1, 1
-            local li, lv, db
+            local last, _tolen, i = 0, to_int:len(), -1
+            local li, lv, dc
             while true do
                 i = i + 1
                 local index = _side and len + i or len - i
@@ -158,8 +184,7 @@ master.roll = {
                 lv = (lv or (not startfront and -connext(b, s, index, nofilter):len() or 0)) + (raw and v:len() or 0)
                 last = (lv or 0) / tolen
                 if index < 1 then
-                    db = db or tostring(raw):match("^0+$") ~= nil
-                    dc, dlen = not db and min(index, dc) or dc, index
+                    dc, dlen = tostring(raw):match("^0+$") ~= nil and index or nil, index
                 end
                 if last >= time then
                     v = _side and v:sub(1 + ((lastcut > 0 and lastcut - 1) or (li + (_tolen * max(0, math.floor(last - time))))), -1) or v:sub(1, -1 - ((lastcut > 0 and lastcut - 1) or (li + (_tolen * max(0, math.floor(last - time))))))
@@ -168,10 +193,10 @@ master.roll = {
                 end
                 atable_int[index] = raw
             end
-            if not nofilter then
-                atable_int = c_empty(atable_int, dlen, dc)
+            if not nofilter and dc then
+                atable_int, dlen = c_empty(atable_int, dlen, dc)
             end
-            atable_int._size, atable_int._dlen = atable_int._size or size, dc
+            atable_int._size, atable_int._dlen = atable_int._size or size, dlen
             return atable_int
         end
     },
@@ -242,14 +267,12 @@ master.calculate = {
     mul = function(a, b, s) -- _size maxiumum 9 **block size should be same**
         master.calculate._assets.VERIFY(a, b, 9, "MUL")
         local result = {_size = a._size or s or 1}
-        local s, d = math.floor(10 ^ (result._size)), 0
-        local stack, ad, bd, cd
+        local s, op = math.floor(10 ^ (result._size)), 1
+        local cd
         for i = a._dlen or 1, #a do
             local block_a = a[i]
-            ad = ad or (block_a ~= 0 and i)
             for i2 = b._dlen or 1, #b do
                 local block_b = b[i2]
-                bd = bd or (block_b ~= 0 and i2)
                 local calcul = block_a * block_b
                 local offset = i + i2 - 1
                 local block_data = (calcul + (result[offset] or 0))
@@ -257,27 +280,26 @@ master.calculate = {
                 block_data = block_data % s
                 cd = (cd or block_data ~= 0) and true or nil
                 result[offset] = (offset >= 1 or cd) and block_data or nil
-                d = result[offset] == nil and d + 1 or d
-                stack = ((block_data == 0 and offset >= 1) and ((stack and { stack[1], offset }) or { offset, offset })) or nil
+                op = result[offset] and math.min(op, offset) or op
                 result[offset + 1] = (next ~= 0 and (next + (result[offset + 1] or 0))) or result[offset + 1]
             end
         end
-        if stack then
-            for i = stack[1], stack[2] do
-                result[i] = nil
+        for i = -#result, -2 do
+            if result[-i] == 0 then
+                result[-i] = nil
+            else
+                break
             end
         end
-        if #result == 0 then
-            result[1] = 0
-        end
-        result._dlen = (ad or 1) + (bd or 1) - 1 + d
+        result._dlen = op
         return result
     end,
-    div = function(a, b, s, l) -- _size maxiumum 9 ("l" mean limit of accuracy value and decimal. default is 14) **block size should be same**
+    div = function(a, b, s, l) -- _size maxiumum 9 ("l" mean limit of accuracy value and decimal. default is 15) **block size should be same**
         master.calculate._assets.VERIFY(a, b, 9, "DIV")
-        local s, max, min = a._size or s or 1, math.max, math.min
-        local accuracy = l or 14
+        local s, b_dlen, max, min = a._size or s or 1, b._dlen, math.max, math.min
+        local accuracy = (l or 15) + 2
         local d
+        b = master.calculate.mul(b, master.convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local function check(n)
             local od = d and (d:match("%.(%d+)$") or ""):match("0*$") or ""
             local dc = d and master.roll.right(master.convert(d, s), od..n) or master.convert(n, s)
@@ -291,7 +313,7 @@ master.calculate = {
         local function calcu(c)
             local map
             if c then
-                local ceil <const>, insert <const> = math.ceil, table.insert
+                local ceil, insert = math.ceil, table.insert
                 map = {}
                 for i = 0, 9 do
                     insert(map, (i % 2 == 0 and (c - ceil(i / 2)) or (c + ceil(i / 2))) % 10)
@@ -316,50 +338,111 @@ master.calculate = {
             end
             return false, low
         end
-        local lastpoint, mark
-        for _ = 1, accuracy + 1 do
+        local lastpoint, fin, mark
+        repeat
             local dv, lp = calcu(lastpoint)
-            d, lastpoint, mark = d and ("%s%s"):format(d, mark and lp or "."..lp) or tostring(lp), lp, mark or #(d or "") > 0 and true
+            d, lastpoint = d and d..(mark and lp or "."..lp) or tostring(lp), lp
+            mark = mark or (d:match("%.") and true)
             if dv then
                 break
             end
+            fin = fin or (d or ""):match("^0*%.?0*$") == nil
+            accuracy = fin and accuracy - 1 or accuracy
+        until accuracy <= 0
+        d = master.convert(d, s)
+        if b_dlen < 1 then
+            d = master.calculate.mul(d, master.convert("1"..("0"):rep(math.abs(b_dlen - 1))))
         end
-        local raw = master.calculate.mul(a, master.convert(d, s))
+        local raw = master.calculate.mul(a, d)
         if -raw._dlen >= (accuracy - 1) // s then
+            raw = master.cfloor(raw, (master.deconvert(raw):match("%.(0*)") or ""):len() + (l or 15))
             local i = raw._dlen
             local iu
             repeat
-                local v <const> = tostring(raw[i])
+                local v = tostring(raw[i])
                 local cu = tonumber(v:match("^(%d-)0*$"):sub(1, -2)) or 0
                 local ma = tonumber("1"..("0"):rep(math.min(#tostring(cu), s + 1)))
                 if v:match("(%d?)0*$") > "5" or iu then
                     cu, iu = (cu + (iu or 1)) % ma, (cu + (iu or 1)) // ma
                 end
-                raw[i], i, raw._dlen = cu ~= 0 and cu..(i > 1 and ("0"):rep(v:match("0*$"):len()) or "") or nil, i + 1, cu == 0 and raw._dlen + 1 or raw._dlen
+                raw[i], i, raw._dlen = cu ~= 0 and cu..("0"):rep(s - tostring(cu):len()) or nil, i + 1, cu == 0 and raw._dlen + 1 or raw._dlen
             until not iu or iu == 0
         end
         return raw
     end,
 }
 
-master.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
-    for i = x._dlen or 1, 0 do
-        x[i] = nil
+local media = {
+    convert = function(n, size) -- automatic setup a table.
+        local t = master.convert(type(n) == "string" and n:match("^[+-]?(%d+)%s*$") or n, size)
+        t.sign = type(n) == "string" and (n:match("^[+-]") or "+") or math.sign(n) < 1 and "-" or "+"
+        return setmetatable(t, master._metatable)
+    end,
+    deconvert = function(int) -- read table data and convert to the number. *string type*
+        local str = master.deconvert(int)
+        return (int.sign == "-" and str ~= "0" and "-" or "")..str
+    end,
+
+    equal = function(x, y) -- work same `equation.equal` but support sign config.
+        return x.sign == y.sign and master.equation.equal(x, y)
+    end,
+    less = function(x, y) -- work same `equation.less` but support sign config.
+        return x.sign == y.sign and master.equation.less(x, y) or x.sign == "-"
+    end,
+    more = function(x, y) -- work same `equation.more` but support sign config.
+        return x.sign == y.sign and master.equation.more(x, y) or y.sign == "-"
+    end,
+
+    In = function(x, l) -- Returns the Natural logarithm of `x` in the given base. `l` mean limit of accuracy value
+        if tostring(x) <= "0" then
+            error("Natural logarithm function return non-positive value.")
+        end
+        local result = master.convert("0", x._size)
+        result.sign = "+"
+        -- taylor series of logarithms --
+        local X1 = (x - 1) / (x + 1)
+        for n = 1, 1 + (2 * (l or 100)), 2 do
+            result = result + ((1 / n) * (X1 ^ n))
+        end
+        return setmetatable(master.cfloor(result * 2, 15), master._metatable)
+    end,
+
+    fact = function(n, s) -- Factorial function
+        local result
+        if type(n) == "table" then
+            result = setmetatable(master.convert("1", n._size), master._metatable)
+            result.sign, n.sign = n.sign or "+", "+"
+        else
+            result = setmetatable(master.convert("1", s or 1), master._metatable)
+            result.sign = "+"
+        end
+        while tostring(n) > "0" do
+            result, n = result * n, n - 1
+        end
+        return result
+    end,
+}
+
+function media.exp(x, l) -- Exponential function
+    local result = setmetatable(master.convert("0", x._size), master._metatable)
+    result.sign = "+"
+    for n = 0, (l or 100) - 1 do
+        result = result + ((x ^ n) / media.fact(n, x._size))
+        print(result)
     end
-    x._dlen = 1
-    return x
+    return result
 end
 
-do
+do 
     -- Build ENV --
     local _ENV <const> = {
         smul = function(x, y)
-            return (x.sign or "+") == (y.sign or "+") and "+" or "-"
+            return x.sign == y.sign and "+" or "-"
         end,
         vtype = function(...)
             local stack, v = {}, {...}
             local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERBLOCK.DEFAULT
-            table.sort(v, function(a, b) return (SOFT[type(a)] or 0) < (SOFT[type(b)] or 0) end)
+            table.sort(v, function(a, b) return (SOFT[type(a)] or 0) > (SOFT[type(b)] or 0) end)
             for _, s in ipairs(v) do
                 if type(s) == "table" then
                     INTEGER = s._size or INTEGER
@@ -370,9 +453,7 @@ do
             for i, s in ipairs({...}) do
                 local ty = type(s)
                 if ty == "string" or ty =="number" then
-                    local c = master.convert(math.abs(type(s) == "string" and s:match("^[+-]?(%d+)%s*$") or s), INTEGER)
-                    c.sign = type(s) == "string" and (s:match("^[+-]") or "+") or math.sign(s) < 1 and "-" or "+"
-                    stack[i] = setmetatable(c, master._metatable)
+                    stack[i] = media.convert(s, INTEGER)
                 elseif ty == "table" then
                     stack[i] = s
                 else
@@ -381,17 +462,21 @@ do
             end
             return table.unpack(stack)
         end,
-        vpow = function(self, x, y)
-            if tostring(y) == "0" then
-                return 1
-            elseif tostring(y) == "1" then
-                return x
-            elseif tostring(y % 2) == "0" then
-                local half_power = self:vpow(x, y // 2)
-                return half_power * half_power
+        vpow = function(self, x, y) -- power function `y >= 0`
+            if tostring(y % 1) == "0" then
+                local st = tostring(y)
+                if st == "0" then
+                    return media.convert("1", x._size)
+                elseif st == "1" then
+                    return master.cfloor(x, 15)
+                elseif tostring(y % 2) == "0" then
+                    local half_power = self:vpow(x, y // 2)
+                    return master.cfloor(half_power * half_power, 15)
+                end
+                local half_power = self:vpow(x, (y - 1) // 2)
+                return master.cfloor(x * half_power * half_power, 15)
             end
-            local half_power = self:vpow(x, (y - 1) // 2)
-            return x * half_power * half_power
+            return media.exp(y * media.In(x))
         end,
         ifloor = master.floor,
 
@@ -400,9 +485,9 @@ do
         mul = master.calculate.mul,
         div = master.calculate.div,
 
-        equal = master.equation.equal,
-        less = master.equation.less,
-        more = master.equation.more,
+        equal = media.equal,
+        less = media.less,
+        more = media.more,
         
         setmetatable = setmetatable
     }
@@ -413,7 +498,7 @@ do
         -- Calculation operators --
         __add = function(x, y)
             x, y = vtype(x, y)
-            if x.sign or "+" == y.sign or "+" then
+            if x.sign == y.sign then
                 local raw = add(x, y)
                 raw.sign = x.sign or "+"
                 return setmetatable(raw, master._metatable)
@@ -426,7 +511,7 @@ do
         __sub = function (x, y)
             x, y = vtype(x, y)
             local reg = more(x, y)
-            local raw = (x.sign or "+" == y.sign or "+") and sub(reg and x or y, reg and y or x) or add(x, y)
+            local raw = (x.sign == y.sign) and sub(reg and x or y, reg and y or x) or add(x, y)
             raw.sign = (y.sign == "+" and reg or not reg) and "+" or "-"
             return setmetatable(raw, master._metatable)
         end,
@@ -448,7 +533,9 @@ do
         end,
         __pow = function(x, y)
             x, y = vtype(x, y)
-            return y.sign == "-" and 1 / _ENV:vpow(x, y) or _ENV:vpow(x, y)
+            local ysign = y.sign
+            y.sign = "+"
+            return ysign == "-" and 1 / _ENV:vpow(x, y) or _ENV:vpow(x, y)
         end,
         __idiv = function(x, y)
             x, y = vtype(x, y)
@@ -469,10 +556,7 @@ do
         end,
 
         -- Misc --
-        __tostring = function(x)
-            local str = master.deconvert(x)
-            return (x.sign == "-" and str ~= "0" and "-" or "")..str
-        end
+        __tostring = media.deconvert
     }
 end
 
@@ -490,17 +574,13 @@ local int = {_advanced = master, _defaultmode = master._config.SETINTEGER_PERBLO
 int.new = function(...) -- (string|number) For only create. alway use default mode! **when calculate block size SHOULD BE SAME**
     local stack = {}
     for _, s in ipairs({...}) do
-        local c = master.convert(math.abs(type(s) == "string" and s:match("^[+-]?(%d+)%s*$") or s), int._defaultmode)
-        c.sign = type(s) == "string" and (s:match("^[+-]") or "+") or math.sign(s) < 1 and "-" or "+"
-        table.insert(stack, setmetatable(c, master._metatable))
+        table.insert(stack, media.convert(s, int._defaultmode))
     end
     return table.unpack(stack)
 end
 
 int.cnew = function(number, mode) -- (string|number, mode) For setting mode **when calculate block size SHOULD BE SAME**
-    local t = master.convert(math.abs(type(number) == "string" and number:match("^[+-]?(%d+)%s*$") or number), mode and master._config.SETINTEGER_PERBLOCK[mode:upper()] or int._defaultmode)
-    t.sign = type(number) == "string" and (number:match("^[+-]") or "+") or math.sign(number) < 1 and "-" or "+"
-    return setmetatable(t, master._metatable)
+    return media.convert(number, mode and master._config.SETINTEGER_PERBLOCK[mode:upper()] or int._defaultmode)
 end
 
 int.abs = function(x) -- Returns the absolute value of `x`.
@@ -508,13 +588,17 @@ int.abs = function(x) -- Returns the absolute value of `x`.
     return setmetatable(x, master._metatable)
 end
 
+int.In = media.In
+int.fact = media.fact
+int.exp = media.exp
+
 int.sign = function(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
     local siz = x._size or 1
-    local zeo = master.convert(0, siz)
-    local reg, req = master.equation.more(x, zeo), master.equation.equal(x, zeo)
-    local t = req and zeo or master.convert(1, siz)
+    local zeo = media.convert(0, siz)
+    local reg, req = media.more(x, zeo), media.equal(x, zeo)
+    local t = req and zeo or media.convert(1, siz)
     t.sign = reg or req and "+" or "-"
-    return setmetatable(t, master._metatable)
+    return t
 end
 
 int.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
@@ -522,23 +606,18 @@ int.floor = function(x) -- Returns the largest integral value smaller than or eq
 end
 
 int.tostring = function(x) -- Returns string
-    return (x.sign == "-" and "-" or "")..master.deconvert(x)
+    return media.deconvert(x)
 end
 
 int.tonumber = function(x) -- Returns number
-    return tonumber(int.tostring(x))
+    return tonumber(media.deconvert(x))
 end
 
 int.fdigitlen = function(x) -- Returns `INTEGER + DECIMAL` len **do not use `#` to get a digit len.**
     return #x + math.abs((x._dlen or 1) - 1)
 end
 
-local x, y = int.new(2, -2)
-
-print(x ^ y + true)
-
-print(("MODULE LOADED\nMEMORY USAGE: %s B"):format(math.floor(collectgarbage("count") * 1024)))
-
+-- print(("MODULE LOADED\nMEMORY USAGE: %.0d B (%s KB)"):format(collectgarbage("count") * 1024, collectgarbage("count")))
 return int
 --[[
 

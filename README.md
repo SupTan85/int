@@ -2,7 +2,7 @@
 
 # int
 
-This Project is math and calculate for large data in Lua. **Waring this module is in beta !!**
+This Project is math and calculate for large data in Lua. **Waring: this module is in beta !! SO MANY BUG**
 
 why this module name is "int"? because in this module alway use integer to calculate math!
 
@@ -25,6 +25,9 @@ why this module name is "int"? because in this module alway use integer to calcu
     - tonumber
     - sign
     - abs
+    - In `Natural logarithm`
+    - fact `Factorial function`
+    - exp `Exponential function`
     - floor
     - fdigitlen `INTEGER LEN + DECIMAL LEN`
 
