@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 156 beta!
+    ||  Module version 156-1 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -22,7 +22,7 @@ local master = {
         },
         ]]
     },
-    _version = "156"
+    _version = "156-1"
 }
 
 master.convert = function(st, s)
@@ -401,7 +401,7 @@ local media = {
         result.sign = "+"
         -- taylor series of logarithms --
         local X1 = (x - 1) / (x + 1)
-        for n = 1, 1 + (2 * (l or 100)), 2 do
+        for n = 1, 1 + (2 * (l or 14)), 2 do
             result = result + ((1 / n) * (X1 ^ n))
         end
         return setmetatable(master.cfloor(result * 2, 15), master._metatable)
@@ -426,11 +426,10 @@ local media = {
 function media.exp(x, l) -- Exponential function
     local result = setmetatable(master.convert("0", x._size), master._metatable)
     result.sign = "+"
-    for n = 0, (l or 100) - 1 do
+    for n = 0, (l or 14) - 1 do
         result = result + ((x ^ n) / media.fact(n, x._size))
-        print(result)
     end
-    return result
+    return master.cfloor(result, l or 14)
 end
 
 do 
