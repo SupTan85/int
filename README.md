@@ -29,6 +29,7 @@ why this module name is "int"? because in this module alway use integer to calcu
     - fact `Factorial function`
     - exp `Exponential function`
     - floor
+    - cfloor
     - integerlen `INTEGER LEN`
     - decimallen `DECIMAL LEN`
     - fdigitlen `INTEGER LEN + DECIMAL LEN`

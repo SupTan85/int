@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 157 beta!
+    ||  Module version 158 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -30,7 +30,7 @@ local master = {
             DECIMAL = 9223372036854775808
         },
     },
-    _version = "157"
+    _version = "158"
 }
 
 master.convert = function(st, s)
@@ -93,14 +93,14 @@ master.floor = function(x) -- Returns the largest integral value smaller than or
     return x
 end
 
-master.cfloor = function(x, large) -- Custom a `x` decimal.
-    large = - math.abs(large or 0)
-    if math.ceil(large / (x._size or 1)) > (x._dlen or 1) - 1 then
+master.cfloor = function(x, length) -- Custom a `x` decimal.
+    length = - math.abs(length or 0)
+    if math.ceil(length / (x._size or 1)) > (x._dlen or 1) - 1 then
         local size = (x._size or 1)
-        local endp = math.ceil(large / size)
+        local endp = math.ceil(length / size)
         for i = x._dlen or 1, endp do
             if i == endp then
-                local shift = tostring(x[i]):sub(1, large % size)
+                local shift = tostring(x[i]):sub(1, length % size)
                 x[i] = tonumber(shift..("0"):rep(size - shift:len()))
             else
                 x[i] = nil
@@ -616,6 +616,10 @@ end
 
 int.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
     return setmetatable(master.floor(x), master._metatable)
+end
+
+int.cfloor = function(x, length) -- Custom a `x` decimal.
+    return setmetatable(master.cfloor(x, length), master._metatable)
 end
 
 int.tostring = function(x) -- Returns string.
