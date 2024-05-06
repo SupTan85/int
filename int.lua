@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 156-3 beta!
+    ||  Module version 157 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -23,14 +23,14 @@ local master = {
             MEDIA_NATURAL_LOGARITHM = 15,
             MEDIA_EXPONENTIAL_FUNCTION = 15,
         },
-        --[[
+
+        -- !! DO NOT CHANGE THIS CONFIG !! --
         MAXIMUM_PERTABLE = {
             INTEGER = 9223372036854775806,
             DECIMAL = 9223372036854775808
         },
-        ]]
     },
-    _version = "156-3"
+    _version = "157"
 }
 
 master.convert = function(st, s)
@@ -592,7 +592,7 @@ int.new = function(...) -- (string|number) For only create. alway use default mo
     return table.unpack(stack)
 end
 
-int.cnew = function(number, mode) -- (string|number, mode) For setting mode **when calculate block size SHOULD BE SAME**
+int.cnew = function(number, mode) -- (string|number, mode) For setting mode. **when calculate block size SHOULD BE SAME**
     return media.convert(number, mode and master._config.SETINTEGER_PERBLOCK[mode:upper()] or int._defaultmode)
 end
 
@@ -618,17 +618,28 @@ int.floor = function(x) -- Returns the largest integral value smaller than or eq
     return setmetatable(master.floor(x), master._metatable)
 end
 
-int.tostring = function(x) -- Returns string
+int.tostring = function(x) -- Returns string.
     return media.deconvert(x)
 end
 
-int.tonumber = function(x) -- Returns number
+int.tonumber = function(x) -- Returns number.
     return tonumber(media.deconvert(x))
 end
 
-int.fdigitlen = function(x) -- Returns `INTEGER + DECIMAL` len **do not use `#` to get a digit len.**
+int.integerlen = function(x) -- Returns `INTEGER` length.
+    return #x
+end
+
+int.decimallen = function(x) -- Returns `DECIMAL` length.
+    return math.abs((x._dlen or 1) - 1)
+end
+
+int.fdigitlen = function(x) -- Returns `INTEGER + DECIMAL` length.
     return #x + math.abs((x._dlen or 1) - 1)
 end
+
+int.maxinteger = master._config.MAXIMUM_PERTABLE.INTEGER
+int.maxdecimal = master._config.MAXIMUM_PERTABLE.DECIMAL
 
 -- print(("MODULE LOADED\nMEMORY USAGE: %.0d B (%s KB)"):format(collectgarbage("count") * 1024, collectgarbage("count")))
 return int
