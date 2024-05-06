@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 156-2 beta!
+    ||  Module version 156-3 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -30,10 +30,13 @@ local master = {
         },
         ]]
     },
-    _version = "156-2"
+    _version = "156-3"
 }
 
 master.convert = function(st, s)
+    if type(st) ~= "string" and type(st) ~= "number" then
+        error(("[CONVERT] attempt to convert with a '%s'"):format(type(st)))
+    end
     st, s = tostring(st), s or 1
     local min = math.min
     local result, step = {_size = s}, 0
@@ -403,6 +406,9 @@ local media = {
 
     In = function(x, l) -- Returns the Natural logarithm of `x` in the given base. `l` mean limit of accuracy value
         if tostring(x) <= "0" then
+            if tostring(x) == "0" then
+                error("Natural logarithm function return inf-positive value.")
+            end
             error("Natural logarithm function return non-positive value.")
         end
         local result = master.convert("0", x._size)
