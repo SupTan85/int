@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 158 beta!
+    ||  Module version 160 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -30,7 +30,7 @@ local master = {
             DECIMAL = 9223372036854775808
         },
     },
-    _version = "158"
+    _version = "160"
 }
 
 master.convert = function(st, s)
@@ -46,11 +46,11 @@ master.convert = function(st, s)
     for index = 1, math.max(len_i, len_i2), s do
         step = step + 1
         if index <= len_i then
-            result[step] = tonumber(i:sub(index, min(index + s - 1, len_i)):reverse())
+            result[step] = tonumber(i:sub(index, min(index + s - 1, len_i)):reverse()) or error("[CONVERT] attempt to convert but got 'nil'")
         end
         if index <= len_i2 then
             local d = i2:sub(index, min(index + s - 1, len_i2))
-            result[1 - step] = tonumber(d .. ("0"):rep(s - d:len()))
+            result[1 - step] = tonumber(d .. ("0"):rep(s - d:len())) or error("[CONVERT] attempt to convert but got 'nil'")
             result._dlen = 1 - step
         end
     end
@@ -385,8 +385,31 @@ master.calculate = {
 
 local media = {
     convert = function(n, size) -- automatic setup a table.
-        local t = master.convert(type(n) == "string" and n:match("^[+-]?(%d+)%s*$") or n, size)
-        t.sign = type(n) == "string" and (n:match("^[+-]") or "+") or math.sign(n) < 1 and "-" or "+"
+        if n:find("e") then
+            local es, fs = n:match("^[+-]?%d+%.?%d*e([+-]?%d+)$"), n:match("^([+-]?%d+%.?%d*)e[+-]?%d+$")
+            if es and fs then
+                es = tonumber(es)
+                if es ~= 0 then
+                    local loc = (fs:find("%.") or (fs:len() + 1)) - 1
+                    local dot, fs_sign = loc + es, fs:match("^[+-]?")
+                    local f, b
+                    fs = fs:gsub("%.", ""):gsub("[+-]", "")
+                    if dot < 0 then
+                        f, b = "0", ("0"):rep(-dot)..fs
+                    else
+                        fs = fs..("0"):rep(dot - fs:len())
+                        f, b = fs:sub(1, dot):match("^0*(.*)$"), fs:sub(dot + 1, -1):match("^(.-)0*$")
+                    end
+                    fs = fs_sign..(f == "" and "0" or f)..(b ~= "" and "."..b or "")
+                end
+                local t = master.convert(fs:match("^[+-]?(%d+%.?%d*)%s*$"), size)
+                t.sign = fs:match("^[+-]?") or "+"
+                return setmetatable(t, master._metatable)
+            end
+            error(("malformed number near '%s'"):format(n))
+        end
+        local t = master.convert(type(n) == "string" and n:match("^[+-]?(%d+%.?%d*)%s*$") or n, size)
+        t.sign = type(n) == "string" and (n:match("^[+-]?") or "+") or math.sign(n) < 1 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
     deconvert = function(int) -- read table data and convert to the number. *string type*
@@ -437,6 +460,34 @@ local media = {
     end,
 }
 
+function media.ntype(...) -- This function make table can mix a number and string. *return table*
+    local stack, v = {}, {...}
+    local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERBLOCK.DEFAULT
+    table.sort(v, function(a, b) return (SOFT[type(a)] or 0) > (SOFT[type(b)] or 0) end)
+    for _, s in ipairs(v) do
+        if type(s) == "table" then
+            INTEGER = s._size or INTEGER
+        else
+            break
+        end
+    end
+    for i, s in ipairs({...}) do
+        local ty = type(s)
+        if ty == "string" or ty =="number" then
+            stack[i] = media.convert(s, INTEGER)
+        elseif ty == "table" then
+            stack[i] = s
+        else
+            error(("[VTYPE] attempt to perform arithmetic on a (%s) value"):format(ty))
+        end
+    end
+    return stack
+end
+
+function media.vtype(...) -- This function make table can mix a number and string.
+    return table.unpack(media.ntype(...))
+end
+
 function media.exp(x, l) -- Exponential function
     local result = setmetatable(master.convert("0", x._size), master._metatable)
     result.sign = "+"
@@ -452,29 +503,7 @@ do
         smul = function(x, y)
             return x.sign == y.sign and "+" or "-"
         end,
-        vtype = function(...)
-            local stack, v = {}, {...}
-            local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERBLOCK.DEFAULT
-            table.sort(v, function(a, b) return (SOFT[type(a)] or 0) > (SOFT[type(b)] or 0) end)
-            for _, s in ipairs(v) do
-                if type(s) == "table" then
-                    INTEGER = s._size or INTEGER
-                else
-                    break
-                end
-            end
-            for i, s in ipairs({...}) do
-                local ty = type(s)
-                if ty == "string" or ty =="number" then
-                    stack[i] = media.convert(s, INTEGER)
-                elseif ty == "table" then
-                    stack[i] = s
-                else
-                    error(("[VTYPE] attempt to perform arithmetic on a (%s) value"):format(ty))
-                end
-            end
-            return table.unpack(stack)
-        end,
+        vtype = media.vtype,
         vpow = function(self, x, y) -- power function `y >= 0`
             if tostring(y % 1) == "0" then
                 local st = tostring(y)
@@ -601,8 +630,8 @@ int.abs = function(x) -- Returns the absolute value of `x`.
     return setmetatable(x, master._metatable)
 end
 
-int.In = media.In
 int.fact = media.fact
+int.In = media.In
 int.exp = media.exp
 
 int.sign = function(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
@@ -612,6 +641,22 @@ int.sign = function(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
     local t = req and zeo or media.convert(1, siz)
     t.sign = reg or req and "+" or "-"
     return t
+end
+
+int.max = function(x, ...) -- Returns the argument with the maximum value, according to the Lua operator `<`.
+    local result
+    for _, x in ipairs(media.ntype(x, ...)) do
+        result = result and (media.more(result, x) and result) or x
+    end
+    return result and setmetatable(result, master._metatable)
+end
+
+int.min = function(x, ...) -- Returns the argument with the minimum value, according to the Lua operator `<`.
+    local result
+    for _, x in ipairs(media.ntype(x, ...)) do
+        result = result and (media.less(result, x) and result) or x
+    end
+    return result and setmetatable(result, master._metatable)
 end
 
 int.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.

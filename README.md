@@ -20,10 +20,13 @@ why this module name is "int"? because in this module alway use integer to calcu
     - equal
     - less than
     - more than
+
 - **Other**
     - tostring
     - tonumber
     - sign
+    - max
+    - min
     - abs
     - In `Natural logarithm`
     - fact `Factorial function`
