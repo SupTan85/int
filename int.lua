@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 160 beta!
+    ||  Module version 163 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -30,7 +30,7 @@ local master = {
             DECIMAL = 9223372036854775808
         },
     },
-    _version = "160"
+    _version = "163"
 }
 
 master.convert = function(st, s)
@@ -385,7 +385,8 @@ master.calculate = {
 
 local media = {
     convert = function(n, size) -- automatic setup a table.
-        if n:find("e") then
+        local n_type = type(n)
+        if n_type == "string" and n:find("e") then
             local es, fs = n:match("^[+-]?%d+%.?%d*e([+-]?%d+)$"), n:match("^([+-]?%d+%.?%d*)e[+-]?%d+$")
             if es and fs then
                 es = tonumber(es)
@@ -408,8 +409,8 @@ local media = {
             end
             error(("malformed number near '%s'"):format(n))
         end
-        local t = master.convert(type(n) == "string" and n:match("^[+-]?(%d+%.?%d*)%s*$") or n, size)
-        t.sign = type(n) == "string" and (n:match("^[+-]?") or "+") or math.sign(n) < 1 and "-" or "+"
+        local t = master.convert(n_type == "string" and n:match("^[+-]?(%d+%.?%d*)%s*$") or n, size)
+        t.sign = n_type == "string" and (n:match("^[+-]?") or "+") or math.sign(n) < 1 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
     deconvert = function(int) -- read table data and convert to the number. *string type*
@@ -424,7 +425,12 @@ local media = {
         return x.sign == y.sign and master.equation.less(x, y) or x.sign == "-"
     end,
     more = function(x, y) -- work same `equation.more` but support sign config.
-        return x.sign == y.sign and master.equation.more(x, y) or y.sign == "-"
+        return x.sign == y.sign and master.equation.more(x, y) or y.sign == "+"
+    end,
+
+    abs = function(x) -- Returns the absolute value of `x`.
+        x.sign = "+"
+        return setmetatable(x, master._metatable)
     end,
 
     In = function(x, l) -- Returns the Natural logarithm of `x` in the given base. `l` mean limit of accuracy value
@@ -458,7 +464,57 @@ local media = {
         end
         return result
     end,
+
+    floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
+        return setmetatable(master.floor(x), master._metatable)
+    end,
+    cfloor = function(x, length) -- Custom a `x` decimal.
+        return setmetatable(master.cfloor(x, length), master._metatable)
+    end,
+
+    integerlen = function(x) -- Returns `INTEGER` length.
+        return #x
+    end,
+    decimallen = function(x) -- Returns `DECIMAL` length.
+        return math.abs((x._dlen or 1) - 1)
+    end,
+    fdigitlen = function(x) -- Returns `INTEGER + DECIMAL` length.
+        return #x + math.abs((x._dlen or 1) - 1)
+    end
 }
+
+function media.tostring(x) -- Deconvert table to string.
+    return media.deconvert(x)
+end
+
+function media.tonumber(x) -- Deconvert table to number. *not recommend*
+    return tonumber(media.deconvert(x))
+end
+
+function media.sign(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
+    local siz = x._size or 1
+    local zeo = media.convert(0, siz)
+    local reg, req = media.more(x, zeo), media.equal(x, zeo)
+    local t = req and zeo or media.convert(1, siz)
+    t.sign = reg or req and "+" or "-"
+    return t
+end
+
+function media.max(x, ...) -- Returns the argument with the maximum value, according to the Lua operator `<`.
+    local result
+    for _, x in ipairs(media.ntype(x, ...)) do
+        result = result and (media.more(result, x) and result) or x
+    end
+    return result and setmetatable(result, master._metatable)
+end
+
+function media.min(x, ...) -- Returns the argument with the minimum value, according to the Lua operator `<`.
+    local result
+    for _, x in ipairs(media.ntype(x, ...)) do
+        result = result and (media.less(result, x) and result) or x
+    end
+    return result and setmetatable(result, master._metatable)
+end
 
 function media.ntype(...) -- This function make table can mix a number and string. *return table*
     local stack, v = {}, {...}
@@ -594,11 +650,50 @@ do
             return less(vtype(x, y))
         end,
         __le = function(x, y)
-            return equal(vtype(x, y)) or less(vtype(x, y))
+            x, y = vtype(x, y)
+            return equal(x, y) or less(x, y)
         end,
 
         -- Misc --
-        __tostring = media.deconvert
+        __tostring = media.deconvert,
+
+        -- Index --
+        __index = {
+            tostring = media.tostring,
+            tonumber = media.tonumber,
+
+            equal = function(x, y) -- equal `==`. *this function made for other types*
+                return equal(vtype(x, y))
+            end,
+            less = function(x, y) -- less `<`. *this function made for other types*
+                return less(vtype(x, y))
+            end,
+            more = function(x, y) -- more `>`. *this function made for other types*
+                return more(vtype(x, y))
+            end,
+
+            eless = function(x, y) -- equal or less `<=`. *this function made for other types*
+                x, y = vtype(x, y)
+                return equal(x, y) or less(x, y)
+            end,
+            emore = function(x, y) -- equal or more `>=`. *this function made for other types*
+                x, y = vtype(x, y)
+                return equal(x, y) or more(x, y)
+            end,
+
+            abs = media.abs,
+
+            sign = media.sign,
+            max = media.max,
+            min = media.min,
+
+            floor = media.floor,
+            cfloor = media.cfloor,
+
+            integerlen = media.integerlen,
+            decimallen = media.decimallen,
+            fdigitlen = media.fdigitlen
+        }
     }
 end
 
@@ -625,67 +720,25 @@ int.cnew = function(number, mode) -- (string|number, mode) For setting mode. **w
     return media.convert(number, mode and master._config.SETINTEGER_PERBLOCK[mode:upper()] or int._defaultmode)
 end
 
-int.abs = function(x) -- Returns the absolute value of `x`.
-    x.sign = "+"
-    return setmetatable(x, master._metatable)
-end
+int.abs = media.abs
 
 int.fact = media.fact
 int.In = media.In
 int.exp = media.exp
 
-int.sign = function(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
-    local siz = x._size or 1
-    local zeo = media.convert(0, siz)
-    local reg, req = media.more(x, zeo), media.equal(x, zeo)
-    local t = req and zeo or media.convert(1, siz)
-    t.sign = reg or req and "+" or "-"
-    return t
-end
+int.tostring = media.tostring
+int.tonumber = media.tonumber
 
-int.max = function(x, ...) -- Returns the argument with the maximum value, according to the Lua operator `<`.
-    local result
-    for _, x in ipairs(media.ntype(x, ...)) do
-        result = result and (media.more(result, x) and result) or x
-    end
-    return result and setmetatable(result, master._metatable)
-end
+int.sign = media.sign
+int.max = media.max
+int.min = media.min
 
-int.min = function(x, ...) -- Returns the argument with the minimum value, according to the Lua operator `<`.
-    local result
-    for _, x in ipairs(media.ntype(x, ...)) do
-        result = result and (media.less(result, x) and result) or x
-    end
-    return result and setmetatable(result, master._metatable)
-end
+int.floor = media.floor
+int.cfloor = media.cfloor
 
-int.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
-    return setmetatable(master.floor(x), master._metatable)
-end
-
-int.cfloor = function(x, length) -- Custom a `x` decimal.
-    return setmetatable(master.cfloor(x, length), master._metatable)
-end
-
-int.tostring = function(x) -- Returns string.
-    return media.deconvert(x)
-end
-
-int.tonumber = function(x) -- Returns number.
-    return tonumber(media.deconvert(x))
-end
-
-int.integerlen = function(x) -- Returns `INTEGER` length.
-    return #x
-end
-
-int.decimallen = function(x) -- Returns `DECIMAL` length.
-    return math.abs((x._dlen or 1) - 1)
-end
-
-int.fdigitlen = function(x) -- Returns `INTEGER + DECIMAL` length.
-    return #x + math.abs((x._dlen or 1) - 1)
-end
+int.integerlen = media.integerlen
+int.decimallen = media.decimallen
+int.fdigitlen = media.fdigitlen
 
 int.maxinteger = master._config.MAXIMUM_PERTABLE.INTEGER
 int.maxdecimal = master._config.MAXIMUM_PERTABLE.DECIMAL

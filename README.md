@@ -74,6 +74,17 @@ local x = int.new("2")
 print(x + 2) -- output: 4
 
 ```
+-----
+**Note:** in version 163 or latest version. you can call some function with **int table** without using `int`
+```lua
+local int = require("int")
+
+local x, y = int.new("5"), 2
+
+if x:more(y) then
+    print(x:tostring().." is more then "..y)
+end
+```
 ## Design
 
 This inside of **int table**, and this mean "101" if you use `tostring` function.
