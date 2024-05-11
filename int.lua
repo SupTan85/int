@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 163 beta!
+    ||  Module version 164 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -29,8 +29,10 @@ local master = {
             INTEGER = 9223372036854775806,
             DECIMAL = 9223372036854775808
         },
+
+        MAXIMUM_SIZE_PERBLOCK = 9 -- stable size is 9
     },
-    _version = "163"
+    _version = "164"
 }
 
 master.convert = function(st, s)
@@ -38,6 +40,9 @@ master.convert = function(st, s)
         error(("[CONVERT] attempt to convert with a '%s'"):format(type(st)))
     end
     st, s = tostring(st), s or 1
+    if s > master._config.MAXIMUM_SIZE_PERBLOCK then
+        error(("[CONVERT] MAXIMUM_SIZE_PERBLOCK (%s) is less than '%s'"):format(master._config.MAXIMUM_SIZE_PERBLOCK, s))
+    end
     local min = math.min
     local result, step = {_size = s}, 0
     local i, i2 = st:match("^(%d+)%.(%d+)$")
@@ -224,7 +229,7 @@ master.roll = {
 master.calculate = {
     _assets = {
         VERIFY = function(a, b, SIZE_MAXIUMUM, CODE_NAME)
-            if (a._size or 1) ~= (b._size or 1) then error(("[%s] BLOCK_SIZE_ISSUE (%s, %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, b._size or 1)) end
+            if (a._size or 1) ~= (b._size or 1) then error(("[%s] BLOCK_SIZE_ISSUE (%s : %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, b._size or 1)) end
             if (a._size or 1) > SIZE_MAXIUMUM then error(("[%s] BLOCK_SIZE_OVERFLOW (%s > %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, SIZE_MAXIUMUM)) end
         end
     },
@@ -706,18 +711,18 @@ math.sign = function(number) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
     return 0
 end
 
-local int = {_advanced = master, _defaultmode = master._config.SETINTEGER_PERBLOCK.DEFAULT}
+local int = {_advanced = master, _defaultsize = master._config.SETINTEGER_PERBLOCK.DEFAULT}
 
-int.new = function(...) -- (string|number) For only create. alway use default mode! **when calculate block size SHOULD BE SAME**
+int.new = function(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
     local stack = {}
     for _, s in ipairs({...}) do
-        table.insert(stack, media.convert(s, int._defaultmode))
+        table.insert(stack, media.convert(s, int._defaultsize))
     end
     return table.unpack(stack)
 end
 
-int.cnew = function(number, mode) -- (string|number, mode) For setting mode. **when calculate block size SHOULD BE SAME**
-    return media.convert(number, mode and master._config.SETINTEGER_PERBLOCK[mode:upper()] or int._defaultmode)
+int.cnew = function(number, size) -- (number:string|number, size:string|number) For setting a size per block. **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
+    return media.convert(number, size and ((type(size) == "number" and size) or master._config.SETINTEGER_PERBLOCK[size:upper()]) or int._defaultsize)
 end
 
 int.abs = media.abs
