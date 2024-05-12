@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 164 beta!
+    ||  Module version 165 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -32,7 +32,7 @@ local master = {
 
         MAXIMUM_SIZE_PERBLOCK = 9 -- stable size is 9
     },
-    _version = "164"
+    _version = "165"
 }
 
 master.convert = function(st, s)
@@ -367,7 +367,7 @@ master.calculate = {
         until accuracy <= 0
         d = master.convert(d, s)
         if b_dlen < 1 then
-            d = master.calculate.mul(d, master.convert("1"..("0"):rep(math.abs(b_dlen - 1))))
+            d = master.calculate.mul(d, master.convert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
         end
         local raw = master.calculate.mul(a, d)
         if -raw._dlen >= (accuracy - 1) // s then
@@ -391,6 +391,7 @@ master.calculate = {
 local media = {
     convert = function(n, size) -- automatic setup a table.
         local n_type = type(n)
+        n = (n_type == "string" or n_type == "number") and n or error(("[CONVERT] INPUT_TYPE_ISSUE (%s)"):format(n_type))
         if n_type == "string" and n:find("e") then
             local es, fs = n:match("^[+-]?%d+%.?%d*e([+-]?%d+)$"), n:match("^([+-]?%d+%.?%d*)e[+-]?%d+$")
             if es and fs then
@@ -414,7 +415,7 @@ local media = {
             end
             error(("malformed number near '%s'"):format(n))
         end
-        local t = master.convert(n_type == "string" and n:match("^[+-]?(%d+%.?%d*)%s*$") or n, size)
+        local t = master.convert(n_type == "string" and n:match("^[+-]?(%d+%.?%d*)%s*$") or math.abs(n), size)
         t.sign = n_type == "string" and (n:match("^[+-]?") or "+") or math.sign(n) < 1 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
@@ -566,6 +567,7 @@ do
         end,
         vtype = media.vtype,
         vpow = function(self, x, y) -- power function `y >= 0`
+            y = tostring(y) >= "0" and y or error(("[VPOW] FUNCTION_NOT_SUPPORT (%s)"):format(tostring(y)))
             if tostring(y % 1) == "0" then
                 local st = tostring(y)
                 if st == "0" then
