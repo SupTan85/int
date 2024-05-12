@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 165 beta!
+    ||  Module version 166 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -32,7 +32,8 @@ local master = {
 
         MAXIMUM_SIZE_PERBLOCK = 9 -- stable size is 9
     },
-    _version = "165"
+
+    _VERSION = "166"
 }
 
 master.convert = function(st, s)
@@ -713,7 +714,7 @@ math.sign = function(number) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
     return 0
 end
 
-local int = {_advanced = master, _defaultsize = master._config.SETINTEGER_PERBLOCK.DEFAULT}
+local int = {_advanced = master, _defaultsize = master._config.SETINTEGER_PERBLOCK.DEFAULT, _VERSION = master._VERSION}
 
 int.new = function(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
     local stack = {}
