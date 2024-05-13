@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 166 beta!
+    ||  Module version 168 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -33,7 +33,7 @@ local master = {
         MAXIMUM_SIZE_PERBLOCK = 9 -- stable size is 9
     },
 
-    _VERSION = "166"
+    _VERSION = "168"
 }
 
 master.convert = function(st, s)
@@ -41,8 +41,10 @@ master.convert = function(st, s)
         error(("[CONVERT] attempt to convert with a '%s'"):format(type(st)))
     end
     st, s = tostring(st), s or 1
-    if s > master._config.MAXIMUM_SIZE_PERBLOCK then
-        error(("[CONVERT] MAXIMUM_SIZE_PERBLOCK (%s) is less than '%s'"):format(master._config.MAXIMUM_SIZE_PERBLOCK, s))
+    if s <= 0 then
+        error(("[CONVERT] SETTING_SIZE_ISSUE (%s < 1)"):format(s))
+    elseif s > master._config.MAXIMUM_SIZE_PERBLOCK then
+        error(("[CONVERT] MAXIMUM_SIZE_PERBLOCK (%s > %s)"):format(s, master._config.MAXIMUM_SIZE_PERBLOCK))
     end
     local min = math.min
     local result, step = {_size = s}, 0
@@ -92,6 +94,9 @@ master.deconvert = function(a, s)
 end
 
 master.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
+    if type(x) ~= "table" then
+        error(("[FLOOR] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
+    end
     for i = x._dlen or 1, 0 do
         x[i] = nil
     end
@@ -100,6 +105,9 @@ master.floor = function(x) -- Returns the largest integral value smaller than or
 end
 
 master.cfloor = function(x, length) -- Custom a `x` decimal.
+    if type(x) ~= "table" then
+        error(("[CFLOOR] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
+    end
     length = - math.abs(length or 0)
     if math.ceil(length / (x._size or 1)) > (x._dlen or 1) - 1 then
         local size = (x._size or 1)
@@ -392,14 +400,14 @@ master.calculate = {
 local media = {
     convert = function(n, size) -- automatic setup a table.
         local n_type = type(n)
-        n = (n_type == "string" or n_type == "number") and n or error(("[CONVERT] INPUT_TYPE_ISSUE (%s)"):format(n_type))
+        n = (n_type == "string" or n_type == "number") and n or error(("[CONVERT] INPUT_TYPE_NOTSUPPORT (%s)"):format(n_type))
         if n_type == "string" and n:find("e") then
-            local es, fs = n:match("^[+-]?%d+%.?%d*e([+-]?%d+)$"), n:match("^([+-]?%d+%.?%d*)e[+-]?%d+$")
+            local es, fs = n:match("^%s*[+-]?%d+%.?%d*e([+-]?%d+)%s*$"), n:match("^%s*([+-]?%d+%.?%d*)e[+-]?%d+%s*$")
             if es and fs then
                 es = tonumber(es)
                 if es ~= 0 then
                     local loc = (fs:find("%.") or (fs:len() + 1)) - 1
-                    local dot, fs_sign = loc + es, fs:match("^[+-]?")
+                    local dot, fs_sign = loc + es, fs:match("^%s*([+-]?)")
                     local f, b
                     fs = fs:gsub("%.", ""):gsub("[+-]", "")
                     if dot < 0 then
@@ -410,14 +418,14 @@ local media = {
                     end
                     fs = fs_sign..(f == "" and "0" or f)..(b ~= "" and "."..b or "")
                 end
-                local t = master.convert(fs:match("^[+-]?(%d+%.?%d*)%s*$"), size)
-                t.sign = fs:match("^[+-]?") or "+"
+                local t = master.convert(fs:match("^%s*[+-]?(%d+%.?%d*)%s*$"), size)
+                t.sign = fs:match("^%s*([+-]?)") or "+"
                 return setmetatable(t, master._metatable)
             end
-            error(("malformed number near '%s'"):format(n))
+            error(("malformed number near '%s'"):format(n:match("^%s*(.-)%s*$")))
         end
-        local t = master.convert(n_type == "string" and n:match("^[+-]?(%d+%.?%d*)%s*$") or math.abs(n), size)
-        t.sign = n_type == "string" and (n:match("^[+-]?") or "+") or math.sign(n) < 1 and "-" or "+"
+        local t = master.convert(n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
+        t.sign = n_type == "string" and (n:match("^%s*([+-]?)") or "+") or math.sign(n) < 1 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
     deconvert = function(int) -- read table data and convert to the number. *string type*
@@ -429,32 +437,18 @@ local media = {
         return x.sign == y.sign and master.equation.equal(x, y)
     end,
     less = function(x, y) -- work same `equation.less` but support sign config.
-        return x.sign == y.sign and master.equation.less(x, y) or x.sign == "-"
+        return x.sign ~= y.sign and y.sign == "-" or master.equation.less(x, y)
     end,
     more = function(x, y) -- work same `equation.more` but support sign config.
-        return x.sign == y.sign and master.equation.more(x, y) or y.sign == "+"
+        return x.sign ~= y.sign and y.sign == "+" or master.equation.more(x, y)
     end,
 
     abs = function(x) -- Returns the absolute value of `x`.
+        if type(x) ~= "table" then
+            error(("[ABS] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
+        end
         x.sign = "+"
         return setmetatable(x, master._metatable)
-    end,
-
-    In = function(x, l) -- Returns the Natural logarithm of `x` in the given base. `l` mean limit of accuracy value
-        if tostring(x) <= "0" then
-            if tostring(x) == "0" then
-                error("Natural logarithm function return inf-positive value.")
-            end
-            error("Natural logarithm function return non-positive value.")
-        end
-        local result = master.convert("0", x._size)
-        result.sign = "+"
-        -- taylor series of logarithms --
-        local X1 = (x - 1) / (x + 1)
-        for n = 1, 1 + (2 * (l or master._config.ACCURACY_LIMIT.MEDIA_NATURAL_LOGARITHM)), 2 do
-            result = result + ((1 / n) * (X1 ^ n))
-        end
-        return setmetatable(master.cfloor(result * 2, 15), master._metatable)
     end,
 
     fact = function(n, s) -- Factorial function
@@ -498,31 +492,6 @@ function media.tonumber(x) -- Deconvert table to number. *not recommend*
     return tonumber(media.deconvert(x))
 end
 
-function media.sign(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
-    local siz = x._size or 1
-    local zeo = media.convert(0, siz)
-    local reg, req = media.more(x, zeo), media.equal(x, zeo)
-    local t = req and zeo or media.convert(1, siz)
-    t.sign = reg or req and "+" or "-"
-    return t
-end
-
-function media.max(x, ...) -- Returns the argument with the maximum value, according to the Lua operator `<`.
-    local result
-    for _, x in ipairs(media.ntype(x, ...)) do
-        result = result and (media.more(result, x) and result) or x
-    end
-    return result and setmetatable(result, master._metatable)
-end
-
-function media.min(x, ...) -- Returns the argument with the minimum value, according to the Lua operator `<`.
-    local result
-    for _, x in ipairs(media.ntype(x, ...)) do
-        result = result and (media.less(result, x) and result) or x
-    end
-    return result and setmetatable(result, master._metatable)
-end
-
 function media.ntype(...) -- This function make table can mix a number and string. *return table*
     local stack, v = {}, {...}
     local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERBLOCK.DEFAULT
@@ -551,7 +520,51 @@ function media.vtype(...) -- This function make table can mix a number and strin
     return table.unpack(media.ntype(...))
 end
 
+function media.sign(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
+    local siz = x._size or 1
+    local zeo = media.convert(0, siz)
+    local reg, req = media.more(x, zeo), media.equal(x, zeo)
+    local t = req and zeo or media.convert(1, siz)
+    t.sign = reg or req and "+" or "-"
+    return t
+end
+
+function media.max(x, ...) -- Returns the argument with the maximum value, according to the Lua operator `<`.
+    local result
+    for _, x in ipairs(media.ntype(x, ...)) do
+        result = result and (media.more(result, x) and result) or x
+    end
+    return result and setmetatable(result, master._metatable)
+end
+
+function media.min(x, ...) -- Returns the argument with the minimum value, according to the Lua operator `>`.
+    local result
+    for _, x in ipairs(media.ntype(x, ...)) do
+        result = result and (media.less(result, x) and result) or x
+    end
+    return result and setmetatable(result, master._metatable)
+end
+
+function media.In(x, l) -- Returns the Natural logarithm of `x` in the given base. `l` mean limit of accuracy value
+    x = media.vtype(x) or error("[IN] INPUT_VOID")
+    if tostring(x) <= "0" then
+        if tostring(x) == "0" then
+            error("[IN] Natural logarithm function return inf-positive value.")
+        end
+        error("[IN] Natural logarithm function return non-positive value.")
+    end
+    local result = master.convert("0", x._size)
+    result.sign = "+"
+    -- taylor series of logarithms --
+    local X1 = (x - 1) / (x + 1)
+    for n = 1, 1 + (2 * (l or master._config.ACCURACY_LIMIT.MEDIA_NATURAL_LOGARITHM)), 2 do
+        result = result + ((1 / n) * (X1 ^ n))
+    end
+    return setmetatable(master.cfloor(result * 2, 15), master._metatable)
+end
+
 function media.exp(x, l) -- Exponential function
+    x = media.vtype(x) or error("[EXP] INPUT_VOID")
     local result = setmetatable(master.convert("0", x._size), master._metatable)
     result.sign = "+"
     for n = 0, (l or master._config.ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION) - 1 do
@@ -559,6 +572,43 @@ function media.exp(x, l) -- Exponential function
     end
     return master.cfloor(result, l or master._config.ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION)
 end
+
+local mediaobj = {
+    tostring = media.tostring,
+    tonumber = media.tonumber,
+
+    equal = function(x, y) -- equal `==`. *this function made for other types*
+        return media.equal(media.vtype(x, y))
+    end,
+    less = function(x, y) -- less `<`. *this function made for other types*
+        return media.less(media.vtype(x, y))
+    end,
+    more = function(x, y) -- more `>`. *this function made for other types*
+        return media.more(media.vtype(x, y))
+    end,
+
+    eless = function(x, y) -- equal or less `<=`. *this function made for other types*
+        x, y = media.vtype(x, y)
+        return media.equal(x, y) or media.less(x, y)
+    end,
+    emore = function(x, y) -- equal or more `>=`. *this function made for other types*
+        x, y = media.vtype(x, y)
+        return media.equal(x, y) or media.more(x, y)
+    end,
+
+    abs = media.abs,
+
+    sign = media.sign,
+    max = media.max,
+    min = media.min,
+
+    floor = media.floor,
+    cfloor = media.cfloor,
+
+    integerlen = media.integerlen,
+    decimallen = media.decimallen,
+    fdigitlen = media.fdigitlen,
+}
 
 do 
     -- Build ENV --
@@ -664,44 +714,11 @@ do
 
         -- Misc --
         __tostring = media.deconvert,
+        __mode = "v",
+        __name = "INT TABLE",
 
         -- Index --
-        __index = {
-            tostring = media.tostring,
-            tonumber = media.tonumber,
-
-            equal = function(x, y) -- equal `==`. *this function made for other types*
-                return equal(vtype(x, y))
-            end,
-            less = function(x, y) -- less `<`. *this function made for other types*
-                return less(vtype(x, y))
-            end,
-            more = function(x, y) -- more `>`. *this function made for other types*
-                return more(vtype(x, y))
-            end,
-
-            eless = function(x, y) -- equal or less `<=`. *this function made for other types*
-                x, y = vtype(x, y)
-                return equal(x, y) or less(x, y)
-            end,
-            emore = function(x, y) -- equal or more `>=`. *this function made for other types*
-                x, y = vtype(x, y)
-                return equal(x, y) or more(x, y)
-            end,
-
-            abs = media.abs,
-
-            sign = media.sign,
-            max = media.max,
-            min = media.min,
-
-            floor = media.floor,
-            cfloor = media.cfloor,
-
-            integerlen = media.integerlen,
-            decimallen = media.decimallen,
-            fdigitlen = media.fdigitlen
-        }
+        __index = mediaobj,
     }
 end
 
@@ -714,7 +731,15 @@ math.sign = function(number) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
     return 0
 end
 
-local int = {_advanced = master, _defaultsize = master._config.SETINTEGER_PERBLOCK.DEFAULT, _VERSION = master._VERSION}
+local int = setmetatable({
+
+    _advanced = master,
+    _defaultsize = master._config.SETINTEGER_PERBLOCK.DEFAULT,
+    _VERSION = master._VERSION
+}, {
+    -- metatable --
+    __index = mediaobj
+})
 
 int.new = function(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
     local stack = {}
@@ -725,28 +750,8 @@ int.new = function(...) -- (string|number) For only create. alway use default si
 end
 
 int.cnew = function(number, size) -- (number:string|number, size:string|number) For setting a size per block. **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
-    return media.convert(number, size and ((type(size) == "number" and size) or master._config.SETINTEGER_PERBLOCK[size:upper()]) or int._defaultsize)
+    return media.convert(number, size and (tonumber(size) or master._config.SETINTEGER_PERBLOCK[size:upper()]) or int._defaultsize)
 end
-
-int.abs = media.abs
-
-int.fact = media.fact
-int.In = media.In
-int.exp = media.exp
-
-int.tostring = media.tostring
-int.tonumber = media.tonumber
-
-int.sign = media.sign
-int.max = media.max
-int.min = media.min
-
-int.floor = media.floor
-int.cfloor = media.cfloor
-
-int.integerlen = media.integerlen
-int.decimallen = media.decimallen
-int.fdigitlen = media.fdigitlen
 
 int.maxinteger = master._config.MAXIMUM_PERTABLE.INTEGER
 int.maxdecimal = master._config.MAXIMUM_PERTABLE.DECIMAL
