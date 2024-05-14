@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 168 beta!
+    ||  Module version 168-1 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -33,7 +33,7 @@ local master = {
         MAXIMUM_SIZE_PERBLOCK = 9 -- stable size is 9
     },
 
-    _VERSION = "168"
+    _VERSION = "168-1"
 }
 
 master.convert = function(st, s)
@@ -185,7 +185,7 @@ master.roll = {
 
         c_process = function(atable_int, to_int, time, lastcut, startfront, nofilter, size, _side)
             local assets = master.roll._assets
-            local min, max, connext, clean, c_empty, lastcut = math.min, math.max, assets.m_connext, assets.m_clean, assets.c_empty, type(lastcut) == "number" and lastcut or 0
+            local max, connext, clean, c_empty, lastcut = math.max, assets.m_connext, assets.m_clean, assets.c_empty, type(lastcut) == "number" and lastcut or 0
             local s, dlen, time = atable_int._size or size or 1, atable_int._dlen or 1, time or 1
             to_int = _side and ((to_int and tostring(to_int)) or "0"):reverse() or ((to_int and tostring(to_int)) or "0")
             local to, tolen, len = to_int:rep(math.ceil(s / to_int:len())), to_int:len(), ((_side and not startfront or startfront) and #atable_int) or dlen
@@ -402,9 +402,8 @@ local media = {
         local n_type = type(n)
         n = (n_type == "string" or n_type == "number") and n or error(("[CONVERT] INPUT_TYPE_NOTSUPPORT (%s)"):format(n_type))
         if n_type == "string" and n:find("e") then
-            local es, fs = n:match("^%s*[+-]?%d+%.?%d*e([+-]?%d+)%s*$"), n:match("^%s*([+-]?%d+%.?%d*)e[+-]?%d+%s*$")
+            local es, fs = tonumber(n:match("^%s*[+-]?%d+%.?%d*e([+-]?%d+)%s*$")), n:match("^%s*([+-]?%d+%.?%d*)e[+-]?%d+%s*$")
             if es and fs then
-                es = tonumber(es)
                 if es ~= 0 then
                     local loc = (fs:find("%.") or (fs:len() + 1)) - 1
                     local dot, fs_sign = loc + es, fs:match("^%s*([+-]?)")
