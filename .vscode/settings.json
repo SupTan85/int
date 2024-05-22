@@ -1,5 +1,10 @@
 {
     "workbench.colorCustomizations": {
+        "button.background": "#ef600c",
+        "button.secondaryBackground": "#ac3f00",
+        "textLink.foreground": "#ef600c",
+        "extensionButton.background": "#ef600c",
+        "activityBar.activeBorder": "#ef600c",
         "minimap.background": "#22222250",
         "scrollbar.shadow": "#22222250"
     },

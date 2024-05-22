@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 168-1 beta!
+    ||  Module version 169 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -33,7 +33,7 @@ local master = {
         MAXIMUM_SIZE_PERBLOCK = 9 -- stable size is 9
     },
 
-    _VERSION = "168-1"
+    _VERSION = "169"
 }
 
 master.convert = function(st, s)
@@ -406,7 +406,7 @@ local media = {
             if es and fs then
                 if es ~= 0 then
                     local loc = (fs:find("%.") or (fs:len() + 1)) - 1
-                    local dot, fs_sign = loc + es, fs:match("^%s*([+-]?)")
+                    local dot, fs_sign = loc + es, fs:match("^%s*([+-])") or "+"
                     local f, b
                     fs = fs:gsub("%.", ""):gsub("[+-]", "")
                     if dot < 0 then
@@ -424,7 +424,7 @@ local media = {
             error(("malformed number near '%s'"):format(n:match("^%s*(.-)%s*$")))
         end
         local t = master.convert(n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
-        t.sign = n_type == "string" and (n:match("^%s*([+-]?)") or "+") or math.sign(n) < 1 and "-" or "+"
+        t.sign = n_type == "string" and (n:match("^%s*([+-])") or "+") or math.sign(n) < 1 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
     deconvert = function(int) -- read table data and convert to the number. *string type*
@@ -613,7 +613,8 @@ do
     -- Build ENV --
     local _ENV <const> = {
         smul = function(x, y)
-            return x.sign == y.sign and "+" or "-"
+            local x_sign, y_sign = x.sign or "+", y.sign or "+"
+            return (x_sign:len() == 1 and x_sign or "+") == (y_sign:len() == 1 and y_sign or "+") and "+" or "-"
         end,
         vtype = media.vtype,
         vpow = function(self, x, y) -- power function `y >= 0`
