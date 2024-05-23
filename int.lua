@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 169 beta!
+    ||  Module version 170 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -26,14 +26,14 @@ local master = {
 
         -- !! DO NOT CHANGE THIS CONFIG !! --
         MAXIMUM_PERTABLE = {
-            INTEGER = 9223372036854775806,
-            DECIMAL = 9223372036854775808
+            INTEGER = "9223372036854775806",
+            DECIMAL = "9223372036854775808"
         },
 
         MAXIMUM_SIZE_PERBLOCK = 9 -- stable size is 9
     },
 
-    _VERSION = "169"
+    _VERSION = "170"
 }
 
 master.convert = function(st, s)
@@ -143,7 +143,7 @@ master.equation = {
         if #x < #y then
             return true
         elseif #x == #y then
-            if (x._dlen or 1) < (y._dlen or 1) then
+            if (x._dlen or 1) > (y._dlen or 1) then
                 return true
             elseif (x._dlen or 1) == (y._dlen or 1) then
                 local e = true
@@ -472,6 +472,13 @@ local media = {
         return setmetatable(master.cfloor(x, length), master._metatable)
     end,
 
+    ceil = function(x)
+        if (x._dlen or 1) < 1 then
+            return setmetatable(master.floor(x), master._metatable) + 1
+        end
+        return setmetatable(x, master._metatable)
+    end,
+
     integerlen = function(x) -- Returns `INTEGER` length.
         return #x
     end,
@@ -572,6 +579,21 @@ function media.exp(x, l) -- Exponential function
     return master.cfloor(result, l or master._config.ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION)
 end
 
+function media.modf(x) -- Returns the integral part of `x` and the fractional part of `x`.
+    x = media.vtype(x)
+    local frac = {sign = x.sign or "+", _dlen = x._dlen or 1, _size = x._size}
+    for i = frac._dlen, 0 do
+        frac[i] = x[i]
+    end
+    frac[1] = 0
+    return master.floor(x), setmetatable(frac, master._metatable)
+end
+
+function media.fmod(x, y) -- Returns the remainder of the division of `x` by `y` that rounds the quotient towards zero.
+    x, y = media.vtype(x, y)
+    return x - ((x // y) * y)
+end
+
 local mediaobj = {
     tostring = media.tostring,
     tonumber = media.tonumber,
@@ -604,12 +626,16 @@ local mediaobj = {
     floor = media.floor,
     cfloor = media.cfloor,
 
+    ceil = media.ceil,
+    modf = media.modf,
+    fmod = media.fmod,
+
     integerlen = media.integerlen,
     decimallen = media.decimallen,
     fdigitlen = media.fdigitlen,
 }
 
-do 
+do
     -- Build ENV --
     local _ENV <const> = {
         smul = function(x, y)
@@ -635,6 +661,7 @@ do
             return media.exp(y * media.In(x))
         end,
         ifloor = master.floor,
+        modf = media.modf,
 
         add = master.calculate.add,
         sub = master.calculate.sub,
@@ -668,7 +695,7 @@ do
             x, y = vtype(x, y)
             local reg = more(x, y)
             local raw = (x.sign == y.sign) and sub(reg and x or y, reg and y or x) or add(x, y)
-            raw.sign = (y.sign == "+" and reg or not reg) and "+" or "-"
+            raw.sign = ((y.sign == "+" and reg) or (y.sign == "-" and not reg)) and "+" or "-"
             return setmetatable(raw, master._metatable)
         end,
         __mul = function(x, y)
@@ -683,10 +710,7 @@ do
             raw.sign = smul(x, y)
             return setmetatable(raw, master._metatable)
         end,
-        __mod = function(x, y)
-            x, y = vtype(x, y)
-            return x - ((x // y) * y)
-        end,
+        __mod = media.fmod,
         __pow = function(x, y)
             x, y = vtype(x, y)
             local ysign = y.sign
@@ -695,8 +719,10 @@ do
         end,
         __idiv = function(x, y)
             x, y = vtype(x, y)
-            local raw = ifloor(div(x, y))
-            raw.sign = smul(x, y)
+            local d, f = modf(div(x, y))
+            local sign, raw = smul(x, y)
+            raw = sign == "-" and more(f, vtype(0)) and add(d, vtype(1)) or d
+            raw.sign = sign
             return setmetatable(raw, master._metatable)
         end,
 
