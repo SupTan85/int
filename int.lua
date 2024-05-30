@@ -446,7 +446,8 @@ local media = {
     convert = function(n, size) -- automatic setup a table.
         local n_type = type(n)
         n = (n_type == "string" or n_type == "number") and n or error(("[CONVERT] INPUT_TYPE_NOTSUPPORT (%s)"):format(n_type))
-        if n_type == "string" and n:find("e") then
+        if tostring(n):find("e") then
+            n, n_type = tostring(n), "string"
             local es, fs = tonumber(n:match("^%s*[+-]?%d+%.?%d*e([+-]?%d+)%s*$")), n:match("^%s*([+-]?%d+%.?%d*)e[+-]?%d+%s*$")
             if es and fs then
                 if es ~= 0 then
