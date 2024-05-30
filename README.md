@@ -2,7 +2,7 @@
 
 # int
 
-This Project is math and calculate for large data in Lua. **Waring: this module is in beta !! SO MANY BUG**
+This Project is math and calculate for large data in Lua. **this module is in beta!**
 
 why this module name is "int"? because in this module alway use integer to calculate math!
 
