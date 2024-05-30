@@ -32,7 +32,7 @@ why this module name is "int"? because in this module alway use integer to calcu
     - fact `Factorial function`
     - exp `Exponential function`
     - floor
-    - cfloor
+    - cfloor `Custom floor function`
     - integerlen `INTEGER LEN`
     - fractionlen `FRACTION LEN`
     - fdigitlen `INTEGER LEN + FRACTION LEN`
@@ -57,37 +57,64 @@ Use **Calculation operators** to calculate math.
 
 **Note:** only operator that in support
 ```lua
+-- require a module
 local int = require("int")
 
+-- build a new int object
 local x = int.new("20")
 local y = int.new("10")
 
 print(x + y) -- output: 30
 ```
 -----
-**Note:** in version 148 or latest version. you can calculate **int table** with number without using `int.new`
+**Note:** in version 148 or latest version. you can calculate **int object** with number without using `int.new`
 ```lua
+-- require a module
 local int = require("int")
 
+-- build a new int object
 local x = int.new("2")
 
 print(x + 2) -- output: 4
 
 ```
 -----
-**Note:** in version 163 or latest version. you can call some function with **int table** without using `int`
+**Note:** in version 163 or latest version. you can call function with **int object** without using `int`
 ```lua
+-- require a module
 local int = require("int")
 
+-- build a new int object
 local x, y = int.new("5"), 2
 
+-- if "x" is more then "y"
 if x:more(y) then
     print(x:tostring().." is more then "..y)
 end
 ```
+
+**Recommend:** some equation operators won't work with other type, but alway work with **int object.**
+
+**DO NOT DO LIKE THIS:**
+```lua
+local int = require("int")
+local x = int.new("5")
+
+-- DO NOT DO LIKE THIS:
+print(x > 2) -- error
+```
+**BUT DO LIKE THIS:**
+```lua
+local int = require("int")
+local x = int.new("5")
+
+-- DO LIKE THIS:
+print(x:more(2)) -- output: true
+```
+---
 ## Design
 
-This inside of **int table**, and this mean "101" if you use `tostring` function.
+This inside of **int object**, this is a number "101" also you use `tonumber` function to convert to number.
 
 ```lua
 local example_int_table = {
@@ -96,14 +123,83 @@ local example_int_table = {
     [0] = 0,
     [-1] = 1,
 
-    -- table info --
+    -- data --
     sign = "+",
 
     _dlen = -1, -- digit of fraction *this for calculate a fraction* **DO NOT CHANGE. HAVE LIMIT!!**
     _size = 1 -- mean per size of block *just maximum digit per value in the digit block* **DO NOT CHANGE. HAVE LIMIT!!**
 }
 ```
+## Function
+all function is in version: **build 180**
+- **int**
+    - int.new
+    - int.cnew
+    - int.tostring
+    - int.tonumber
+    - int.equal
+    - int.less
+    - int.more
+    - int.eqless
+    - int.eqmore
+    - int.abs
+    - int.ceil
+    - int.cfloor
+    - int.fdigitlen
+    - int.floor
+    - int.fmod
+    - int.fractionlen
+    - int.integerlen
+    - int.max
+    - int.min
+    - int.modf
+    - int.sign
 
+**Example to call a function:**
+```lua
+-- require a module.
+local int = require("int")
+
+-- build int object.
+local x = int.new("14.695")
+
+-- using a custom floor function.
+print(int.cfloor(x, 2)) -- output: 14.69
+```
+---
+- **int object**
+    - abs
+    - ceil
+    - cfloor
+    - eqless
+    - eqmore
+    - equal
+    - fdigitlen
+    - floor
+    - fmod
+    - fractionlen
+    - integerlen
+    - less
+    - max
+    - min
+    - modf
+    - more
+    - sign
+    - tonumber
+    - tostring
+
+**Example to call a function:**
+```lua
+-- require a module.
+local int = require("int")
+
+-- build int object.
+local x = int.new("14.695")
+
+-- using a custom floor function.
+print(x:cfloor(2)) -- output: 14.69
+```
+---
 ## Limit
 - Maximum digit of integer is 9223372036854775806
     - Set `_size` to `9` maximum digit of integer is `83010348331692982254 (9223372036854775806 * 9)`

@@ -128,7 +128,7 @@ master.cfloor = function(x, length) -- Custom a `x` fraction.
         for i = x._dlen or 1, endp do
             if i == endp then
                 local shift = tostring(x[i]):sub(1, length % size)
-                local hofu = tonumber((shift..("0"):rep(size - shift:len())):match("^0*([^0]+)"))
+                local hofu = tonumber((shift..("0"):rep(size - shift:len())):match("^0*(.+)"))
                 x[i] = hofu
                 if not hofu then
                     endp = endp + 1
@@ -804,7 +804,7 @@ do
         -- Misc --
         __tostring = media.deconvert,
         __mode = "v",
-        __name = "INT TABLE",
+        __name = "INT OBJECT",
 
         -- Index --
         __index = mediaobj,
