@@ -422,16 +422,11 @@ master.calculate = {
                 local rv = ""
                 for i = 1, vn:len() do
                     local v = tonumber(vn:sub(i, i)) or 0
-                    if not iu then
-                        if v > 5 then
-                            iu = 1
-                        else
-                            iu = 0
-                        end
-                        v = 0
-                    else
+                    if iu then
                         v = v + iu
                         iu, v = v // 10, v % 10
+                    else
+                        iu, v = v > 5 and 1 or 0, 0
                     end
                     rv = v..rv
                 end
