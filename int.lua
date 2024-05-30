@@ -695,7 +695,7 @@ local mediaobj = {
 
 do
     -- Build ENV --
-    local _ENV <const> = {
+    local _ENV = {
         smul = function(x, y)
             local x_sign, y_sign = x.sign or "+", y.sign or "+"
             return (x_sign:len() == 1 and x_sign or "+") == (y_sign:len() == 1 and y_sign or "+") and "+" or "-"
