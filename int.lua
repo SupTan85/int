@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 170 beta!
+    ||  Module version 180 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -11,13 +11,26 @@ local master = {
         SETINTEGER_PERBLOCK = {
             STABLE = 1,
             BALANCE = 4,
-            FULL = 9,
+            FASTEST = 9,
 
             DEFAULT = 9,
         },
         ACCURACY_LIMIT = {
+            -- AUTO --
+
+            --[[ MASTER DIVISION | AUTO CONFIG ACCURACY LIMIT >>
+                HOW DOSE IT WORK :
+                    automatic setting a accuracy limit in division function. *only when there is no self config value*
+                    note: this option causes a division speed slow, but very powerful for high accuracy.
+
+                // DISABLE : MASTER_CALCULATE_LIMIT_DIV
+                Copy right (C) 2024 SupTan85
+            << BUILD-IN >>]]
+            MASTER_CALCULATE_DIV_AUTO_CONFIG_ACCURATE = true,
+
             -- MASTER --
-            MASTER_CALCULATE_DIV = 15,
+            MASTER_CALCULATE_LIMIT_DIV = 15,
+            MASTER_DEFAULT_FRACT_LIMIT_DIV = 15,
 
             -- MEDIA --
             MEDIA_NATURAL_LOGARITHM = 15,
@@ -25,15 +38,15 @@ local master = {
         },
 
         -- !! DO NOT CHANGE THIS CONFIG !! --
-        MAXIMUM_PERTABLE = {
+        MAXIMUM_DIGIT_PERTABLE = {
             INTEGER = "9223372036854775806",
-            DECIMAL = "9223372036854775808"
+            FRACTION = "9223372036854775808"
         },
 
         MAXIMUM_SIZE_PERBLOCK = 9 -- stable size is 9
     },
 
-    _VERSION = "170"
+    _VERSION = "180"
 }
 
 master.convert = function(st, s)
@@ -104,18 +117,22 @@ master.floor = function(x) -- Returns the largest integral value smaller than or
     return x
 end
 
-master.cfloor = function(x, length) -- Custom a `x` decimal.
+master.cfloor = function(x, length) -- Custom a `x` fraction.
     if type(x) ~= "table" then
         error(("[CFLOOR] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
     end
-    length = - math.abs(length or 0)
-    if math.ceil(length / (x._size or 1)) > (x._dlen or 1) - 1 then
+    length = math.abs(length or 0)
+    if math.ceil(-length / (x._size or 1)) > (x._dlen or 1) - 1 then
         local size = (x._size or 1)
-        local endp = math.ceil(length / size)
+        local endp = math.ceil(-length / size)
         for i = x._dlen or 1, endp do
             if i == endp then
                 local shift = tostring(x[i]):sub(1, length % size)
-                x[i] = tonumber(shift..("0"):rep(size - shift:len()))
+                local hofu = tonumber((shift..("0"):rep(size - shift:len())):match("^0*([^0]+)"))
+                x[i] = hofu
+                if not hofu then
+                    endp = endp + 1
+                end
             else
                 x[i] = nil
             end
@@ -143,18 +160,14 @@ master.equation = {
         if #x < #y then
             return true
         elseif #x == #y then
-            if (x._dlen or 1) > (y._dlen or 1) then
-                return true
-            elseif (x._dlen or 1) == (y._dlen or 1) then
-                local e = true
-                for i = x._dlen or 1, #x do
-                    if x[i] > y[i] then
-                        return false
-                    elseif e and x[i] ~= y[i] then
-                        e = false
-                    end
+            for i = -#x, -(x._dlen or 1) do
+                i = -i
+                local vx, vy = x[i] or 0, y[i] or 0
+                if vx < vy then
+                    return true
+                elseif vx > vy then
+                    return false
                 end
-                return not e
             end
         end
         return false
@@ -319,19 +332,29 @@ master.calculate = {
         result._dlen = op
         return result
     end,
-    div = function(a, b, s, l) -- _size maxiumum 9 ("l" mean limit of accuracy value and decimal. default is 15) **block size should be same**
+    div = function(a, b, s, f, l) -- _size maxiumum 9 ("f" for maxiumum of fraction, "l" for set limit of accuracy value and fraction.) **block size should be same**
         master.calculate._assets.VERIFY(a, b, 9, "DIV")
-        local s, b_dlen, max, min = a._size or s or 1, b._dlen, math.max, math.min
-        local accuracy = (l or master._config.ACCURACY_LIMIT.MASTER_CALCULATE_DIV) + 2
-        local d
-        b = master.calculate.mul(b, master.convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
+        local s, b_dlen, max, min, f = a._size or s or 1, b._dlen or 1, math.max, math.min, (f or master._config.ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV) + 1
+        local auto_acc, mul = not l and master._config.ACCURACY_LIMIT.MASTER_CALCULATE_DIV_AUTO_CONFIG_ACCURATE, master.calculate.mul
+        local accuracy, d
+        if auto_acc then
+            local HF = function(x)
+                return (s - tostring(x[#x]):len()) + ((x._dlen or 1) < 1 and s - tostring(x[x._dlen]) or 0)
+            end
+            local AS, BS = master.calculate.add(master.convert(#a, s), master.convert(math.abs((a._dlen or 1) - 1), s)), master.calculate.add(master.convert(#b, s), master.convert(math.abs(b_dlen - 1), s))
+            local MORE = master.equation.more(AS, BS)
+            accuracy = master.calculate.sub(mul((MORE and AS or BS), master.convert(s, s)), master.convert(MORE and HF(a) or HF(b), s))
+        else
+            accuracy = (l or master._config.ACCURACY_LIMIT.MASTER_CALCULATE_LIMIT_DIV) + 1
+        end
+        b = mul(b, master.convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local function check(n)
             local od = d and (d:match("%.(%d+)$") or ""):match("0*$") or ""
             local dc = d and master.roll.right(master.convert(d, s), od..n) or master.convert(n, s)
-            local nc = tonumber(master.deconvert(master.calculate.mul(b, dc))) or 0
-            if nc > 1 then
+            local nc = mul(b, dc)
+            if master.equation.more(nc, master.convert(1, s)) then
                 return 1
-            elseif nc < 1 then
+            elseif master.equation.less(nc, master.convert(1, s)) then
                 return 0
             end
         end
@@ -346,18 +369,18 @@ master.calculate = {
             else
                 map = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
             end
-            local high, low = 9, 0
+            local high, low
             for _, i in ipairs(map) do
-                if i >= low and i <= high then
+                if i >= (low or 0) and i <= (high or 9) then
                     local code = check(i)
                     if code == 0 then
-                        low = max(low, i)
+                        low = max(low or i, i)
                     elseif code == 1 then
-                        high = min(high, i)
+                        high = min(high or i, i)
                     else
                         return true, i
                     end
-                elseif high - low == 1 then
+                elseif high and low and high - low == 1 then
                     break
                 end
             end
@@ -372,25 +395,47 @@ master.calculate = {
                 break
             end
             fin = fin or (d or ""):match("^0*%.?0*$") == nil
-            accuracy = fin and accuracy - 1 or accuracy
-        until accuracy <= 0
+            if fin then
+                if auto_acc then
+                    local one = master.convert(1, s)
+                    if master.equation.less(accuracy, one) then
+                        break
+                    end
+                    accuracy = master.calculate.sub(accuracy, one) or accuracy
+                else
+                    accuracy = (accuracy - 1 or accuracy)
+                end
+            end
+        until auto_acc and master.equation.less(accuracy, master.convert(0, s)) or not auto_acc and accuracy < 0
         d = master.convert(d, s)
         if b_dlen < 1 then
-            d = master.calculate.mul(d, master.convert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
+            d = mul(d, master.convert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
         end
-        local raw = master.calculate.mul(a, d)
-        if -raw._dlen >= (accuracy - 1) // s then
-            raw = master.cfloor(raw, (master.deconvert(raw):match("%.(0*)") or ""):len() + (l or 15))
+        local raw = mul(a, d)
+        if -raw._dlen >= f // s then
+            raw = master.cfloor(raw, (master.deconvert(raw):match("%.(0*)") or ""):len() + f)
             local i = raw._dlen
             local iu
             repeat
-                local v = tostring(raw[i])
-                local cu = tonumber(v:match("^(%d-)0*$"):sub(1, -2)) or 0
-                local ma = tonumber("1"..("0"):rep(math.min(#tostring(cu), s + 1)))
-                if v:match("(%d?)0*$") > "5" or iu then
-                    cu, iu = (cu + (iu or 1)) % ma, (cu + (iu or 1)) // ma
+                local v = raw[i]
+                local vn = tostring(v or ""):match("(%d-)0*$"):reverse()
+                local rv = ""
+                for i = 1, vn:len() do
+                    local v = tonumber(vn:sub(i, i)) or 0
+                    if not iu then
+                        if v > 5 then
+                            iu = 1
+                        else
+                            iu = 0
+                        end
+                        v = 0
+                    else
+                        v = v + iu
+                        iu, v = v // 10, v % 10
+                    end
+                    rv = v..rv
                 end
-                raw[i], i, raw._dlen = cu ~= 0 and cu..("0"):rep(s - tostring(cu):len()) or nil, i + 1, cu == 0 and raw._dlen + 1 or raw._dlen
+                raw[i], i = tonumber((rv..("0"):rep(s - rv:len())):match("^0*([^0]+)")), i + 1
             until not iu or iu == 0
         end
         return raw
@@ -424,7 +469,7 @@ local media = {
             error(("malformed number near '%s'"):format(n:match("^%s*(.-)%s*$")))
         end
         local t = master.convert(n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
-        t.sign = n_type == "string" and (n:match("^%s*([+-])") or "+") or math.sign(n) < 1 and "-" or "+"
+        t.sign = n_type == "string" and (n:match("^%s*([+-])") or "+") or math.sign(n) < 0 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
     deconvert = function(int) -- read table data and convert to the number. *string type*
@@ -432,14 +477,26 @@ local media = {
         return (int.sign == "-" and str ~= "0" and "-" or "")..str
     end,
 
+    --[[
+    FSZsign = function(...) -- set value of `_sign` to `+` when number is zero.
+        local nums = {...}
+        for i, x in ipairs(nums) do
+            nums[i].sign = (x.sign == "-" and #x <= 1 and (x._dlen or 1) == 1 and "+") or x.sign or "+"
+        end
+        return table.unpack(nums)
+    end,
+    ]]
+
     equal = function(x, y) -- work same `equation.equal` but support sign config.
         return x.sign == y.sign and master.equation.equal(x, y)
     end,
     less = function(x, y) -- work same `equation.less` but support sign config.
-        return x.sign ~= y.sign and y.sign == "-" or master.equation.less(x, y)
+        local nox = x.sign ~= y.sign
+        return nox and y.sign == "+" or (not nox and master.equation.less(x, y))
     end,
     more = function(x, y) -- work same `equation.more` but support sign config.
-        return x.sign ~= y.sign and y.sign == "+" or master.equation.more(x, y)
+        local nox = x.sign ~= y.sign
+        return nox and y.sign == "-" or (not nox and master.equation.more(x, y))
     end,
 
     abs = function(x) -- Returns the absolute value of `x`.
@@ -468,27 +525,31 @@ local media = {
     floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
         return setmetatable(master.floor(x), master._metatable)
     end,
-    cfloor = function(x, length) -- Custom a `x` decimal.
+    cfloor = function(x, length) -- Custom a `x` fraction.
         return setmetatable(master.cfloor(x, length), master._metatable)
     end,
 
-    ceil = function(x)
+    ceil = function(x) -- Returns the smallest integral value larger than or equal to `x`.
         if (x._dlen or 1) < 1 then
             return setmetatable(master.floor(x), master._metatable) + 1
         end
         return setmetatable(x, master._metatable)
-    end,
-
-    integerlen = function(x) -- Returns `INTEGER` length.
-        return #x
-    end,
-    decimallen = function(x) -- Returns `DECIMAL` length.
-        return math.abs((x._dlen or 1) - 1)
-    end,
-    fdigitlen = function(x) -- Returns `INTEGER + DECIMAL` length.
-        return #x + math.abs((x._dlen or 1) - 1)
     end
 }
+
+function media.integerlen(x) -- Returns `INTEGER` length.
+    local le = #x
+    return (tostring(x[le] or ""):len() + ((media.convert(le) - 1):max(0) * x._size)):max(1)
+end
+
+function media.fractionlen(x) -- Returns `FRACTION` length.
+    local le = math.abs((x._dlen or 1) - 1)
+    return tostring(x[le] or ""):len() + ((media.convert(le) - 1):max(0) * x._size)
+end
+
+function media.fdigitlen(x) -- Returns `INTEGER + FRACTION` length.
+    return media.integerlen(x) + media.fractionlen(x)
+end
 
 function media.tostring(x) -- Deconvert table to string.
     return media.deconvert(x)
@@ -559,7 +620,7 @@ function media.In(x, l) -- Returns the Natural logarithm of `x` in the given bas
         end
         error("[IN] Natural logarithm function return non-positive value.")
     end
-    local result = master.convert("0", x._size)
+    local result = master.convert(0, x._size)
     result.sign = "+"
     -- taylor series of logarithms --
     local X1 = (x - 1) / (x + 1)
@@ -571,7 +632,7 @@ end
 
 function media.exp(x, l) -- Exponential function
     x = media.vtype(x) or error("[EXP] INPUT_VOID")
-    local result = setmetatable(master.convert("0", x._size), master._metatable)
+    local result = setmetatable(master.convert(0, x._size), master._metatable)
     result.sign = "+"
     for n = 0, (l or master._config.ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION) - 1 do
         result = result + ((x ^ n) / media.fact(n, x._size))
@@ -586,12 +647,13 @@ function media.modf(x) -- Returns the integral part of `x` and the fractional pa
         frac[i] = x[i]
     end
     frac[1] = 0
-    return master.floor(x), setmetatable(frac, master._metatable)
+    return setmetatable(master.floor(x), master._metatable), setmetatable(frac, master._metatable)
 end
 
 function media.fmod(x, y) -- Returns the remainder of the division of `x` by `y` that rounds the quotient towards zero.
     x, y = media.vtype(x, y)
-    return x - ((x // y) * y)
+    local r = x - ((x // y) * y)
+    return r == y and media.convert(0, x._size) or r
 end
 
 local mediaobj = {
@@ -608,11 +670,11 @@ local mediaobj = {
         return media.more(media.vtype(x, y))
     end,
 
-    eless = function(x, y) -- equal or less `<=`. *this function made for other types*
+    eqless = function(x, y) -- equal or less `<=`. *this function made for other types*
         x, y = media.vtype(x, y)
         return media.equal(x, y) or media.less(x, y)
     end,
-    emore = function(x, y) -- equal or more `>=`. *this function made for other types*
+    eqmore = function(x, y) -- equal or more `>=`. *this function made for other types*
         x, y = media.vtype(x, y)
         return media.equal(x, y) or media.more(x, y)
     end,
@@ -631,7 +693,7 @@ local mediaobj = {
     fmod = media.fmod,
 
     integerlen = media.integerlen,
-    decimallen = media.decimallen,
+    fractionlen = media.fractionlen,
     fdigitlen = media.fdigitlen,
 }
 
@@ -648,7 +710,7 @@ do
             if tostring(y % 1) == "0" then
                 local st = tostring(y)
                 if st == "0" then
-                    return media.convert("1", x._size)
+                    return media.convert(1, x._size)
                 elseif st == "1" then
                     return master.cfloor(x, 15)
                 elseif tostring(y % 2) == "0" then
@@ -759,7 +821,6 @@ end
 
 local int = setmetatable({
 
-    _advanced = master,
     _defaultsize = master._config.SETINTEGER_PERBLOCK.DEFAULT,
     _VERSION = master._VERSION
 }, {
@@ -779,8 +840,8 @@ int.cnew = function(number, size) -- (number:string|number, size:string|number) 
     return media.convert(number, size and (tonumber(size) or master._config.SETINTEGER_PERBLOCK[size:upper()]) or int._defaultsize)
 end
 
-int.maxinteger = master._config.MAXIMUM_PERTABLE.INTEGER
-int.maxdecimal = master._config.MAXIMUM_PERTABLE.DECIMAL
+int.maxinteger = master._config.MAXIMUM_DIGIT_PERTABLE.INTEGER
+int.maxfraction = master._config.MAXIMUM_DIGIT_PERTABLE.FRACTION
 
 -- print(("MODULE LOADED\nMEMORY USAGE: %.0d B (%s KB)"):format(collectgarbage("count") * 1024, collectgarbage("count")))
 return int

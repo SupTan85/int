@@ -34,8 +34,8 @@ why this module name is "int"? because in this module alway use integer to calcu
     - floor
     - cfloor
     - integerlen `INTEGER LEN`
-    - decimallen `DECIMAL LEN`
-    - fdigitlen `INTEGER LEN + DECIMAL LEN`
+    - fractionlen `FRACTION LEN`
+    - fdigitlen `INTEGER LEN + FRACTION LEN`
 
 ## How to use
 
@@ -99,16 +99,16 @@ local example_int_table = {
     -- table info --
     sign = "+",
 
-    _dlen = -1, -- digit of decimal *this for calculate a decimal* **DO NOT CHANGE. HAVE LIMIT!!**
+    _dlen = -1, -- digit of fraction *this for calculate a fraction* **DO NOT CHANGE. HAVE LIMIT!!**
     _size = 1 -- mean per size of block *just maximum digit per value in the digit block* **DO NOT CHANGE. HAVE LIMIT!!**
 }
 ```
 
 ## Limit
 - Maximum digit of integer is 9223372036854775806
-    - Set `_size` to `9` maximum digit of integer is `83010348331692982254! (9223372036854775806 * 9)`
+    - Set `_size` to `9` maximum digit of integer is `83010348331692982254 (9223372036854775806 * 9)`
 
-- Maximum digit of decimal is 9223372036854775808
-    - Set `_size` to `9` maximum decimal of integer is `83010348331692982272! (9223372036854775808 * 9)`
+- Maximum digit of fraction is 9223372036854775808
+    - Set `_size` to `9` maximum fraction of integer is `83010348331692982263 (9223372036854775808 * 9)`
 
 ![](image-d.png)
