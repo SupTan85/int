@@ -28,16 +28,16 @@ local master = {
             << BUILD-IN >>]]
             MASTER_CALCULATE_DIV_AUTO_CONFIG_ACCURATE = true,
 
-            -- MASTER --
+            -- MASTER FUNCTION CONFIG --
             MASTER_CALCULATE_LIMIT_DIV = 15,
             MASTER_DEFAULT_FRACT_LIMIT_DIV = 15,
 
-            -- MEDIA --
+            -- MEDIA FUNCTION CONFIG --
             MEDIA_NATURAL_LOGARITHM = 15,
             MEDIA_EXPONENTIAL_FUNCTION = 15,
         },
 
-        -- !! DO NOT CHANGE THIS CONFIG !! --
+        -- SYSTEM CONFIG ! DO NOT CHANGE ! --
         MAXIMUM_DIGIT_PERTABLE = {
             INTEGER = "9223372036854775806",
             FRACTION = "9223372036854775808"

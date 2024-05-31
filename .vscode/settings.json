@@ -1,14 +1,20 @@
 {
+    "cSpell.words": [
+        "cfloor",
+        "cnew",
+        "dlen",
+        "eqless",
+        "eqmore",
+        "fdigitlen",
+        "fmod",
+        "fractionlen",
+        "integerlen",
+        "modf",
+        "tonumber",
+        "tostring"
+    ],
     "workbench.colorCustomizations": {
-        "button.background": "#ef600c",
-        "button.secondaryBackground": "#ac3f00",
-        "textLink.foreground": "#ef600c",
-        "extensionButton.background": "#ef600c",
-        "activityBar.activeBorder": "#ef600c",
         "minimap.background": "#22222250",
         "scrollbar.shadow": "#22222250"
-    },
-    "Lua.diagnostics.disable": [
-        "param-type-mismatch"
-    ]
+    }
 }

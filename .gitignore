@@ -1,2 +1,7 @@
+# vscode config
+.vscode/*
+
+!.vscode/settings.json
+
+# other
 .lh
-.vscode
