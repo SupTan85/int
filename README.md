@@ -132,7 +132,7 @@ local example_int_table = {
 ```
 ## Function
 all function is in version: **build 180**
-- **int**
+- **module function**
     - int.new
     - int.cnew
     - int.tostring
@@ -171,7 +171,7 @@ local x = int.new("14.695")
 print(int.cfloor(x, 2)) -- output: 14.69
 ```
 ---
-- **int object**
+- **methods**
     - abs
     - fact
     - In
