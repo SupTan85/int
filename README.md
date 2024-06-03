@@ -143,6 +143,10 @@ all function is in version: **build 180**
     - int.eqless
     - int.eqmore
     - int.abs
+    - int.fact
+    - int.In
+    - int.exp
+    - int.pow
     - int.ceil
     - int.cfloor
     - int.fdigitlen
@@ -169,6 +173,10 @@ print(int.cfloor(x, 2)) -- output: 14.69
 ---
 - **int object**
     - abs
+    - fact
+    - In
+    - exp
+    - pow
     - ceil
     - cfloor
     - eqless

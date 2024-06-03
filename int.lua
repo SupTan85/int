@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 180 beta!
+    ||  Module version 181 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -43,22 +43,18 @@ local master = {
             FRACTION = "9223372036854775808"
         },
 
-        MAXIMUM_SIZE_PERBLOCK = 9 -- stable size is 9
+        MAXIMUM_SIZE_PERBLOCK = 9, -- stable size is 9
+        MAXIMUM_LUA_INTEGER = 9223372036854775807 -- math.maxinteger
     },
 
-    _VERSION = "180"
+    _VERSION = "181"
 }
 
 master.convert = function(st, s)
-    if type(st) ~= "string" and type(st) ~= "number" then
-        error(("[CONVERT] attempt to convert with a '%s'"):format(type(st)))
-    end
+    assert(type(st) == "string" or type(st) == "number", ("[CONVERT] attempt to convert with a '%s'"):format(type(st)))
     st, s = tostring(st), s or 1
-    if s <= 0 then
-        error(("[CONVERT] SETTING_SIZE_ISSUE (%s < 1)"):format(s))
-    elseif s > master._config.MAXIMUM_SIZE_PERBLOCK then
-        error(("[CONVERT] MAXIMUM_SIZE_PERBLOCK (%s > %s)"):format(s, master._config.MAXIMUM_SIZE_PERBLOCK))
-    end
+    assert(not (s <= 0), ("[CONVERT] SETTING_SIZE_ISSUE (%s < 1)"):format(s))
+    assert(not (s > master._config.MAXIMUM_SIZE_PERBLOCK), ("[CONVERT] MAXIMUM_SIZE_PERBLOCK (%s > %s)"):format(s, master._config.MAXIMUM_SIZE_PERBLOCK))
     local min = math.min
     local result, step = {_size = s}, 0
     local i, i2 = st:match("^(%d+)%.(%d+)$")
@@ -80,16 +76,12 @@ master.convert = function(st, s)
 end
 
 master.deconvert = function(a, s)
-    if type(a) ~= "table" then
-        error(("[DECONVERT] attempt to deconvert with a '%s'"):format(type(a)))
-    end
+    assert(type(a) == "table", ("[DECONVERT] attempt to deconvert with a '%s'"):format(type(a)))
     s = a._size or s or 1
     local result, cd = "", false
     for i = (a._dlen or 1), #a do
         local v = a[i]
-        if not v then
-            error("[DECONVERT] missing value in index = "..i)
-        end
+        assert(v, "[DECONVERT] missing value in index = "..i)
         v = tostring(v)
         if v:len() ~= s and i ~= #a then
             v = ("0"):rep(s - v:len()) .. v
@@ -107,9 +99,7 @@ master.deconvert = function(a, s)
 end
 
 master.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
-    if type(x) ~= "table" then
-        error(("[FLOOR] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
-    end
+    assert(type(x) == "table", ("[FLOOR] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
     for i = x._dlen or 1, 0 do
         x[i] = nil
     end
@@ -118,9 +108,7 @@ master.floor = function(x) -- Returns the largest integral value smaller than or
 end
 
 master.cfloor = function(x, length) -- Custom a `x` fraction.
-    if type(x) ~= "table" then
-        error(("[CFLOOR] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
-    end
+    assert(type(x) == "table", ("[CFLOOR] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
     length = math.abs(length or 0)
     if math.ceil(-length / (x._size or 1)) > (x._dlen or 1) - 1 then
         local size = (x._size or 1)
@@ -144,7 +132,7 @@ end
 
 master.equation = {
     equal = function(x, y) -- block size should be same
-        if (x._size or 1) ~= (y._size or 1) then error(("BLOCK_SIZE_ISSUE (%s, %s)"):format(x._size or 1, y._size or 1)) end
+        assert((x._size or 1) == (y._size or 1), ("BLOCK_SIZE_ISSUE (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x == #y and (x._dlen or 1) == (y._dlen or 1) then
             for i = x._dlen or 1, #x do
                 if x[i] ~= y[i] then
@@ -156,7 +144,7 @@ master.equation = {
         return false
     end,
     less = function(x, y) -- block size should be same
-        if (x._size or 1) ~= (y._size or 1) then error(("BLOCK_SIZE_ISSUE (%s, %s)"):format(x._size or 1, y._size or 1)) end
+        assert((x._size or 1) == (y._size or 1), ("BLOCK_SIZE_ISSUE (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x < #y then
             return true
         elseif #x == #y then
@@ -173,7 +161,7 @@ master.equation = {
         return false
     end,
     more = function(x, y) -- block size should be same
-        return not master.equation.less(x, y)
+        return not master.equation.less(x, y) and not master.equation.equal(x, y)
     end
 }
 
@@ -251,8 +239,8 @@ master.roll = {
 master.calculate = {
     _assets = {
         VERIFY = function(a, b, SIZE_MAXIUMUM, CODE_NAME)
-            if (a._size or 1) ~= (b._size or 1) then error(("[%s] BLOCK_SIZE_ISSUE (%s : %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, b._size or 1)) end
-            if (a._size or 1) > SIZE_MAXIUMUM then error(("[%s] BLOCK_SIZE_OVERFLOW (%s > %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, SIZE_MAXIUMUM)) end
+            assert((a._size or 1) == (b._size or 1), ("[%s] BLOCK_SIZE_ISSUE (%s : %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, b._size or 1))
+            assert(not ((a._size or 1) > SIZE_MAXIUMUM), ("[%s] BLOCK_SIZE_OVERFLOW (%s > %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, SIZE_MAXIUMUM))
         end
     },
 
@@ -334,27 +322,34 @@ master.calculate = {
     end,
     div = function(a, b, s, f, l) -- _size maxiumum 9 ("f" for maxiumum of fraction, "l" for set limit of accuracy value and fraction.) **block size should be same**
         master.calculate._assets.VERIFY(a, b, 9, "DIV")
-        local s, b_dlen, max, min, f = a._size or s or 1, b._dlen or 1, math.max, math.min, (f or master._config.ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV) + 1
+        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, (f or master._config.ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV) + 1
         local auto_acc, mul = not l and master._config.ACCURACY_LIMIT.MASTER_CALCULATE_DIV_AUTO_CONFIG_ACCURATE, master.calculate.mul
+        local convert = master.convert
         local accuracy, d
         if auto_acc then
-            local HF = function(x)
-                return (s - tostring(x[#x]):len()) + ((x._dlen or 1) < 1 and s - tostring(x[x._dlen]) or 0)
+            local function HF(x)
+                return (s - tostring(x[#x]):len()) + ((x._dlen or 1) < 1 and s - tostring(x[x._dlen] or ""):len() or 0)
             end
-            local AS, BS = master.calculate.add(master.convert(#a, s), master.convert(math.abs((a._dlen or 1) - 1), s)), master.calculate.add(master.convert(#b, s), master.convert(math.abs(b_dlen - 1), s))
-            local MORE = master.equation.more(AS, BS)
-            accuracy = master.calculate.sub(mul((MORE and AS or BS), master.convert(s, s)), master.convert(MORE and HF(a) or HF(b), s))
+            local AN, BN = (#a + math.abs((a._dlen or 1) - 1)) * s, (#b + math.abs((b._dlen or 1) - 1)) * s
+            local NV = AN > BN
+            if (NV and AN or BN) < master._config.MAXIMUM_LUA_INTEGER then
+                accuracy, auto_acc = (NV and AN or BN) - HF(NV and a or b) + f, false
+            else
+                local AS, BS = master.calculate.add(convert(#a, s), convert(math.abs((a._dlen or 1) - 1), s)), master.calculate.add(convert(#b, s), convert(math.abs(b_dlen - 1), s))
+                local MORE = master.equation.more(AS, BS)
+                accuracy = master.calculate.add(master.calculate.sub(mul((MORE and AS or BS), convert(s, s)), convert(HF(MORE and a or b), s)), convert(f, s))
+            end
         else
             accuracy = (l or master._config.ACCURACY_LIMIT.MASTER_CALCULATE_LIMIT_DIV) + 1
         end
-        b = mul(b, master.convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
+        b = mul(b, convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local function check(n)
             local od = d and (d:match("%.(%d+)$") or ""):match("0*$") or ""
-            local dc = d and master.roll.right(master.convert(d, s), od..n) or master.convert(n, s)
+            local dc = d and master.roll.right(convert(d, s), od..n) or convert(n, s)
             local nc = mul(b, dc)
-            if master.equation.more(nc, master.convert(1, s)) then
+            if master.equation.more(nc, convert(1, s)) then
                 return 1
-            elseif master.equation.less(nc, master.convert(1, s)) then
+            elseif master.equation.less(nc, convert(1, s)) then
                 return 0
             end
         end
@@ -369,14 +364,14 @@ master.calculate = {
             else
                 map = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
             end
-            local high, low
+            local high, low, code
             for _, i in ipairs(map) do
                 if i >= (low or 0) and i <= (high or 9) then
-                    local code = check(i)
+                    code = i == 0 and 0 or check(i)
                     if code == 0 then
-                        low = max(low or i, i)
+                        low = i
                     elseif code == 1 then
-                        high = min(high or i, i)
+                        high = i
                     else
                         return true, i
                     end
@@ -397,7 +392,7 @@ master.calculate = {
             fin = fin or (d or ""):match("^0*%.?0*$") == nil
             if fin then
                 if auto_acc then
-                    local one = master.convert(1, s)
+                    local one = convert(1, s)
                     if master.equation.less(accuracy, one) then
                         break
                     end
@@ -406,31 +401,41 @@ master.calculate = {
                     accuracy = (accuracy - 1 or accuracy)
                 end
             end
-        until auto_acc and master.equation.less(accuracy, master.convert(0, s)) or not auto_acc and accuracy < 0
-        d = master.convert(d, s)
+        until auto_acc and master.equation.less(accuracy, convert(0, s)) or not auto_acc and accuracy < 0
+        d = convert(d, s)
         if b_dlen < 1 then
-            d = mul(d, master.convert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
+            d = mul(d, convert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
         end
         local raw = mul(a, d)
         if -raw._dlen >= f // s then
             raw = master.cfloor(raw, (master.deconvert(raw):match("%.(0*)") or ""):len() + f)
-            local i = raw._dlen
-            local iu
+            local i, iu, dx, U
             repeat
-                local v = raw[i]
-                local vn = tostring(v or ""):match("(%d-)0*$"):reverse()
-                local rv = ""
-                for i = 1, vn:len() do
-                    local v = tonumber(vn:sub(i, i)) or 0
-                    if iu then
-                        v = v + iu
-                        iu, v = v // 10, v % 10
-                    else
-                        iu, v = v > 5 and 1 or 0, 0
+                local v = raw[i or raw._dlen]
+                local rv
+                if i then
+                    U = U or math.floor(10 ^ s)
+                    rv = (v or 0) + iu
+                    rv, iu = tostring(rv % U), rv // U
+                else
+                    for v in tostring(v or ""):match("(%d-)0*$"):reverse():gmatch(".") do
+                        v = tonumber(v)
+                        if iu then
+                            v = v + iu
+                            iu, v = v // 10, v % 10
+                        else
+                            iu, v = v > 5 and 1 or 0, 0
+                        end
+                        rv = rv and v..rv or tostring(v)
                     end
-                    rv = v..rv
                 end
-                raw[i], i = tonumber((rv..("0"):rep(s - rv:len())):match("^0*([^0]+)")), i + 1
+                if not rv then
+                    rv, iu = tostring(iu), nil
+                end
+                rv = tonumber((rv..(not i and raw._dlen < 1 and ("0"):rep(s - rv:len()) or "")):match("^0*(.+)"))
+                dx = dx or rv ~= 0
+                raw[i or raw._dlen], i = dx and rv, (i or raw._dlen) + 1
+                raw._dlen = raw[i - 1] and raw._dlen or i
             until not iu or iu == 0
         end
         return raw
@@ -438,9 +443,10 @@ master.calculate = {
 }
 
 local media = {
+    assets = {},
     convert = function(n, size) -- automatic setup a table.
         local n_type = type(n)
-        n = (n_type == "string" or n_type == "number") and n or error(("[CONVERT] INPUT_TYPE_NOTSUPPORT (%s)"):format(n_type))
+        assert(n_type == "string" or n_type == "number", ("[CONVERT] INPUT_TYPE_NOTSUPPORT (%s)"):format(n_type))
         if tostring(n):find("e") then
             n, n_type = tostring(n), "string"
             local es, fs = tonumber(n:match("^%s*[+-]?%d+%.?%d*e([+-]?%d+)%s*$")), n:match("^%s*([+-]?%d+%.?%d*)e[+-]?%d+%s*$")
@@ -496,9 +502,7 @@ local media = {
     end,
 
     abs = function(x) -- Returns the absolute value of `x`.
-        if type(x) ~= "table" then
-            error(("[ABS] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
-        end
+        assert(type(x) == "table", ("[ABS] INPUT_TYPE_NOTSUPPORT (%s)"):format(type(x)))
         x.sign = "+"
         return setmetatable(x, master._metatable)
     end,
@@ -652,6 +656,34 @@ function media.fmod(x, y) -- Returns the remainder of the division of `x` by `y`
     return r == y and media.convert(0, x._size) or r
 end
 
+function media.assets.vpow(self, x, y) -- pow function assets. `y >= 0`
+    y = tostring(y) >= "0" and y or error(("[VPOW] FUNCTION_NOT_SUPPORT (%s)"):format(tostring(y)))
+    if tostring(x) == "0" then
+        return x
+    end
+    if tostring(y % 1) == "0" then
+        local st = tostring(y)
+        if st == "0" then
+            return media.convert(1, x._size)
+        elseif st == "1" then
+            return media.cfloor(x, 15)
+        elseif tostring(y % 2) == "0" then
+            local half_power = self:vpow(x, y // 2)
+            return media.cfloor(half_power * half_power, 15)
+        end
+        local half_power = self:vpow(x, (y - 1) // 2)
+        return media.cfloor(x * half_power * half_power, 15)
+    end
+    return media.exp(y * media.In(x))
+end
+
+function media.pow(x, y) -- Returns `x ^ y`.
+    x, y = media.vtype(x, y)
+    local ysign = y.sign
+    y.sign = "+"
+    return ysign == "-" and 1 / media.assets:vpow(x, y) or media.assets:vpow(x, y)
+end
+
 local mediaobj = {
     tostring = media.tostring,
     tonumber = media.tonumber,
@@ -681,6 +713,11 @@ local mediaobj = {
     max = media.max,
     min = media.min,
 
+    fact = media.fact,
+    In = media.In,
+    exp = media.exp,
+    pow = media.pow,
+
     floor = media.floor,
     cfloor = media.cfloor,
 
@@ -701,23 +738,6 @@ do
             return (x_sign:len() == 1 and x_sign or "+") == (y_sign:len() == 1 and y_sign or "+") and "+" or "-"
         end,
         vtype = media.vtype,
-        vpow = function(self, x, y) -- power function `y >= 0`
-            y = tostring(y) >= "0" and y or error(("[VPOW] FUNCTION_NOT_SUPPORT (%s)"):format(tostring(y)))
-            if tostring(y % 1) == "0" then
-                local st = tostring(y)
-                if st == "0" then
-                    return media.convert(1, x._size)
-                elseif st == "1" then
-                    return master.cfloor(x, 15)
-                elseif tostring(y % 2) == "0" then
-                    local half_power = self:vpow(x, y // 2)
-                    return master.cfloor(half_power * half_power, 15)
-                end
-                local half_power = self:vpow(x, (y - 1) // 2)
-                return master.cfloor(x * half_power * half_power, 15)
-            end
-            return media.exp(y * media.In(x))
-        end,
         ifloor = master.floor,
         modf = media.modf,
 
@@ -769,12 +789,7 @@ do
             return setmetatable(raw, master._metatable)
         end,
         __mod = media.fmod,
-        __pow = function(x, y)
-            x, y = vtype(x, y)
-            local ysign = y.sign
-            y.sign = "+"
-            return ysign == "-" and 1 / _ENV:vpow(x, y) or _ENV:vpow(x, y)
-        end,
+        __pow = media.pow,
         __idiv = function(x, y)
             x, y = vtype(x, y)
             local d, f = modf(div(x, y))
