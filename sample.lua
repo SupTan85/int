@@ -4,12 +4,19 @@ os.execute("cls")
 print(("\n>> Hello!\nUSING MODULE VERSION: %s (%s)"):format(int._VERSION, _VERSION))
 
 local MAXLOOP = 2500
+local ALLSAME = false
+local n, c
+
 local start = os.clock()
 for i = 1, MAXLOOP do
-    local n, c = "", ""
-    for _ = 1, 100 do
-        n = n..math.random(9)
-        c = c..math.random(9)
+    if not ALLSAME or not n or not c then
+        if not ALLSAME then
+            n, c = nil, nil
+        end
+        for _ = 1, 100 do
+            n = (n or "")..math.random(9)
+            c = (c or "")..math.random(9)
+        end
     end
     local x, y = int.new(n, c)
     local result = x % y
@@ -23,5 +30,4 @@ for i = 1, MAXLOOP do
         break
     end
 end
-
 print(("\n\nModule load/Setup time: %.3f s\nOperation time: %.3f s\nGoodbye! <<"):format(start, os.clock() - start))

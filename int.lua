@@ -15,11 +15,9 @@ local master = {
 
             DEFAULT = 9,
         },
-        ACCURACY_LIMIT = {
-            -- AUTO --
-
+        OPTION = {
             --[[ MASTER DIVISION | AUTO CONFIG ACCURACY LIMIT >>
-                HOW DOSE IT WORK :
+                How dose it work :
                     automatic setting a accuracy limit in division function. *only when there is no self config value*
                     note: this option causes a division speed slow, but very powerful for high accuracy.
 
@@ -28,6 +26,21 @@ local master = {
             << BUILD-IN >>]]
             MASTER_CALCULATE_DIV_AUTO_CONFIG_ACCURATE = true,
 
+            --[[ MASTER DIVISION | CALCULATE BUFFER >>
+                How dose it work :
+                    automatic manager a memory for buffer the function. *highly recommended when dividing by the same number multiple times*
+                    note: this option using a lot of ram memory, but very effective for fast calculations.
+                
+                // ENABLE  : MASTER_CALCULATE_DIV_CALCULATE_BUFFER_LIMIT
+                // CREATE  : MCDCB_CACHE
+                Copy right (C) 2024 SupTan85
+            << BUILD-IN >>]]
+            MASTER_CALCULATE_DIV_CALCULATE_BUFFER = false,
+
+            MASTER_CALCULATE_DIV_CALCULATE_BUFFER_LIMIT = 10, -- limit a buffer (high = use more ram memory)
+        },
+
+        ACCURACY_LIMIT = {
             -- MASTER FUNCTION CONFIG --
             MASTER_CALCULATE_LIMIT_DIV = 15,
             MASTER_DEFAULT_FRACT_LIMIT_DIV = 15,
@@ -49,6 +62,9 @@ local master = {
 
     _VERSION = "181"
 }
+
+local OPTION = master._config.OPTION
+local ACCURACY_LIMIT = master._config.ACCURACY_LIMIT
 
 master.convert = function(st, s)
     assert(type(st) == "string" or type(st) == "number", ("[CONVERT] attempt to convert with a '%s'"):format(type(st)))
@@ -322,91 +338,132 @@ master.calculate = {
     end,
     div = function(a, b, s, f, l) -- _size maxiumum 9 ("f" for maxiumum of fraction, "l" for set limit of accuracy value and fraction.) **block size should be same**
         master.calculate._assets.VERIFY(a, b, 9, "DIV")
-        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, (f or master._config.ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV) + 1
-        local auto_acc, mul = not l and master._config.ACCURACY_LIMIT.MASTER_CALCULATE_DIV_AUTO_CONFIG_ACCURATE, master.calculate.mul
+        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, (f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV) + 1
+        local auto_acc, mul = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ACCURATE, master.calculate.mul
         local convert = master.convert
-        local accuracy, d
-        if auto_acc then
-            local function HF(x)
-                return (s - tostring(x[#x]):len()) + ((x._dlen or 1) < 1 and s - tostring(x[x._dlen] or ""):len() or 0)
-            end
-            local AN, BN = (#a + math.abs((a._dlen or 1) - 1)) * s, (#b + math.abs((b._dlen or 1) - 1)) * s
-            local NV = AN > BN
-            if (NV and AN or BN) < master._config.MAXIMUM_LUA_INTEGER then
-                accuracy, auto_acc = (NV and AN or BN) - HF(NV and a or b) + f, false
-            else
-                local AS, BS = master.calculate.add(convert(#a, s), convert(math.abs((a._dlen or 1) - 1), s)), master.calculate.add(convert(#b, s), convert(math.abs(b_dlen - 1), s))
-                local MORE = master.equation.more(AS, BS)
-                accuracy = master.calculate.add(master.calculate.sub(mul((MORE and AS or BS), convert(s, s)), convert(HF(MORE and a or b), s)), convert(f, s))
-            end
-        else
-            accuracy = (l or master._config.ACCURACY_LIMIT.MASTER_CALCULATE_LIMIT_DIV) + 1
-        end
-        b = mul(b, convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
-        local function check(n)
-            local od = d and (d:match("%.(%d+)$") or ""):match("0*$") or ""
-            local dc = d and master.roll.right(convert(d, s), od..n) or convert(n, s)
-            local nc = mul(b, dc)
-            if master.equation.more(nc, convert(1, s)) then
-                return 1
-            elseif master.equation.less(nc, convert(1, s)) then
-                return 0
-            end
-        end
-        local function calcu(c)
-            local map
-            if c then
-                local ceil, insert = math.ceil, table.insert
-                map = {}
-                for i = 0, 9 do
-                    insert(map, (i % 2 == 0 and (c - ceil(i / 2)) or (c + ceil(i / 2))) % 10)
-                end
-            else
-                map = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-            end
-            local high, low, code
-            for _, i in ipairs(map) do
-                if i >= (low or 0) and i <= (high or 9) then
-                    code = i == 0 and 0 or check(i)
-                    if code == 0 then
-                        low = i
-                    elseif code == 1 then
-                        high = i
-                    else
-                        return true, i
-                    end
-                elseif high and low and high - low == 1 then
-                    break
-                end
-            end
-            return false, low
-        end
-        local lastpoint, fin, mark
-        repeat
-            local dv, lp = calcu(lastpoint)
-            d, lastpoint = d and d..(mark and lp or "."..lp) or tostring(lp), lp
-            mark = mark or (d:match("%.") and true)
-            if dv then
-                break
-            end
-            fin = fin or (d or ""):match("^0*%.?0*$") == nil
-            if fin then
-                if auto_acc then
-                    local one = convert(1, s)
-                    if master.equation.less(accuracy, one) then
+        local accuracy, bufch, d
+        if OPTION.MASTER_CALCULATE_DIV_CALCULATE_BUFFER then
+            local MCDCB_CACHE = master.MCDCB_CACHE
+            if MCDCB_CACHE then
+                local sel
+                for i, v in ipairs({b, a}) do
+                    sel = MCDCB_CACHE[master.deconvert(v)]
+                    if sel then
+                        bufch = i == 2
                         break
                     end
-                    accuracy = master.calculate.sub(accuracy, one) or accuracy
+                end
+                if sel then
+                    d, sel[2] = convert(sel[1], s), math.min(sel[2] + 3, 100)
+                    for i, v in pairs(MCDCB_CACHE) do
+                        if i ~= 1 then
+                            v[2] = math.max(v[2] - 1, -20)
+                        end
+                    end
+                end
+            else
+                master.MCDCB_CACHE = {0}
+            end
+        end
+        if bufch == nil then
+            if auto_acc then
+                local function HF(x)
+                    return (s - tostring(x[#x]):len()) + ((x._dlen or 1) < 1 and s - tostring(x[x._dlen] or ""):len() or 0)
+                end
+                local AN, BN = (#a + math.abs((a._dlen or 1) - 1)) * s, (#b + math.abs((b._dlen or 1) - 1)) * s
+                local NV = AN > BN
+                if (NV and AN or BN) < master._config.MAXIMUM_LUA_INTEGER then
+                    accuracy, auto_acc = (NV and AN or BN) - HF(NV and a or b) + f, false
                 else
-                    accuracy = (accuracy - 1 or accuracy)
+                    local AS, BS = master.calculate.add(convert(#a, s), convert(math.abs((a._dlen or 1) - 1), s)), master.calculate.add(convert(#b, s), convert(math.abs(b_dlen - 1), s))
+                    local MORE = master.equation.more(AS, BS)
+                    accuracy = master.calculate.add(master.calculate.sub(mul((MORE and AS or BS), convert(s, s)), convert(HF(MORE and a or b), s)), convert(f, s))
+                end
+            else
+                accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_LIMIT_DIV) + 1
+            end
+            b = mul(b, convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
+            local function check(n)
+                local od = d and (d:match("%.(%d+)$") or ""):match("0*$") or ""
+                local dc = d and master.roll.right(convert(d, s), od..n) or convert(n, s)
+                local nc = mul(b, dc)
+                if master.equation.more(nc, convert(1, s)) then
+                    return 1
+                elseif master.equation.less(nc, convert(1, s)) then
+                    return 0
                 end
             end
-        until auto_acc and master.equation.less(accuracy, convert(0, s)) or not auto_acc and accuracy < 0
-        d = convert(d, s)
-        if b_dlen < 1 then
-            d = mul(d, convert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
+            local function calcu(c)
+                local map
+                if c then
+                    local ceil, insert = math.ceil, table.insert
+                    map = {}
+                    for i = 0, 9 do
+                        insert(map, (i % 2 == 0 and (c - ceil(i / 2)) or (c + ceil(i / 2))) % 10)
+                    end
+                else
+                    map = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+                end
+                local high, low, code
+                for _, i in ipairs(map) do
+                    if i >= (low or 0) and i <= (high or 9) then
+                        code = i == 0 and 0 or check(i)
+                        if code == 0 then
+                            low = i
+                        elseif code == 1 then
+                            high = i
+                        else
+                            return true, i
+                        end
+                    elseif high and low and high - low == 1 then
+                        break
+                    end
+                end
+                return false, low
+            end
+            local lastpoint, fin, mark
+            repeat
+                local dv, lp = calcu(lastpoint)
+                d, lastpoint = d and d..(mark and lp or "."..lp) or tostring(lp), lp
+                mark = mark or (d:match("%.") and true)
+                if dv then
+                    break
+                end
+                fin = fin or (d or ""):match("^0*%.?0*$") == nil
+                if fin then
+                    if auto_acc then
+                        local one = convert(1, s)
+                        if master.equation.less(accuracy, one) then
+                            break
+                        end
+                        accuracy = master.calculate.sub(accuracy, one) or accuracy
+                    else
+                        accuracy = (accuracy - 1 or accuracy)
+                    end
+                end
+            until auto_acc and master.equation.less(accuracy, convert(0, s)) or not auto_acc and accuracy < 0
+            if OPTION.MASTER_CALCULATE_DIV_CALCULATE_BUFFER then
+                local MCDCB_CACHE = master.MCDCB_CACHE
+                if MCDCB_CACHE[1] >= OPTION.MASTER_CALCULATE_DIV_CALCULATE_BUFFER_LIMIT then
+                    local sel, min
+                    for i, v in pairs(MCDCB_CACHE) do
+                        if i ~= 1 and v[2] <= (min or v[2]) then
+                            sel, min = i, v[2]
+                            if min <= -20 then
+                                break
+                            end
+                        end
+                    end
+                    MCDCB_CACHE[sel], MCDCB_CACHE[1] = nil, MCDCB_CACHE[1] - 1
+                end
+                MCDCB_CACHE[master.deconvert(b)], MCDCB_CACHE[1] = {d, 0}, MCDCB_CACHE[1] + 1
+            end
+            d = convert(d, s)
+            if b_dlen < 1 then
+                d = mul(d, convert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
+            end
         end
-        local raw = mul(a, d)
+        local raw = mul(bufch and b or a, d)
         if -raw._dlen >= f // s then
             raw = master.cfloor(raw, (master.deconvert(raw):match("%.(0*)") or ""):len() + f)
             local i, iu, dx, U
@@ -513,11 +570,18 @@ local media = {
             result = setmetatable(master.convert("1", n._size), master._metatable)
             result.sign, n.sign = n.sign or "+", "+"
         else
-            result = setmetatable(master.convert("1", s or 1), master._metatable)
+            result = setmetatable(master.convert("1", s or master._config.SETINTEGER_PERBLOCK.DEFAULT), master._metatable)
             result.sign = "+"
         end
-        while tostring(n) > "0" do
-            result, n = result * n, n - 1
+        if tostring(n) >= tostring(master._config.MAXIMUM_LUA_INTEGER) then
+            while tostring(n) > "0" do
+                result, n = result * n, n - 1
+            end
+        else
+            n = tonumber(tostring(n))
+            while n > 0 do
+                result, n = result * n, n - 1
+            end
         end
         return result
     end,
@@ -624,7 +688,7 @@ function media.In(x, l) -- Returns the Natural logarithm of `x` in the given bas
     result.sign = "+"
     -- taylor series of logarithms --
     local X1 = (x - 1) / (x + 1)
-    for n = 1, 1 + (2 * (l or master._config.ACCURACY_LIMIT.MEDIA_NATURAL_LOGARITHM)), 2 do
+    for n = 1, 1 + (2 * (l or ACCURACY_LIMIT.MEDIA_NATURAL_LOGARITHM)), 2 do
         result = result + ((1 / n) * (X1 ^ n))
     end
     return setmetatable(master.cfloor(result * 2, 15), master._metatable)
@@ -634,10 +698,10 @@ function media.exp(x, l) -- Exponential function
     x = media.vtype(x) or error("[EXP] INPUT_VOID")
     local result = setmetatable(master.convert(0, x._size), master._metatable)
     result.sign = "+"
-    for n = 0, (l or master._config.ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION) - 1 do
+    for n = 0, (l or ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION) - 1 do
         result = result + ((x ^ n) / media.fact(n, x._size))
     end
-    return master.cfloor(result, l or master._config.ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION)
+    return master.cfloor(result, l or ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION)
 end
 
 function media.modf(x) -- Returns the integral part of `x` and the fractional part of `x`.
