@@ -148,7 +148,6 @@ all function is in version: **build 180**
     - int.exp
     - int.pow
     - int.ceil
-    - int.cfloor
     - int.fdigitlen
     - int.floor
     - int.fmod
@@ -178,7 +177,6 @@ print(int.cfloor(x, 2)) -- output: 14.69
     - exp
     - pow
     - ceil
-    - cfloor
     - eqless
     - eqmore
     - equal

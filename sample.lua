@@ -3,7 +3,7 @@ local int = require("int")
 os.execute("cls")
 print(("\n>> Hello!\nUSING MODULE VERSION: %s (%s)"):format(int._VERSION, _VERSION))
 
-local MAXLOOP = 2500
+local MAXLOOP = tonumber(arg[1]) or 2500
 local ALLSAME = false
 local n, c
 
@@ -21,7 +21,6 @@ for i = 1, MAXLOOP do
     local x, y = int.new(n, c)
     local result = x % y
     -- loading bar --
-    local cdelay = os.clock()
     local bar = ("|"):rep(math.floor((i / MAXLOOP) * 100))
     io.write("\r"..bar..(" "):rep(((5 - bar:len()) % 5) + 3), ("[%s] %.2f %% | using: %s"):format(i == MAXLOOP and "/" or ("/-\\|"):sub((((math.floor((i / MAXLOOP) * 500))) % 4) + 1, ((math.floor((i / MAXLOOP) * 500)) % 4) + 1), (i / MAXLOOP) * 100, math.floor(collectgarbage("count") * 1024).." Byte"))
 
