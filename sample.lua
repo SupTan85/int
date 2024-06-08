@@ -2,8 +2,7 @@ local int = require("int")
 
 os.execute("cls")
 print(("\n>> Hello!\nUSING MODULE VERSION: %s (%s)"):format(int._VERSION, _VERSION))
-
-local MAXLOOP = tonumber(arg[1]) or 2500
+local MAXLOOP = arg[1] and arg[1]:match("^(-*)"):len() == 1 and tonumber(arg[1]:match("(%d+)$")) or 2500
 local ALLSAME = false
 local n, c
 
