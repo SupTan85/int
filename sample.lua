@@ -29,3 +29,4 @@ for i = 1, MAXLOOP do
     end
 end
 print(("\n\nModule load/Setup time: %.3f s\nOperation time: %.3f s\nGoodbye! <<"):format(start, os.clock() - start))
+os.execute("pause")

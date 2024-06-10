@@ -1,7 +1,7 @@
 --[[
 
     |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 180 beta!
+    ||  Module version 181 beta!
     module | math and calculate for large data.
     >> basic packagelib
 ]]
@@ -16,26 +16,31 @@ local master = {
             DEFAULT = 9,
         },
         OPTION = {
-            --[[ MASTER DIVISION | AUTO CONFIG ACCURACY LIMIT >>
+            --[[ MASTER DIVISION | AUTO CONFIG ITERATIONS LIMIT >>
                 How dose it work :
-                    automatic setting a accuracy limit in division function. *only when there is no self config value*
+                    automatic setting a maxiumum of iterations in division function. *only when there is no self config value*
                     note: this option causes a division speed slow, but very powerful for high accuracy.
 
-                // DISABLE : MASTER_CALCULATE_LIMIT_DIV
+                // DISABLE : MASTER_CALCULATE_DIV_MAXITERATIONS
                 Copy right (C) 2024 SupTan85
             << BUILD-IN >>]]
-            MASTER_CALCULATE_DIV_AUTO_CONFIG_ACCURATE = true,
+            MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS = true,
             
         },
 
         ACCURACY_LIMIT = {
             -- MASTER FUNCTION CONFIG --
-            MASTER_CALCULATE_LIMIT_DIV = 15,
+            MASTER_CALCULATE_DIV_MAXITERATIONS = 15,
             MASTER_DEFAULT_FRACT_LIMIT_DIV = 14,
 
             -- MEDIA FUNCTION CONFIG --
-            MEDIA_NATURAL_LOGARITHM = 15,
-            MEDIA_EXPONENTIAL_FUNCTION = 15,
+            MEDIA_POWER_ACCURATE_LIMIT = 15,
+
+            MEDIA_NATURAL_LOGARITHM_MAXITERATIONS = 15,
+            MEDIA_EXPONENTIAL_MAXITERATIONS = 15,
+
+            MEDIA_SQRTROOT_MAXITERATIONS = 15,
+            MEDIA_SQRTROOT_TOLERANCE = 14,
         },
 
         -- SYSTEM CONFIG ! DO NOT CHANGE ! --
@@ -48,7 +53,7 @@ local master = {
         MAXIMUM_LUA_INTEGER = 9223372036854775807 -- math.maxinteger
     },
 
-    _VERSION = "180"
+    _VERSION = "181"
 }
 
 local OPTION = master._config.OPTION
@@ -80,7 +85,7 @@ master.convert = function(st, s)
 end
 
 master.deconvert = function(a, s)
-    assert(type(a) == "table", ("[DECONVERT] INPUT_TYPE_NOTSUPPORT | attempt to deconvert with a '%s'."):format(type(a)))
+    assert(type(a or error("[DECONVERT] INPUT_VOID")) == "table", ("[DECONVERT] INPUT_TYPE_NOTSUPPORT | attempt to deconvert with a '%s'."):format(type(a)))
     s = a._size or s or 1
     local result, cd = "", false
     for i = (a._dlen or 1), #a do
@@ -102,39 +107,98 @@ master.deconvert = function(a, s)
     return #result > 0 and result or "0"
 end
 
-master.floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
-    assert(type(x) == "table", ("[FLOOR] INPUT_TYPE_NOTSUPPORT | x: table (not %s)"):format(type(x)))
-    for i = x._dlen or 1, 0 do
-        x[i] = nil
-    end
-    x._dlen = 1
-    return x
-end
-
-master.cfloor = function(x, length) -- Custom a `x` fraction.
-    assert(type(length) == "number", ("[CFLOOR] INPUT_TYPE_NOTSUPPORT | length: number (not %s)"):format(type(length)))
-    assert(type(x) == "table", ("[CFLOOR] INPUT_TYPE_NOTSUPPORT | x: table (not %s)"):format(type(x)))
-    local rev, size = length < 0, x._size or 1
-    length = rev and length - (((x._dlen or 1) - 1) * size) or length
-    if rev or math.ceil(-length / (x._size or 1)) > (x._dlen or 1) - 1 then
-        local endp = math.ceil(-length / size)
-        for i = x._dlen or 1, endp do
-            if i == endp then
-                local shift = tostring(x[i]):sub(1, length % size)
-                local hofu = tonumber(shift..("0"):rep(size - shift:len()))
-                x[i] = hofu ~= 0 and hofu
-                if not x[i] then
-                    endp = endp + 1
+master.objfloor = {
+    _floor = function(x, length, s, c)
+        local rev, dlen = length < 0, x._dlen or 1
+        length = rev and math.abs(((dlen - 1) * s) + (s - (tostring(x[dlen]):match("^(%d-)0*$") or ""):len())) + length or length
+        local endp, ispr
+        if rev or math.ceil(-length / s) > dlen - 1 then
+            endp = math.ceil(-length / s)
+            for i = dlen, math.min(endp, 0) do
+                if i == endp then
+                    local shift = tostring(x[i]):sub(1, length % s)
+                    local hofu = tonumber(shift..("0"):rep(s - shift:len()))
+                    ispr = ispr or (length % s) < (tostring(x[i]):match("^(%d-)0*$") or ""):len()
+                    x[i] = hofu ~= 0 and hofu
+                    if not x[i] and not c then
+                        endp = endp + 1
+                        for i = endp, 0 do
+                            if x[i] == 0 then
+                                endp, x[i] = endp + 1, nil
+                            else
+                                break
+                            end
+                        end
+                    end
+                else
+                    x[i], ispr = nil, true
                 end
-            else
-                x[i] = nil
             end
+            x._dlen = endp
         end
-        x._dlen = endp
-    end
-    return x
-end
+        return {x, ispr or false, endp or dlen}
+    end,
 
+    floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
+        assert(type(x) == "table", ("[FLOOR] INPUT_TYPE_NOTSUPPORT | x: table (not %s)"):format(type(x)))
+        for i = x._dlen or 1, 0 do
+            x[i] = nil
+        end
+        x._dlen = 1
+        return x
+    end,
+
+    cfloor = function(self, x, length) -- Custom a `x` fraction. *use ":" to call a function*
+        assert(type(length) == "number", ("[CFLOOR] INPUT_TYPE_NOTSUPPORT | length: number (not %s)"):format(type(length)))
+        assert(type(x) == "table", ("[CFLOOR] INPUT_TYPE_NOTSUPPORT | x: table (not %s)"):format(type(x)))
+        return self._floor(x, length, x._size or 1)[1]
+    end,
+
+    cround = function(self, x, length) -- Custom a `x` fraction, with automatic round fractions. *use ":" to call a function*
+        assert(type(length) == "number", ("[CROUND] INPUT_TYPE_NOTSUPPORT | length: number (not %s)"):format(type(length)))
+        assert(type(x) == "table", ("[CROUND] INPUT_TYPE_NOTSUPPORT | x: table (not %s)"):format(type(x)))
+        local s = x._size or 1
+        local ispr, endp
+        if length < 0 and length + 1 == 0 then
+            ispr, endp = true, x._dlen or 1
+        else
+            x, ispr, endp = table.unpack(self._floor(x, length + 1, s, false))
+        end
+        if ispr and (x._dlen or 1) < 1 then
+            local i, iu, dx, U
+            repeat
+                local v = x[i or endp]
+                local rv
+                if i then
+                    U = U or math.floor(10 ^ s)
+                    rv = (v or 0) + iu
+                    rv, iu = tostring(rv % U), rv // U
+                else
+                    for v in tostring(v or ""):match("(%d-)0*$"):reverse():gmatch(".") do
+                        v = tonumber(v)
+                        if iu then
+                            v = v + iu
+                            iu, v = v // 10, v % 10
+                        else
+                            iu, v = v > 5 and 1 or 0, 0
+                        end
+                        rv = rv and v..rv or tostring(v)
+                    end
+                end
+                if not rv then
+                    rv, iu = tostring(iu), nil
+                end
+                rv = tonumber((rv..(not i and endp < 1 and ("0"):rep(s - rv:len()) or "")):match("^0*(.+)"))
+                dx = dx or rv ~= 0
+                x[i or endp], i = dx and rv, (i or endp) + 1
+                x._dlen = x[i - 1] and endp or i
+            until not iu or iu == 0
+        end
+        return x
+    end
+}
+
+local objfloor = master.objfloor
 master.equation = {
     equal = function(x, y) -- block size should be same
         assert((x._size or 1) == (y._size or 1), ("BLOCK_SIZE_ISSUE (%s, %s)"):format(x._size or 1, y._size or 1))
@@ -324,10 +388,10 @@ master.calculate = {
         result._dlen = op
         return result
     end,
-    div = function(a, b, s, f, l) -- _size maxiumum 9 ("f" for maxiumum of fraction, "l" for set limit of accuracy value and fraction.) **block size should be same**
+    div = function(a, b, s, f, l) -- _size maxiumum 9 ("f" for maxiumum of fraction, "l" The maximum number of iterations to perform.) **block size should be same**
         master.calculate._assets.VERIFY(a, b, 9, "DIV")
-        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, (f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV) + 1
-        local auto_acc, mul = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ACCURATE, master.calculate.mul
+        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV
+        local auto_acc, mul = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.calculate.mul
         local convert = master.convert
         local accuracy, d, uc
         if auto_acc then
@@ -344,7 +408,7 @@ master.calculate = {
                 accuracy = master.calculate.add(master.calculate.sub(mul((MORE and AS or BS), convert(s, s)), convert(HF(MORE and a or b), s)), convert(f, s))
             end
         else
-            accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_LIMIT_DIV) + 1
+            accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_DIV_MAXITERATIONS) + 1
         end
         b = mul(b, convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local function check(n)
@@ -422,44 +486,25 @@ master.calculate = {
                     break
                 end
             end
-            
-            raw = master.cfloor(raw, shf + f)
-            local i, iu, dx, U
-            repeat
-                local v = raw[i or raw._dlen]
-                local rv
-                if i then
-                    U = U or math.floor(10 ^ s)
-                    rv = (v or 0) + iu
-                    rv, iu = tostring(rv % U), rv // U
-                else
-                    for v in tostring(v or ""):match("(%d-)0*$"):reverse():gmatch(".") do
-                        v = tonumber(v)
-                        if iu then
-                            v = v + iu
-                            iu, v = v // 10, v % 10
-                        else
-                            iu, v = v > 5 and 1 or 0, 0
-                        end
-                        rv = rv and v..rv or tostring(v)
-                    end
-                end
-                if not rv then
-                    rv, iu = tostring(iu), nil
-                end
-                rv = tonumber((rv..(not i and raw._dlen < 1 and ("0"):rep(s - rv:len()) or "")):match("^0*(.+)"))
-                dx = dx or rv ~= 0
-                raw[i or raw._dlen], i = dx and rv, (i or raw._dlen) + 1
-                raw._dlen = raw[i - 1] and raw._dlen or i
-            until not iu or iu == 0
+            raw = objfloor:cround(raw, shf + f)
         end
         return raw
     end,
 }
 
+math.sign = function(number) -- Returns -1 if `x < 0`, 0 if `x == 0`, or 1 if `x > 0`.
+    if number > 0 then
+        return 1
+    elseif number < 0 then
+        return -1
+    end
+    return 0
+end
+
 local media = {
     assets = {},
     convert = function(n, size) -- automatic setup a table.
+        n = n or 0
         local n_type = type(n)
         assert(n_type == "string" or n_type == "number", ("[CONVERT] INPUT_TYPE_NOTSUPPORT | n: string|number (not %s)"):format(n_type))
         if tostring(n):find("e") then
@@ -545,17 +590,21 @@ local media = {
     end,
 
     floor = function(x, length) -- Returns the largest integral value smaller than or equal to `x`.
-        return setmetatable(length and master.cfloor(x, length) or master.floor(x), master._metatable)
+        return setmetatable(length and objfloor:cfloor(x, length) or objfloor.floor(x), master._metatable)
+    end,
+    cround = function(x, length)
+        return setmetatable(length and objfloor:cround(x, length) or objfloor.floor(x), master._metatable)
     end,
 
     ceil = function(x) -- Returns the smallest integral value larger than or equal to `x`.
         if (x._dlen or 1) < 1 then
-            return setmetatable(master.floor(x), master._metatable) + 1
+            return setmetatable(objfloor.floor(x), master._metatable) + 1
         end
         return setmetatable(x, master._metatable)
     end
 }
 
+local assets = media.assets
 function media.integerlen(x) -- Returns `INTEGER` length.
     local le = #x
     return (tostring(x[le] or ""):len() + ((media.convert(le) - 1):max(0) * x._size)):max(1)
@@ -578,7 +627,7 @@ function media.tonumber(x) -- Deconvert table to number. *not recommend*
     return tonumber(media.deconvert(x))
 end
 
-function media.ntype(...) -- This function make table can mix a number and string. *return table*
+function assets.vtype(...) -- This function make table can mix a number and string. *return table*
     local stack, v = {}, {...}
     local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERBLOCK.DEFAULT
     table.sort(v, function(a, b) return (SOFT[type(a)] or 0) > (SOFT[type(b)] or 0) end)
@@ -603,10 +652,11 @@ function media.ntype(...) -- This function make table can mix a number and strin
 end
 
 function media.vtype(...) -- This function make table can mix a number and string.
-    return table.unpack(media.ntype(...))
+    return table.unpack(assets.vtype(...))
 end
 
 function media.sign(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
+    assert(x, "[SIGN] INPUT_VOID")
     local siz = x._size or 1
     local zeo = media.convert(0, siz)
     local reg, req = media.more(x, zeo), media.equal(x, zeo)
@@ -617,7 +667,7 @@ end
 
 function media.max(x, ...) -- Returns the argument with the maximum value, according to the Lua operator `<`.
     local result
-    for _, x in ipairs(media.ntype(x, ...)) do
+    for _, x in ipairs(assets.vtype(x, ...)) do
         result = result and (media.more(result, x) and result) or x
     end
     return result and setmetatable(result, master._metatable)
@@ -625,82 +675,95 @@ end
 
 function media.min(x, ...) -- Returns the argument with the minimum value, according to the Lua operator `>`.
     local result
-    for _, x in ipairs(media.ntype(x, ...)) do
+    for _, x in ipairs(assets.vtype(x, ...)) do
         result = result and (media.less(result, x) and result) or x
     end
     return result and setmetatable(result, master._metatable)
 end
 
-function media.In(x, l) -- Returns the Natural logarithm of `x` in the given base. `l` mean limit of accuracy value
+function media.In(x, l) -- Returns the Natural logarithm of `x` in the given base. `l` The maximum number of iterations to perform.
     x = media.vtype(x) or error("[IN] INPUT_VOID")
     if tostring(x) <= "0" then
-        if tostring(x) == "0" then
-            error("[IN] Natural logarithm function return inf-positive value.")
-        end
-        error("[IN] Natural logarithm function return non-positive value.")
+        assert(tostring(x) ~= "0", "[IN] INPUT_VALIDATION_FAILED | Natural logarithm function return inf-positive value.")
+        error("[IN] INPUT_VALIDATION_FAILED | Natural logarithm function return non-positive value.")
     end
     local result = master.convert(0, x._size)
     result.sign = "+"
     -- taylor series of logarithms --
     local X1 = (x - 1) / (x + 1)
-    for n = 1, 1 + (2 * (l or ACCURACY_LIMIT.MEDIA_NATURAL_LOGARITHM)), 2 do
+    for n = 1, 1 + (2 * (l or ACCURACY_LIMIT.MEDIA_NATURAL_LOGARITHM_MAXITERATIONS)), 2 do
         result = result + ((1 / n) * (X1 ^ n))
     end
-    return setmetatable(master.cfloor(result * 2, 15), master._metatable)
+    return setmetatable(objfloor:cfloor(result * 2, 15), master._metatable)
 end
 
-function media.exp(x, l) -- Exponential function
+function media.exp(x, l) -- Exponential function. `l` The maximum number of iterations to perform.
     x = media.vtype(x) or error("[EXP] INPUT_VOID")
     local result = setmetatable(master.convert(0, x._size), master._metatable)
     result.sign = "+"
-    for n = 0, (l or ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION) - 1 do
+    for n = 0, (l or ACCURACY_LIMIT.MEDIA_EXPONENTIAL_MAXITERATIONS) - 1 do
         result = result + ((x ^ n) / media.fact(n, x._size))
     end
-    return master.cfloor(result, l or ACCURACY_LIMIT.MEDIA_EXPONENTIAL_FUNCTION)
+    return objfloor:cfloor(result, l or ACCURACY_LIMIT.MEDIA_EXPONENTIAL_MAXITERATIONS)
 end
 
 function media.modf(x) -- Returns the integral part of `x` and the fractional part of `x`.
-    x = media.vtype(x)
+    x = media.vtype(x or error("[MODF] INPUT_VOID"))
     local frac = {sign = x.sign or "+", _dlen = x._dlen or 1, _size = x._size}
     for i = frac._dlen, 0 do
         frac[i] = x[i]
     end
     frac[1] = 0
-    return setmetatable(master.floor(x), master._metatable), setmetatable(frac, master._metatable)
+    return setmetatable(objfloor.floor(x), master._metatable), setmetatable(frac, master._metatable)
 end
 
 function media.fmod(x, y) -- Returns the remainder of the division of `x` by `y` that rounds the quotient towards zero.
+    assert(x and y, "[FMOD] INPUT_VOID")
     x, y = media.vtype(x, y)
     local r = x - ((x // y) * y)
     return r == y and media.convert(0, x._size) or r
 end
 
-function media.assets.vpow(self, x, y) -- pow function assets. `y >= 0`
-    y = tostring(y) >= "0" and y or error(("[VPOW] FUNCTION_NOT_SUPPORT (%s)"):format(tostring(y)))
-    if tostring(x) == "0" then
-        return x
-    end
+function assets.vpow(self, x, y) -- pow function assets. `y >= 0`
+    assert(x and y, "[VPOW] INPUT_VOID")
+    assert(tostring(y) >= "0", ("[VPOW] FUNCTION_NOT_SUPPORT (%s)"):format(tostring(y)))
     if tostring(y % 1) == "0" then
         local st = tostring(y)
         if st == "0" then
             return media.convert(1, x._size)
         elseif st == "1" then
-            return media.cfloor(x, 15)
+            return objfloor:cfloor(x, ACCURACY_LIMIT.MEDIA_POWER_ACCURATE_LIMIT)
         elseif tostring(y % 2) == "0" then
             local half_power = self:vpow(x, y // 2)
-            return media.cfloor(half_power * half_power, 15)
+            return objfloor:cfloor(half_power * half_power, ACCURACY_LIMIT.MEDIA_POWER_ACCURATE_LIMIT)
         end
         local half_power = self:vpow(x, (y - 1) // 2)
-        return media.cfloor(x * half_power * half_power, 15)
+        return objfloor:cfloor(x * half_power * half_power, ACCURACY_LIMIT.MEDIA_POWER_ACCURATE_LIMIT)
     end
     return media.exp(y * media.In(x))
 end
 
 function media.pow(x, y) -- Returns `x ^ y`.
+    assert(x and y, "[POW] INPUT_VOID")
     x, y = media.vtype(x, y)
     local ysign = y.sign
     y.sign = "+"
-    return ysign == "-" and 1 / media.assets:vpow(x, y) or media.assets:vpow(x, y)
+    return ysign == "-" and 1 / assets:vpow(x, y) or assets:vpow(x, y)
+end
+
+function media.sqrt(x, l) -- Returns the square root of `x`. `l` The maximum number of iterations to perform.
+    x = media.vtype(x or error("[SQRT] INPUT_VOID"))
+    -- Newton's Method --
+    assert(tostring(x) >= "0", "[SQRT] INPUT_VALIDATION_FAILED | Cannot compute the square root of a negative number.")
+    local res = x / 2
+    for _ = 1, l or ACCURACY_LIMIT.MEDIA_SQRTROOT_MAXITERATIONS do
+        local nes = 0.5 * (res + (x / res))
+        if media.fractionlen(nes - res) >= ACCURACY_LIMIT.MEDIA_SQRTROOT_TOLERANCE then
+            return objfloor:cround(nes, ACCURACY_LIMIT.MEDIA_SQRTROOT_TOLERANCE)
+        end
+        res = nes
+    end
+    return res
 end
 
 local mediaobj = {
@@ -738,11 +801,12 @@ local mediaobj = {
     pow = media.pow,
 
     floor = media.floor,
-    cfloor = media.cfloor,
+    cround = media.cround,
 
     ceil = media.ceil,
     modf = media.modf,
     fmod = media.fmod,
+    sqrt = media.sqrt,
 
     integerlen = media.integerlen,
     fractionlen = media.fractionlen,
@@ -757,7 +821,6 @@ do
             return (x_sign:len() == 1 and x_sign or "+") == (y_sign:len() == 1 and y_sign or "+") and "+" or "-"
         end,
         vtype = media.vtype,
-        ifloor = master.floor,
         modf = media.modf,
 
         add = master.calculate.add,
@@ -838,15 +901,6 @@ do
         -- Index --
         __index = mediaobj,
     }
-end
-
-math.sign = function(number) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
-    if number > 0 then
-        return 1
-    elseif number < 0 then
-        return -1
-    end
-    return 0
 end
 
 local int = setmetatable({
