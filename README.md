@@ -187,7 +187,7 @@ local int = require("int")
 local x = int.new("14.695")
 
 -- using a custom floor function.
-print(int.cfloor(x, 2)) -- output: 14.69
+print(int.floor(x, 2)) -- output: 14.69
 ```
 
 -----
@@ -228,7 +228,7 @@ local int = require("int")
 local x = int.new("14.695")
 
 -- using a custom floor function.
-print(x:cfloor(2)) -- output: 14.69
+print(x:floor(2)) -- output: 14.69
 ```
 
 -----
