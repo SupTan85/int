@@ -15,6 +15,7 @@ local master = {
 
             DEFAULT = 9,
         },
+
         OPTION = {
             --[[ MASTER DIVISION | AUTO CONFIG ITERATIONS LIMIT >>
                 How dose it work :
@@ -538,16 +539,6 @@ local media = {
         local str = master.deconvert(int)
         return (int.sign == "-" and str ~= "0" and "-" or "")..str
     end,
-
-    --[[
-    FSZsign = function(...) -- set value of `_sign` to `+` when number is zero.
-        local nums = {...}
-        for i, x in ipairs(nums) do
-            nums[i].sign = (x.sign == "-" and #x <= 1 and (x._dlen or 1) == 1 and "+") or x.sign or "+"
-        end
-        return table.unpack(nums)
-    end,
-    ]]
 
     equal = function(x, y) -- work same `equation.equal` but support sign config.
         return x.sign == y.sign and master.equation.equal(x, y)
