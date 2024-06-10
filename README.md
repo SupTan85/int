@@ -14,6 +14,7 @@ reason why this module name is "int"? because in this module alway use integer t
   - division `\, \\`
   - modulo `%`
   - power `^`
+  - sqrt
 
 - **Equation**
   - equal
@@ -31,10 +32,12 @@ reason why this module name is "int"? because in this module alway use integer t
   - fact `Factorial function`
   - exp `Exponential function`
   - floor
-  - cfloor `Custom floor function`
+  - cround
   - integerlen `INTEGER LEN`
   - fractionlen `FRACTION LEN`
   - fdigitlen `INTEGER LEN + FRACTION LEN`
+
+**and more...**
 
 ## How to use
 
