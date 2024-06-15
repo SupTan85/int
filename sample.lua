@@ -1,8 +1,9 @@
 local int = require("int")
+local loaded = os.clock()
 
 os.execute("cls")
 print(("\n>> Hello!\nUSING MODULE VERSION: %s (%s)"):format(int._VERSION, _VERSION))
-local MAXLOOP = arg[1] and arg[1]:match("^(-*)"):len() == 1 and tonumber(arg[1]:match("(%d+)$")) or 2500
+local MAXLOOP = arg[1] and tonumber(arg[1]:match("(%d+)$")) or 2500
 local ALLSAME = false
 local n, c
 
@@ -28,5 +29,6 @@ for i = 1, MAXLOOP do
         break
     end
 end
-print(("\n\nModule load/Setup time: %.3f s\nOperation time: %.3f s\nGoodbye! <<"):format(start, os.clock() - start))
+
+print(("\n\nModule load/Setup time: %.3fs\nOperation time: %.3fs (%d)\nGoodbye! <<"):format(loaded, os.clock() - start, MAXLOOP))
 os.execute("pause")
