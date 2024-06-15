@@ -1,7 +1,8 @@
 # int
 
 ![https://github.com/SupTan85/int](cover.png)
-This Project is math and calculate for large data in Lua.\**this module is in beta! some function/feature won't work on very large data.**\
+This Project is math and calculate for large data in Lua.\
+**this module is in beta! some function/feature won't work on very large data.**\
 reason why this module name is "int"? because in this module alway use integer to calculate math!\
 **Verified: `Lua5.3 Lua5.4`**
 
