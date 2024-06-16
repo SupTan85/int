@@ -1,10 +1,12 @@
---[[
-
-    |   𝘜𝘓𝘛𝘐𝘔𝘈𝘛𝘌 𝘐𝘕𝘛 (master)
-    ||  Module version 182 beta!
-    module | math and calculate for large data.
-    >> basic packagelib
-]]
+----------------------------------------------------
+--                 ULTIMATE INT                   --
+----------------------------------------------------
+-- MODULE VERSION: 182 (15/06/2024) dd:mm:yy
+-- AUTHOR: SupTan85
+-- LICENSE: MIT (the same license as Lua itself)
+-- LINK: https://github.com/SupTan85/int
+-- 
+----------------------------------------------------
 
 local master = {
     _config = {
