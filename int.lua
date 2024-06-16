@@ -1,11 +1,16 @@
 ----------------------------------------------------
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
--- MODULE VERSION: 182 (15/06/2024) dd:mm:yy
+-- MODULE VERSION: 182 (15/06/2024) -> (16/06/2024) dd:mm:yy
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int
 -- 
+-- CHANGE LOG:
+----------------------------------------------------
+--     patch     |     date     |     description
+----------------------------------------------------
+--       1       :  16/06/2024  :   little optimize
 ----------------------------------------------------
 
 local master = {
@@ -49,8 +54,7 @@ local master = {
 
         -- SYSTEM CONFIG ! DO NOT CHANGE ! --
         MAXIMUM_DIGIT_PERTABLE = {
-            INTEGER = "9223372036854775806",
-            FRACTION = "9223372036854775808"
+            INTEGER = "9223372036854775806",    FRACTION = "9223372036854775808"
         },
 
         MAXIMUM_SIZE_PERBLOCK = 9, -- stable size is 9
@@ -63,7 +67,7 @@ local master = {
 local OPTION = master._config.OPTION
 local ACCURACY_LIMIT = master._config.ACCURACY_LIMIT
 
-local max, min = math.max, math.min
+local max, min, floor = math.max, math.min, math.floor
 
 master.convert = function(st, s)
     assert(type(st) == "string" or type(st) == "number", ("[CONVERT] INPUT_TYPE_NOTSUPPORT | attempt to convert with a '%s'."):format(type(st)))
@@ -175,7 +179,7 @@ master.objfloor = {
                 local v = x[i or endp]
                 local rv
                 if i then
-                    U = U or math.floor(10 ^ s)
+                    U = U or floor(10 ^ s)
                     rv = (v or 0) + iu
                     rv, iu = tostring(rv % U), rv // U
                 else
@@ -285,7 +289,7 @@ master.roll = {
                     dc, dlen = tostring(raw):match("^0+$") ~= nil and index or nil, index
                 end
                 if last >= time then
-                    v = _side and v:sub(1 + ((lastcut > 0 and lastcut - 1) or (li + (_tolen * max(0, math.floor(last - time))))), -1) or v:sub(1, -1 - ((lastcut > 0 and lastcut - 1) or (li + (_tolen * max(0, math.floor(last - time))))))
+                    v = _side and v:sub(1 + ((lastcut > 0 and lastcut - 1) or (li + (_tolen * max(0, floor(last - time))))), -1) or v:sub(1, -1 - ((lastcut > 0 and lastcut - 1) or (li + (_tolen * max(0, floor(last - time))))))
                     atable_int[index] = clean(b, index, v, s, _side)
                     break
                 end
@@ -316,10 +320,10 @@ master.calculate = {
         end
     },
 
-    add = function(a, b, s)  -- _size maxiumum 18 **block size should be same**
-        master.calculate._assets.VERIFY(a, b, 18, "ADD")
+    add = function(self, a, b, s)  -- _size maxiumum 18 **block size should be same**
+        self._assets.VERIFY(a, b, 18, "ADD")
         local result = {_size = a._size or s or 1}
-        local s, c, d = math.floor(10 ^ (result._size)), false, false
+        local s, c, d = floor(10 ^ (result._size)), false, false
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
             local block_result = (a[i] or 0) + (b[i] or 0)
             local next = block_result // s
@@ -334,10 +338,10 @@ master.calculate = {
         end
         return result
     end,
-    sub = function(a, b, s)  -- _size maxiumum 18 (to use this function `a >= b` else result will been wrong!) **block size should be same**
-        master.calculate._assets.VERIFY(a, b, 18, "SUB")
+    sub = function(self, a, b, s)  -- _size maxiumum 18 (to use this function `a >= b` else result will been wrong!) **block size should be same**
+        self._assets.VERIFY(a, b, 18, "SUB")
         local result = {_size = a._size or s or 1}
-        local s, d = math.floor(10 ^ (result._size)), false
+        local s, d = floor(10 ^ (result._size)), false
         local stack
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
             local block_result = (a[i] or 0) - (b[i] or 0)
@@ -362,10 +366,10 @@ master.calculate = {
         end
         return result
     end,
-    mul = function(a, b, s, e) -- _size maxiumum 9 (`e` endpoint process of len table result size for div function.) **block size should be same**
-        master.calculate._assets.VERIFY(a, b, 9, "MUL")
+    mul = function(self, a, b, s, e) -- _size maxiumum 9 (`e` endpoint process of len table result size for div function.) **block size should be same**
+        self._assets.VERIFY(a, b, 9, "MUL")
         local result = {_size = a._size or s or 1}
-        local s, op = math.floor(10 ^ (result._size)), 1
+        local s, op = floor(10 ^ (result._size)), 1
         local cd
         for i = a._dlen or 1, #a do
             local block_a = a[i]
@@ -397,12 +401,12 @@ master.calculate = {
         result._dlen = op
         return result
     end,
-    div = function(a, b, s, f, l) -- _size maxiumum 9 (`f` The maxiumum number of fraction, `l` The maximum number of iterations to perform.) **block size should be same**
-        master.calculate._assets.VERIFY(a, b, 9, "DIV")
+    div = function(self, a, b, s, f, l) -- _size maxiumum 9 (`f` The maxiumum number of fraction, `l` The maximum number of iterations to perform.) **block size should be same**
+        self._assets.VERIFY(a, b, 9, "DIV")
         local convert = master.convert
         assert(not master.equation.equal(b, convert(0, b._size or 1)), "[DIV] INPUT_VALIDATION_FAILED | divisor cannot be zero.")
         local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV
-        local auto_acc, mul, more, less = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.calculate.mul, master.equation.more, master.equation.less
+        local auto_acc, more, less = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less
         local one = convert(1, s)
         local accuracy, d, uc
         if auto_acc then
@@ -414,17 +418,17 @@ master.calculate = {
             if (NV and AN or BN) < master._config.MAXIMUM_LUA_INTEGER then
                 accuracy, auto_acc = (NV and AN or BN) - HF(NV and a or b) + f, false
             else
-                local AS, BS = master.calculate.add(convert(#a, s), convert(math.abs((a._dlen or 1) - 1), s)), master.calculate.add(convert(#b, s), convert(math.abs(b_dlen - 1), s))
+                local AS, BS = self.add(convert(#a, s), convert(math.abs((a._dlen or 1) - 1), s)), self.add(convert(#b, s), convert(math.abs(b_dlen - 1), s))
                 local MORE = more(AS, BS)
-                accuracy = master.calculate.add(master.calculate.sub(mul((MORE and AS or BS), convert(s, s)), convert(HF(MORE and a or b), s)), convert(f, s))
+                accuracy = self.add(self.sub(self:mul((MORE and AS or BS), convert(s, s)), convert(HF(MORE and a or b), s)), convert(f, s))
             end
         else
             accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_DIV_MAXITERATIONS) + 1
         end
-        b = mul(b, convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
+        b = self:mul(b, convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local function check(n)
             local dc = d and setmetatable({}, {__index = d, __len = function() return #d end}) or convert(n, s)
-            local nc = mul(b, d and master.roll.right(dc, ("0"):rep(uc or 0)..n) or dc, s, 1)
+            local nc = self:mul(b, d and master.roll.right(dc, ("0"):rep(uc or 0)..n) or dc, s, 1)
             if more(nc, one) then
                 return 1
             elseif less(nc, one) then
@@ -475,16 +479,16 @@ master.calculate = {
                     if less(accuracy, one) then
                         break
                     end
-                    accuracy = master.calculate.sub(accuracy, one) or accuracy
+                    accuracy = self.sub(accuracy, one) or accuracy
                 else
                     accuracy = (accuracy - 1 or accuracy)
                 end
             end
         until auto_acc and less(accuracy, convert(0, s)) or not auto_acc and accuracy < 0
         if b_dlen < 1 then
-            d = mul(d, convert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
+            d = self:mul(d, convert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
         end
-        local raw = mul(a, d)
+        local raw = self:mul(a, d)
         if lastpoint and -raw._dlen >= f // s then
             local shf = 0
             for i = raw._dlen or 1, 0, -1 do
@@ -659,7 +663,7 @@ end
 function media.cdiv(x, y, f, l) -- Custom division function. (`f` The maxiumum number of fraction, `l` The maximum number of iterations to perform.)
     assert(x and y, "[CDIV] INPUT_VOID")
     x, y = media.vtype(x, y)
-    local raw = master.calculate.div(x, y, x._size, f, l)
+    local raw = master.calculate:div(x, y, x._size, f, l)
     local x_sign, y_sign = x.sign or "+", y.sign or "+"
     raw.sign = (#x_sign == 1 and x_sign or "+") == (#y_sign == 1 and y_sign or "+") and "+" or "-"
     return setmetatable(raw, master._metatable)
@@ -801,22 +805,12 @@ local mediaobj = {
 
     abs = media.abs,
 
-    sign = media.sign,
-    max = media.max,
-    min = media.min,
+    sign = media.sign,  fact = media.fact,  pow = media.pow,
+    max = media.max,    In = media.In,      floor = media.floor,
+    min = media.min,    exp = media.exp,    cround = media.cround,
 
-    fact = media.fact,
-    In = media.In,
-    exp = media.exp,
-    pow = media.pow,
-
-    floor = media.floor,
-    cround = media.cround,
-
-    ceil = media.ceil,
-    modf = media.modf,
-    fmod = media.fmod,
-    sqrt = media.sqrt,
+    ceil = media.ceil,  fmod = media.fmod,
+    modf = media.modf,  sqrt = media.sqrt,
 
     integerlen = media.integerlen,
     fractionlen = media.fractionlen,
@@ -833,9 +827,7 @@ do
         vtype = media.vtype,
         modf = media.modf,
 
-        add = master.calculate.add,
-        sub = master.calculate.sub,
-        mul = master.calculate.mul,
+        cal = master.calculate,
         div = media.cdiv,
 
         equal = media.equal,
@@ -852,25 +844,25 @@ do
         __add = function(x, y)
             x, y = vtype(x, y)
             if x.sign == y.sign then
-                local raw = add(x, y)
+                local raw = cal:add(x, y)
                 raw.sign = x.sign or "+"
                 return setmetatable(raw, master._metatable)
             end
             local reg = more(x, y)
-            local raw = sub(reg and x or y, reg and y or x)
+            local raw = cal:sub(reg and x or y, reg and y or x)
             raw.sign = (reg and x or y).sign or "+"
             return setmetatable(raw, master._metatable)
         end,
         __sub = function (x, y)
             x, y = vtype(x, y)
             local reg = more(x, y)
-            local raw = (x.sign == y.sign) and sub(reg and x or y, reg and y or x) or add(x, y)
+            local raw = (x.sign == y.sign) and cal:sub(reg and x or y, reg and y or x) or cal:add(x, y)
             raw.sign = ((y.sign == "+" and reg) or (y.sign == "-" and not reg)) and "+" or "-"
             return setmetatable(raw, master._metatable)
         end,
         __mul = function(x, y)
             x, y = vtype(x, y)
-            local raw = mul(x, y)
+            local raw = cal:mul(x, y)
             raw.sign = smul(x, y)
             return setmetatable(raw, master._metatable)
         end,
@@ -881,7 +873,7 @@ do
             x, y = vtype(x, y)
             local d, f = modf(div(x, y))
             local sign = smul(x, y)
-            local raw = sign == "-" and more(f, vtype(0)) and add(d, vtype(1)) or d
+            local raw = sign == "-" and more(f, vtype(0)) and cal:add(d, vtype(1)) or d
             raw.sign = sign
             return setmetatable(raw, master._metatable)
         end,
