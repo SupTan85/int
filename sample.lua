@@ -19,15 +19,17 @@ for i = 1, MAXLOOP do
         end
     end
     local x, y = int.new(n, c)
+    local start = os.clock()
     local result = x % y
     -- loading bar --
     local bar = ("|"):rep(math.floor((i / MAXLOOP) * 100))
-    io.write("\r"..bar..(" "):rep(((5 - bar:len()) % 5) + 3), ("[%s] %.2f %% | using: %s"):format(i == MAXLOOP and "/" or ("/-\\|"):sub((((math.floor((i / MAXLOOP) * 500))) % 4) + 1, ((math.floor((i / MAXLOOP) * 500)) % 4) + 1), (i / MAXLOOP) * 100, math.floor(collectgarbage("count") * 1024).." Byte"))
-
+    io.write("\r"..bar..(" "):rep(((5 - bar:len()) % 5) + 3), ("[%s] %.2f %% (%d ms) | using: %s"):format(i == MAXLOOP and "/" or ("/-\\|"):sub((((math.floor((i / MAXLOOP) * 500))) % 4) + 1, ((math.floor((i / MAXLOOP) * 500)) % 4) + 1), (i / MAXLOOP) * 100, math.floor((os.clock() - start) * 1000), math.floor(collectgarbage("count") * 1024).." Byte"))
+    --[[
     if result:eqmore(c) then
         print(n, c)
         break
     end
+    ]]
 end
 
 print(("\n\nModule load/Setup time: %.3fs\nOperation time: %.3fs (%d)\nGoodbye! <<"):format(loaded, os.clock() - start, MAXLOOP))
