@@ -11,6 +11,9 @@
 --     patch     |     date     |     description
 ----------------------------------------------------
 --       1       :  16/06/2024  :   little optimize
+--
+--       2       :  19/06/2024  :   fix pow & logic
+--                                   and optimize
 ----------------------------------------------------
 
 local master = {
@@ -67,7 +70,7 @@ local master = {
 local OPTION = master._config.OPTION
 local ACCURACY_LIMIT = master._config.ACCURACY_LIMIT
 
-local max, min, floor = math.max, math.min, math.floor
+local max, min, floor, ceil = math.max, math.min, math.floor, math.ceil
 
 master.convert = function(st, s)
     assert(type(st) == "string" or type(st) == "number", ("[CONVERT] INPUT_TYPE_NOTSUPPORT | attempt to convert with a '%s'."):format(type(st)))
@@ -121,8 +124,8 @@ master.objfloor = {
         local rev, dlen = length < 0, x._dlen or 1
         length = rev and math.abs(((dlen - 1) * s) + (s - #(tostring(x[dlen]):match("^(%d-)0*$") or ""))) + length or length
         local endp, ispr
-        if rev or math.ceil(-length / s) > dlen - 1 then
-            endp = math.ceil(-length / s)
+        if rev or ceil(-length / s) > dlen - 1 then
+            endp = ceil(-length / s)
             for i = dlen, min(endp, 0) do
                 if i == endp then
                     local shift = tostring(x[i]):sub(1, length % s)
@@ -265,7 +268,7 @@ master.roll = {
             local connext, clean, c_empty, lastcut = self.m_connext, self.m_clean, self.c_empty, type(lastcut) == "number" and lastcut or 0
             local s, dlen, time = atable_int._size or size or 1, atable_int._dlen or 1, time or 1
             to_int = _side and ((to_int and tostring(to_int)) or "0"):reverse() or ((to_int and tostring(to_int)) or "0")
-            local to, tolen, len = to_int:rep(math.ceil(s / #to_int)), #to_int, ((_side and not startfront or startfront) and #atable_int) or dlen
+            local to, tolen, len = to_int:rep(ceil(s / #to_int)), #to_int, ((_side and not startfront or startfront) and #atable_int) or dlen
             local last, _tolen, i = 0, #to_int, -1
             local li, lv, dc
             while true do
@@ -366,7 +369,7 @@ master.calculate = {
         end
         return result
     end,
-    mul = function(self, a, b, s, e) -- _size maxiumum 9 (`e` endpoint process of len table result size for div function.) **block size should be same**
+    mul = function(self, a, b, s, e) -- _size maxiumum 9 (`e` switch for division process.) **block size should be same**
         self._assets.VERIFY(a, b, 9, "MUL")
         local result = {_size = a._size or s or 1}
         local s, op = floor(10 ^ (result._size)), 1
@@ -385,8 +388,8 @@ master.calculate = {
                 op = result[offset] and min(op, offset) or op
                 result[offset + 1] = (next ~= 0 and (next + (result[offset + 1] or 0))) or result[offset + 1]
             end
-            if e and #result >= e then
-                if #result > e or (#result == e and result[e] ~= 0) then
+            if e and #result >= 1 then
+                if #result > 1 or (#result == 1 and result[1] ~= 0) then
                     break
                 end
             end
@@ -406,7 +409,7 @@ master.calculate = {
         local convert = master.convert
         assert(not master.equation.equal(b, convert(0, b._size or 1)), "[DIV] INPUT_VALIDATION_FAILED | divisor cannot be zero.")
         local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV
-        local auto_acc, more, less = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less
+        local auto_acc, more, less, right = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less, master.roll.right
         local one = convert(1, s)
         local accuracy, d, uc
         if auto_acc then
@@ -428,7 +431,7 @@ master.calculate = {
         b = self:mul(b, convert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local function check(n)
             local dc = d and setmetatable({}, {__index = d, __len = function() return #d end}) or convert(n, s)
-            local nc = self:mul(b, d and master.roll.right(dc, ("0"):rep(uc or 0)..n) or dc, s, 1)
+            local nc = self:mul(b, d and right(dc, ("0"):rep(uc or 0)..n) or dc, s, true)
             if more(nc, one) then
                 return 1
             elseif less(nc, one) then
@@ -438,16 +441,16 @@ master.calculate = {
         local function calcu(c)
             local map
             if c then
-                local ceil, insert = math.ceil, table.insert
                 map = {}
                 for i = 0, 9 do
-                    insert(map, (i % 2 == 0 and (c - ceil(i / 2)) or (c + ceil(i / 2))) % 10)
+                    map[i + 1] = (i % 2 == 0 and (c - ceil(i / 2)) or (c + ceil(i / 2))) % 10
                 end
             else
                 map = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
             end
             local high, low, code
-            for _, i in ipairs(map) do
+            for i = 1, 10 do
+                i = map[i]
                 if i >= (low or 0) and i <= (high or 9) then
                     code = check(i)
                     if code == 0 then
@@ -457,8 +460,9 @@ master.calculate = {
                     else
                         return true, i
                     end
-                elseif high and low and high - low <= 1 then
-                    break
+                    if (high or 9) - (low or 0) <= 1 and high and low then
+                        break
+                    end
                 end
             end
             return false, low
@@ -466,7 +470,7 @@ master.calculate = {
         local lastpoint, fin, mark
         repeat
             local dv, lp = calcu(lastpoint)
-            d, lastpoint = d and master.roll.right(d, ("0"):rep(uc)..lp) or not d and convert(lp, s) or d, lp
+            d, lastpoint = d and right(d, ("0"):rep(uc)..lp) or not d and convert(lp, s) or d, lp
             uc = lp == 0 and mark and (uc or 0) + 1 or 0
             mark = mark or d ~= nil
             if dv then
@@ -516,7 +520,12 @@ math.sign = function(number) -- Returns -1 if `x < 0`, 0 if `x == 0`, or 1 if `x
 end
 
 local media = {
-    assets = {},
+    assets = {
+        FSzero = function(x, y) -- return the same sign when number is *zero*
+            local ze, equal = master.convert(0, x._size), master.equation.equal
+            return equal(x, ze) and "+" or x.sign, equal(y, ze) and "+" or y.sign
+        end
+    },
 
     convert = function(n, size) -- automatic setup a table.
         n = n or 0
@@ -552,18 +561,6 @@ local media = {
     deconvert = function(int) -- read table data and convert to the number. *string type*
         local str = master.deconvert(int)
         return (int.sign == "-" and str ~= "0" and "-" or "")..str
-    end,
-
-    equal = function(x, y) -- work same `equation.equal` but support sign config.
-        return x.sign == y.sign and master.equation.equal(x, y)
-    end,
-    less = function(x, y) -- work same `equation.less` but support sign config.
-        local nox = x.sign ~= y.sign
-        return nox and y.sign == "+" or (not nox and master.equation.less(x, y))
-    end,
-    more = function(x, y) -- work same `equation.more` but support sign config.
-        local nox = x.sign ~= y.sign
-        return nox and y.sign == "-" or (not nox and master.equation.more(x, y))
     end,
 
     abs = function(x) -- Returns the absolute value of `x`.
@@ -610,16 +607,29 @@ local media = {
 }
 
 local assets = media.assets
+function media.equal(x, y) -- work same `equation.equal` but support sign config.
+    local ze, equal = master.convert(0, x._size), master.equation.equal
+    return (equal(x, ze) and "+" or x.sign) == (equal(y, ze) and "+" or y.sign) and equal(x, y)
+end
+function media.less(x, y) -- work same `equation.less` but support sign config.
+    local xs, ys = assets.FSzero(x, y)
+    local nox = xs ~= ys
+    return nox and ys == "+" or (not nox and master.equation.less(x, y))
+end
+function media.more(x, y) -- work same `equation.more` but support sign config.
+    local xs, ys = assets.FSzero(x, y)
+    local nox = xs ~= ys
+    return nox and ys == "-" or (not nox and master.equation.more(x, y))
+end
+
 function media.integerlen(x) -- Returns `INTEGER` length.
     local le = #x
     return #(tostring(x[le] or "") + ((media.convert(le) - 1):max(0) * x._size)):max(1)
 end
-
 function media.fractionlen(x) -- Returns `FRACTION` length.
     local le = math.abs((x._dlen or 1) - 1)
     return #tostring(x[le] or "") + ((media.convert(le) - 1):max(0) * x._size)
 end
-
 function media.fdigitlen(x) -- Returns `INTEGER + FRACTION` length.
     return media.integerlen(x) + media.fractionlen(x)
 end
@@ -655,7 +665,6 @@ function assets.vtype(...) -- This function make table can mix a number and stri
     end
     return stack
 end
-
 function media.vtype(...) -- This function make table can mix a number and string.
     return table.unpack(assets.vtype(...))
 end
@@ -743,7 +752,7 @@ function assets.vpow(self, x, y, l) -- pow function assets. `y >= 0`
     if tostring(y % 1) == "0" then
         local st = tostring(y)
         if st == "0" then
-            return media.convert(1, x._size)
+            return tostring(x) == "0" and error("[VPOW] INPUT_VALIDATION_FAILED | cannot divide itself by zero.") or media.convert(1, x._size)
         elseif st == "1" then
             return objfloor:cfloor(x, l)
         elseif tostring(y % 2) == "0" then
@@ -911,8 +920,8 @@ local int = setmetatable({
 
 int.new = function(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
     local stack = {}
-    for _, s in ipairs({...}) do
-        table.insert(stack, media.convert(s, int._defaultsize))
+    for i, s in ipairs({...}) do
+        stack[i] = media.convert(s, int._defaultsize)
     end
     return table.unpack(stack)
 end
