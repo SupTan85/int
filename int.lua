@@ -14,6 +14,9 @@
 --
 --       2       :  19/06/2024  :   fix pow & logic
 --                                   and optimize
+-- 
+--       3       :  21/06/2024  :   little optimize
+--                                   and fix bugs
 ----------------------------------------------------
 
 local master = {
@@ -99,24 +102,20 @@ end
 master.deconvert = function(a, s)
     assert(type(a or error("[DECONVERT] INPUT_VOID")) == "table", ("[DECONVERT] INPUT_TYPE_NOTSUPPORT | attempt to deconvert with a '%s'."):format(type(a)))
     s = a._size or s or 1
-    local result, cd = "", false
-    for i = (a._dlen or 1), #a do
+    local result = {}
+    for i = #a, (a._dlen or 1), -1 do
         local v = a[i]
         assert(v, "[DECONVERT] VOID_VALUE | missing value in index = "..i)
         v = tostring(v)
         if #v ~= s and i ~= #a then
             v = ("0"):rep(s - #v) .. v
         end
-        if cd == false and i < 1 then
-            v = v:match("^(.-)0+$") or v
-            v = (v ~= "0" and v) or nil
-            if v then
-                cd = true
-            end
-        end
-        result = (v and ((i == 0 and v ~= "" and "." .. v .. result) or v .. result)) or result
+        result[#result + 1] = v and (i == 0 and v ~= "" and "." .. v or v) or nil
     end
-    return #result > 0 and result or "0"
+    if (a._dlen or 1) < 1 then
+        result[#result] = result[#result]:match("^(.-)0+$")
+    end
+    return #result > 0 and table.concat(result) or "0"
 end
 
 master.objfloor = {
@@ -202,8 +201,10 @@ master.objfloor = {
                 end
                 rv = tonumber((rv..(not i and endp < 1 and ("0"):rep(s - #rv) or "")):match("^0*(.+)"))
                 dx = dx or rv ~= 0
-                x[i or endp], i = dx and rv, (i or endp) + 1
-                x._dlen = x[i - 1] and endp or i
+                x[i or endp], i = dx and rv or nil, (i or endp) + 1
+                if not dx then
+                    x._dlen = i
+                end
             until not iu or iu == 0
         end
         return x
@@ -228,7 +229,7 @@ master.equation = {
         assert((x._size or 1) == (y._size or 1), ("BLOCK_SIZE_ISSUE (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x < #y then
             return true
-        elseif #x == #y then
+        elseif #x == #y or x[#x] == 0 or y[#y] == 0 then
             for i = #x, x._dlen or 1, -1 do
                 local vx, vy = x[i] or 0, y[i] or 0
                 if vx < vy then
@@ -377,9 +378,7 @@ master.calculate = {
         for i = a._dlen or 1, #a do
             local block_a = a[i]
             for i2 = b._dlen or 1, #b do
-                local block_b = b[i2]
-                local calcul = block_a * block_b
-                local offset = i + i2 - 1
+                local calcul, offset = block_a * b[i2], i + i2 - 1
                 local block_data = (calcul + (result[offset] or 0))
                 local next = block_data // s
                 block_data = block_data % s
