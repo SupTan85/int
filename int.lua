@@ -1,25 +1,11 @@
 ----------------------------------------------------
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
--- MODULE VERSION: 182 (15/06/2024) -> (16/06/2024) dd:mm:yy
+-- MODULE VERSION: 183 (30/06/2024) dd:mm:yy
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int
 -- 
--- CHANGE LOG:
-----------------------------------------------------
---     patch     |     date     |     description
-----------------------------------------------------
---       1       :  16/06/2024  :   little optimize
---
---       2       :  19/06/2024  :   fix pow & logic
---                                   and optimize
--- 
---       3       :  21/06/2024  :   little optimize
---                                   and fix bugs
--- 
---       4       :  23/06/2024  :   little optimize
---                                   and fix bugs
 ----------------------------------------------------
 
 local master = {
@@ -33,6 +19,14 @@ local master = {
         },
 
         OPTION = {
+            --[[ MASTER DIVISION | BYPASS FLOATING POINT >>
+                How dose it work :
+                    optimize division process by less loop calculate cycle.
+
+                Copy right (C) 2024 SupTan85
+            << BUILD-IN >>]]
+            MASTER_CALCULATE_DIV_BYPASS_FLOATING_POINT = true,
+
             --[[ MASTER DIVISION | AUTO CONFIG ITERATIONS LIMIT >>
                 How dose it work :
                     automatic setting a maxiumum of iterations in division function. *only when there is no self config value*
@@ -42,23 +36,22 @@ local master = {
                 Copy right (C) 2024 SupTan85
             << BUILD-IN >>]]
             MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS = true,
-            
         },
 
         ACCURACY_LIMIT = {
             -- MASTER FUNCTION CONFIG --
-            MASTER_CALCULATE_DIV_MAXITERATIONS = 15,
-            MASTER_DEFAULT_FRACT_LIMIT_DIV = 14,
+            MASTER_CALCULATE_DIV_MAXITERATIONS = 15, -- 15
+            MASTER_DEFAULT_FRACT_LIMIT_DIV = 14, -- 14
 
             -- MEDIA FUNCTION CONFIG --
-            MEDIA_DEFAULT_POWER_ACCURATE_LIMIT = 15,
-            MEDIA_DEFAULT_POWER_FRACT_LIMIT = 14,
+            MEDIA_DEFAULT_POWER_ACCURATE_LIMIT = 15, -- 15
+            MEDIA_DEFAULT_POWER_FRACT_LIMIT = 14, -- 14
 
-            MEDIA_DEFAULT_NATURAL_LOGARITHM_MAXITERATIONS = 15,
-            MEDIA_DEFAULT_EXPONENTIAL_MAXITERATIONS = 15,
+            MEDIA_DEFAULT_NATURAL_LOGARITHM_MAXITERATIONS = 15, -- 15
+            MEDIA_DEFAULT_EXPONENTIAL_MAXITERATIONS = 15, -- 15
 
-            MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS = 15,
-            MEDIA_DEFAULT_SQRTROOT_TOLERANCE = 14,
+            MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS = 15, -- 15
+            MEDIA_DEFAULT_SQRTROOT_TOLERANCE = 14, -- 14
         },
 
         -- SYSTEM CONFIG ! DO NOT CHANGE ! --
@@ -70,7 +63,7 @@ local master = {
         MAXIMUM_LUA_INTEGER = 9223372036854775807 -- math.maxinteger
     },
 
-    _VERSION = "182"
+    _VERSION = "183"
 }
 
 local OPTION = master._config.OPTION
@@ -413,7 +406,20 @@ master.calculate = {
         local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV
         local auto_acc, more, less, right = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less, master.roll.right
         local one = mconvert(1, s)
-        local accuracy, d, uc
+        local accuracy, uc = 0, 0
+        local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_FLOATING_POINT and (function(b)
+            local p = tostring("1" / b)
+            if p:find("e") then
+                local L = p:match("^[-+]?(%d-%.?%d+)e")
+                local R = p:match("e[-+]?(%d+)$")
+                local S = L:match("^(%d+)%."):len()
+                if tonumber(R) > master._config.MAXIMUM_LUA_INTEGER then
+                    return {L:gsub("%.", ""), self.sub(mconvert(R, s), mconvert(S, s))}
+                end
+                return "0."..("0"):rep(tonumber(R) - S)..L:gsub("%.", "")
+            end
+            return p ~= "0.0" and p
+        end)(master.deconvert(b))
         if auto_acc then
             local function HF(x)
                 return (s - #tostring(x[#x])) + ((x._dlen or 1) < 1 and s - #tostring(x[x._dlen] or "") or 0)
@@ -470,10 +476,34 @@ master.calculate = {
             return false, low
         end
         local lastpoint, fin, mark
-        repeat
+        if d then
+            if type(d) == "table" then
+                local fp, bp = d[2], d[1]
+                accuracy = auto_acc and self.sub(accuracy, bp) or accuracy - master.deconvert(bp)
+                d = {0, _size = s, _dlen = 1}
+                local SIZE = mconvert(s, s)
+                while less(bp, one) do
+                    bp = self.sub(bp, SIZE)
+                    if less(bp, one) then
+                        for v in fp:gmatch(("."):rep(s)) do
+                            d._dlen = d._dlen - 1
+                            d[d._dlen] = tonumber(v)
+                        end
+                        break
+                    end
+                    d._dlen = d._dlen - 1
+                    d[d._dlen] = 0
+                end
+            else
+                d = d:sub(1, auto_acc and master.deconvert(accuracy) or accuracy)
+                accuracy = auto_acc and self.sub(accuracy, mconvert(d:len())) or accuracy - d:match("%.(.+)$"):len()
+                d = mconvert(d, s)
+            end
+        end
+        while auto_acc and more(accuracy, mconvert(0, s)) or not auto_acc and accuracy > 0 do
             local dv, lp = calcu(lastpoint)
             d, lastpoint = d and right(d, ("0"):rep(uc)..lp) or not d and mconvert(lp, s) or d, lp
-            uc = lp == 0 and mark and (uc or 0) + 1 or 0
+            uc = lp == 0 and mark and (uc) + 1 or 0
             mark = mark or d ~= nil
             if dv then
                 lastpoint = nil
@@ -490,7 +520,7 @@ master.calculate = {
                     accuracy = (accuracy - 1 or accuracy)
                 end
             end
-        until auto_acc and less(accuracy, mconvert(0, s)) or not auto_acc and accuracy < 0
+        end
         if b_dlen < 1 then
             d = self:mul(d, mconvert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
         end

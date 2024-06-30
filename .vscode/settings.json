@@ -16,5 +16,8 @@
     "workbench.colorCustomizations": {
         "minimap.background": "#22222250",
         "scrollbar.shadow": "#22222250"
-    }
+    },
+    "Lua.diagnostics.disable": [
+        "cast-local-type"
+    ]
 }
