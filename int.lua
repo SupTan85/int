@@ -114,7 +114,7 @@ master.deconvert = function(a, s)
     return #result > 0 and table.concat(result) or "0"
 end
 
-local mconvert = master.convert
+local Cmaster, Dmaster = master.convert, master.deconvert
 master.objfloor = {
     _floor = function(x, length, s, c)
         local rev, dlen = length < 0, x._dlen or 1
@@ -402,10 +402,10 @@ master.calculate = {
     end,
     div = function(self, a, b, s, f, l) -- _size maxiumum 9 (`f` The maxiumum number of fraction, `l` The maximum number of iterations to perform.) **block size should be same**
         self._assets.VERIFY(a, b, 9, "DIV")
-        assert(not master.equation.equal(b, mconvert(0, b._size or 1)), "[DIV] INPUT_VALIDATION_FAILED | divisor cannot be zero.")
+        assert(not master.equation.equal(b, Cmaster(0, b._size or 1)), "[DIV] INPUT_VALIDATION_FAILED | divisor cannot be zero.")
         local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV
         local auto_acc, more, less, right = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less, master.roll.right
-        local one = mconvert(1, s)
+        local one = Cmaster(1, s)
         local accuracy, uc = 0, 0
         local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_FLOATING_POINT and (function(b)
             local p = tostring("1" / b)
@@ -414,12 +414,12 @@ master.calculate = {
                 local R = p:match("e[-+]?(%d+)$")
                 local S = L:match("^(%d+)%."):len()
                 if tonumber(R) > master._config.MAXIMUM_LUA_INTEGER then
-                    return {L:gsub("%.", ""), self.sub(mconvert(R, s), mconvert(S, s))}
+                    return {L:gsub("%.", ""), self.sub(Cmaster(R, s), Cmaster(S, s))}
                 end
                 return "0."..("0"):rep(tonumber(R) - S)..L:gsub("%.", "")
             end
             return p ~= "0.0" and p
-        end)(master.deconvert(b))
+        end)(Dmaster(b))
         if auto_acc then
             local function HF(x)
                 return (s - #tostring(x[#x])) + ((x._dlen or 1) < 1 and s - #tostring(x[x._dlen] or "") or 0)
@@ -429,16 +429,16 @@ master.calculate = {
             if (NV and AN or BN) < master._config.MAXIMUM_LUA_INTEGER then
                 accuracy, auto_acc = (NV and AN or BN) - HF(NV and a or b) + f, false
             else
-                local AS, BS = self.add(mconvert(#a, s), mconvert(math.abs((a._dlen or 1) - 1), s)), self.add(mconvert(#b, s), mconvert(math.abs(b_dlen - 1), s))
+                local AS, BS = self.add(Cmaster(#a, s), Cmaster(math.abs((a._dlen or 1) - 1), s)), self.add(Cmaster(#b, s), Cmaster(math.abs(b_dlen - 1), s))
                 local MORE = more(AS, BS)
-                accuracy = self.add(self.sub(self:mul((MORE and AS or BS), mconvert(s, s)), mconvert(HF(MORE and a or b), s)), mconvert(f, s))
+                accuracy = self.add(self.sub(self:mul((MORE and AS or BS), Cmaster(s, s)), Cmaster(HF(MORE and a or b), s)), Cmaster(f, s))
             end
         else
             accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_DIV_MAXITERATIONS) + 1
         end
-        b = self:mul(b, mconvert("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
+        b = self:mul(b, Cmaster("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local function check(n)
-            local dc = d and setmetatable({}, {__index = d, __len = function() return #d end}) or mconvert(n, s)
+            local dc = d and setmetatable({}, {__index = d, __len = function() return #d end}) or Cmaster(n, s)
             local nc = self:mul(b, d and right(dc, ("0"):rep(uc or 0)..n) or dc, s, true)
             if more(nc, one) then
                 return 1
@@ -479,9 +479,9 @@ master.calculate = {
         if d then
             if type(d) == "table" then
                 local fp, bp = d[2], d[1]
-                accuracy = auto_acc and self.sub(accuracy, bp) or accuracy - master.deconvert(bp)
+                accuracy = auto_acc and self.sub(accuracy, bp) or accuracy - Dmaster(bp)
                 d = {0, _size = s, _dlen = 1}
-                local SIZE = mconvert(s, s)
+                local SIZE = Cmaster(s, s)
                 while less(bp, one) do
                     bp = self.sub(bp, SIZE)
                     if less(bp, one) then
@@ -495,21 +495,21 @@ master.calculate = {
                     d[d._dlen] = 0
                 end
             else
-                d = d:sub(1, auto_acc and master.deconvert(accuracy) or accuracy)
-                accuracy = auto_acc and self.sub(accuracy, mconvert(d:len())) or accuracy - d:match("%.(.+)$"):len()
-                d = mconvert(d, s)
+                d = d:sub(1, auto_acc and Dmaster(accuracy) or accuracy)
+                accuracy = auto_acc and self.sub(accuracy, Cmaster(d:len())) or accuracy - d:match("%.(.+)$"):len()
+                d = Cmaster(d, s)
             end
         end
-        while auto_acc and more(accuracy, mconvert(0, s)) or not auto_acc and accuracy > 0 do
+        while auto_acc and more(accuracy, Cmaster(0, s)) or not auto_acc and accuracy > 0 do
             local dv, lp = calcu(lastpoint)
-            d, lastpoint = d and right(d, ("0"):rep(uc)..lp) or not d and mconvert(lp, s) or d, lp
+            d, lastpoint = d and right(d, ("0"):rep(uc)..lp) or not d and Cmaster(lp, s) or d, lp
             uc = lp == 0 and mark and (uc) + 1 or 0
             mark = mark or d ~= nil
             if dv then
                 lastpoint = nil
                 break
             end
-            fin = fin or (master.deconvert(d) or ""):match("^0*%.?0*$") == nil
+            fin = fin or (Dmaster(d) or ""):match("^0*%.?0*$") == nil
             if fin then
                 if auto_acc then
                     if less(accuracy, one) then
@@ -522,7 +522,7 @@ master.calculate = {
             end
         end
         if b_dlen < 1 then
-            d = self:mul(d, mconvert("1"..("0"):rep(math.abs(b_dlen - 1)), s))
+            d = self:mul(d, Cmaster("1"..("0"):rep(math.abs(b_dlen - 1)), s))
         end
         local raw = self:mul(a, d)
         if lastpoint and -raw._dlen >= f // s then
@@ -554,7 +554,7 @@ end
 local media = {
     assets = {
         FSzero = function(x, y) -- return the same sign when number is *zero*
-            local ze, equal = mconvert(0, x._size), master.equation.equal
+            local ze, equal = Cmaster(0, x._size), master.equation.equal
             return equal(x, ze) and "+" or x.sign, equal(y, ze) and "+" or y.sign
         end
     },
@@ -580,18 +580,18 @@ local media = {
                     end
                     fs = fs_sign..(f == "" and "0" or f)..(b ~= "" and "."..b or "")
                 end
-                local t = mconvert(fs:match("^%s*[+-]?(%d+%.?%d*)%s*$"), size)
+                local t = Cmaster(fs:match("^%s*[+-]?(%d+%.?%d*)%s*$"), size)
                 t.sign = fs:match("^%s*([+-]?)") or "+"
                 return setmetatable(t, master._metatable)
             end
             error(("malformed number near '%s'"):format(n:match("^%s*(.-)%s*$")))
         end
-        local t = mconvert(n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
+        local t = Cmaster(n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
         t.sign = n_type == "string" and (n:match("^%s*([+-])") or "+") or sign(n) < 0 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
     deconvert = function(int) -- read table data and convert to the number. *string type*
-        local str = master.deconvert(int)
+        local str = Dmaster(int)
         return (int.sign == "-" and str ~= "0" and "-" or "")..str
     end,
 
@@ -604,10 +604,10 @@ local media = {
     fact = function(n, s) -- Factorial function
         local result
         if type(n) == "table" then
-            result = setmetatable(mconvert("1", n._size), master._metatable)
+            result = setmetatable(Cmaster("1", n._size), master._metatable)
             result.sign, n.sign = n.sign or "+", "+"
         else
-            result = setmetatable(mconvert("1", s or master._config.SETINTEGER_PERBLOCK.DEFAULT), master._metatable)
+            result = setmetatable(Cmaster("1", s or master._config.SETINTEGER_PERBLOCK.DEFAULT), master._metatable)
             result.sign = "+"
         end
         if tostring(n) >= tostring(master._config.MAXIMUM_LUA_INTEGER) then
@@ -640,7 +640,7 @@ local media = {
 
 local assets = media.assets
 function media.equal(x, y) -- work same `equation.equal` but support sign config.
-    local ze, equal = mconvert(0, x._size), master.equation.equal
+    local ze, equal = Cmaster(0, x._size), master.equation.equal
     return (equal(x, ze) and "+" or x.sign) == (equal(y, ze) and "+" or y.sign) and equal(x, y)
 end
 function media.less(x, y) -- work same `equation.less` but support sign config.
@@ -742,7 +742,7 @@ function media.In(x, l) -- Returns the Natural logarithm of `x` in the given bas
         assert(tostring(x) ~= "0", "[IN] INPUT_VALIDATION_FAILED | Natural logarithm function return inf-positive value.")
         error("[IN] INPUT_VALIDATION_FAILED | Natural logarithm function return non-positive value.")
     end
-    local result = mconvert(0, x._size)
+    local result = Cmaster(0, x._size)
     result.sign = "+"
     -- taylor series of logarithms --
     local X1 = (x - 1) / (x + 1)
@@ -754,7 +754,7 @@ end
 
 function media.exp(x, l) -- Exponential function. `l` The maximum number of iterations to perform.
     x = media.vtype(x) or error("[EXP] INPUT_VOID")
-    local result = setmetatable(mconvert(0, x._size), master._metatable)
+    local result = setmetatable(Cmaster(0, x._size), master._metatable)
     result.sign = "+"
     for n = 0, (l or ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_MAXITERATIONS) - 1 do
         result = result + ((x ^ n) / media.fact(n, x._size))
