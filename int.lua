@@ -1,7 +1,7 @@
 ----------------------------------------------------
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
--- MODULE VERSION: 183 (30/06/2024) dd:mm:yy
+-- MODULE VERSION: 184 (28/07/2024) dd:mm:yyyy
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int
@@ -63,7 +63,7 @@ local master = {
         MAXIMUM_LUA_INTEGER = 9223372036854775807 -- math.maxinteger
     },
 
-    _VERSION = "183"
+    _VERSION = "184"
 }
 
 local OPTION = master._config.OPTION
@@ -95,23 +95,28 @@ master.convert = function(st, s)
     return result
 end
 
-master.deconvert = function(a, s)
+master.deconvert = function(a)
     assert(type(a or error("[DECONVERT] INPUT_VOID")) == "table", ("[DECONVERT] INPUT_TYPE_NOTSUPPORT | attempt to deconvert with a '%s'."):format(type(a)))
-    s = a._size or s or 1
-    local result = {}
-    for i = #a, (a._dlen or 1), -1 do
-        local v = a[i]
-        assert(v, "[DECONVERT] VOID_VALUE | missing value in index = "..i)
-        v = tostring(v)
-        if #v ~= s and i ~= #a then
-            v = ("0"):rep(s - #v) .. v
+    local em, sm = false, {}
+    for i = a._dlen or 1, 0 do
+        if em then
+            sm[-i] = a[i]
+        else
+            if a[i] <= 0 then
+                a._dlen, a[i] = a._dlen + 1, nil
+            else
+                sm[-i], em = a[i], true
+            end
         end
-        result[#result + 1] = v and (i == 0 and v ~= "" and "." .. v or v) or nil
     end
-    if (a._dlen or 1) < 1 then
-        result[#result] = result[#result]:match("^(.-)0+$")
+    for i = #a, 2, -1 do
+        if a[i] <= 0 then
+            a[i] = nil
+        else
+            break
+        end
     end
-    return #result > 0 and table.concat(result) or "0"
+    return table.concat(a)..(em and "."..table.concat(sm, "", 0):match("(%d-)0*$") or "")
 end
 
 local Cmaster, Dmaster = master.convert, master.deconvert
@@ -180,18 +185,20 @@ master.objfloor = {
                 if i then
                     U = U or floor(10 ^ s)
                     rv = (v or 0) + iu
-                    rv, iu = tostring(rv % U), rv // U
+                    rv, iu = tostring(rv % U), floor(rv / U)
                 else
+                    local ca = {}
                     for v in tostring(v or ""):match("(%d-)0*$"):reverse():gmatch(".") do
                         v = tonumber(v)
                         if iu then
                             v = v + iu
-                            iu, v = v // 10, v % 10
+                            iu, v = floor(v / 10), v % 10
                         else
                             iu, v = v > 5 and 1 or 0, 0
                         end
-                        rv = rv and v..rv or tostring(v)
+                        ca[#ca+1] = v
                     end
+                    rv = table.concat(ca)
                 end
                 if not rv then
                     rv, iu = tostring(iu), nil
@@ -327,7 +334,7 @@ master.calculate = {
         local s, c, d = floor(10 ^ (result._size)), false, false
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
             local block_result = (a[i] or 0) + (b[i] or 0)
-            local next = block_result // s
+            local next = floor(block_result / s)
             result[i + 1] = (next ~= 0 and next) or nil
             if i >= 1 or c == true or block_result ~= 0 then
                 result[i], c = (block_result % s) + (result[i] or 0), true
@@ -353,8 +360,8 @@ master.calculate = {
                 result._dlen, d = (i < 1 and i) or 1, true
             end
             stack = (block_data == 0 and ((stack and {stack[1], i}) or {i, i})) or nil
-            result[i + 1] = (callback < 0 and (((callback % s) // s) + (((callback % s) ~= 0 and 1) or 0))) or nil
-            result[i + 1] = (block_result < 0 and (result[i + 1] or 0) + (((block_result % s) // s) + (((block_result % s) ~= 0 and 1) or 0))) or result[i + 1]
+            result[i + 1] = (callback < 0 and (floor((callback % s) / s) + (((callback % s) ~= 0 and 1) or 0))) or nil
+            result[i + 1] = (block_result < 0 and (result[i + 1] or 0) + (floor((block_result % s) / s) + (((block_result % s) ~= 0 and 1) or 0))) or result[i + 1]
         end
         if stack then
             for i = stack[1], stack[2] do
@@ -377,7 +384,7 @@ master.calculate = {
             for i2 = b._dlen or 1, #b do
                 local calcul, offset = block_a * b[i2], i + i2 - 1
                 local block_data = (calcul + (result[offset] or 0))
-                local next = block_data // s
+                local next = floor(block_data / s)
                 block_data = block_data % s
                 cd = (cd or block_data ~= 0) and true or nil
                 result[offset] = (offset >= 1 or cd) and block_data or nil
@@ -525,7 +532,7 @@ master.calculate = {
             d = self:mul(d, Cmaster("1"..("0"):rep(math.abs(b_dlen - 1)), s))
         end
         local raw = self:mul(a, d)
-        if lastpoint and -raw._dlen >= f // s then
+        if lastpoint and -raw._dlen >= floor(f / s) then
             local shf = 0
             for i = raw._dlen or 1, 0, -1 do
                 local sel = raw[i]
@@ -590,7 +597,7 @@ local media = {
         t.sign = n_type == "string" and (n:match("^%s*([+-])") or "+") or sign(n) < 0 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
-    deconvert = function(int) -- read table data and convert to the number. *string type*
+    tostring = function(int) -- Deconvert table to string.
         local str = Dmaster(int)
         return (int.sign == "-" and str ~= "0" and "-" or "")..str
     end,
@@ -666,12 +673,8 @@ function media.fdigitlen(x) -- Returns `INTEGER + FRACTION` length.
     return media.integerlen(x) + media.fractionlen(x)
 end
 
-function media.tostring(x) -- Deconvert table to string.
-    return media.deconvert(x)
-end
-
 function media.tonumber(x) -- Deconvert table to number. *not recommend*
-    return tonumber(media.deconvert(x))
+    return tonumber(media.tostring(x))
 end
 
 function assets.vtype(...) -- This function make table can mix a number and string. *return table*
@@ -736,7 +739,7 @@ function media.min(x, ...) -- Returns the argument with the minimum value, accor
     return result and setmetatable(result, master._metatable)
 end
 
-function media.In(x, l) -- Returns the Natural logarithm of `x` in the given base. `l` The maximum number of iterations to perform.
+function media.ln(x, l) -- Returns the Natural logarithm of `x` in the given base. `l` The maximum number of iterations to perform.
     x = media.vtype(x) or error("[IN] INPUT_VOID")
     if tostring(x) <= "0" then
         assert(tostring(x) ~= "0", "[IN] INPUT_VALIDATION_FAILED | Natural logarithm function return inf-positive value.")
@@ -775,7 +778,7 @@ end
 function media.fmod(x, y) -- Returns the remainder of the division of `x` by `y` that rounds the quotient towards zero.
     assert(x and y, "[FMOD] INPUT_VOID")
     x, y = media.vtype(x, y)
-    return x - ((x // y) * y)
+    return x - (media.floor(x / y) * y)
 end
 
 function assets.vpow(self, x, y, l) -- pow function assets. `y >= 0`
@@ -794,7 +797,7 @@ function assets.vpow(self, x, y, l) -- pow function assets. `y >= 0`
         local half_power = self:vpow(x, media.cdiv((y - 1), 2, 0, l), l)
         return x * half_power * half_power
     end
-    return media.exp(y * media.In(x))
+    return media.exp(y * media.ln(x))
 end
 
 function media.pow(x, y, f, l) -- Returns `x ^ y`. (`f` The maxiumum number of fraction, `l` The maximum number of iterations to perform.)
@@ -847,7 +850,7 @@ local mediaobj = {
     abs = media.abs,
 
     sign = media.sign,  fact = media.fact,  pow = media.pow,
-    max = media.max,    In = media.In,      floor = media.floor,
+    max = media.max,    ln = media.ln,      floor = media.floor,
     min = media.min,    exp = media.exp,    cround = media.cround,
 
     ceil = media.ceil,  fmod = media.fmod,
@@ -932,9 +935,9 @@ do
         end,
 
         -- Misc --
-        __tostring = media.deconvert,
+        __tostring = media.tostring,
         __mode = "v",
-        __name = "INT OBJECT",
+        __name = "int object",
 
         -- Index --
         __index = mediaobj,
@@ -951,15 +954,18 @@ local int = setmetatable({
 })
 
 int.new = function(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
-    local stack = {}
+    local stack, em = {}, false
     for i, s in ipairs({...}) do
-        stack[i] = media.convert(s, int._defaultsize)
+        stack[i], em = media.convert(s, int._defaultsize), true
+    end
+    if not em then
+        return media.convert(0, int._defaultsize)
     end
     return table.unpack(stack)
 end
 
 int.cnew = function(number, size) -- (number:string|number, size:string|number) For setting a size per block. **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
-    return media.convert(number, size and (tonumber(size) or master._config.SETINTEGER_PERBLOCK[size:upper()]) or int._defaultsize)
+    return media.convert(number or 0, size and (tonumber(size) or master._config.SETINTEGER_PERBLOCK[size:upper()]) or int._defaultsize)
 end
 
 int.maxinteger = master._config.MAXIMUM_DIGIT_PERTABLE.INTEGER

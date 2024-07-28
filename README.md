@@ -29,7 +29,7 @@ reason why this module name is "int"? because in this module alway use integer t
   - max
   - min
   - abs
-  - In `Natural logarithm`
+  - ln `Natural logarithm`
   - fact `Factorial function`
   - exp `Exponential function`
   - floor
@@ -162,7 +162,7 @@ all function is in version: **build 180**
   - int.eqmore
   - int.abs
   - int.fact
-  - int.In</span>
+  - int.ln</span>
   - int.exp
   - int.sqrt
   - int.pow
@@ -196,7 +196,7 @@ print(int.floor(x, 2)) -- output: 14.69
 - **methods**
   - abs
   - fact
-  - In
+  - ln
   - exp
   - sqrt
   - pow
