@@ -1,7 +1,7 @@
 ----------------------------------------------------
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
--- MODULE VERSION: 184 (28/07/2024) dd:mm:yyyy
+-- MODULE VERSION: 185 (02/08/2024) dd:mm:yyyy
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int
@@ -824,6 +824,11 @@ function media.sqrt(x, f, l) -- Returns the square root of `x`. (`f` The maxiumu
     return objfloor:cround(res, TOLERANCE)
 end
 
+function media.unm(x)
+    x.sign = x.sign == "-" and "+" or "-"
+    return x
+end
+
 local mediaobj = {
     tostring = media.tostring,
     tonumber = media.tonumber,
@@ -853,7 +858,7 @@ local mediaobj = {
     max = media.max,    ln = media.ln,      floor = media.floor,
     min = media.min,    exp = media.exp,    cround = media.cround,
 
-    ceil = media.ceil,  fmod = media.fmod,
+    ceil = media.ceil,  fmod = media.fmod,  unm = media.unm,
     modf = media.modf,  sqrt = media.sqrt,
 
     integerlen = media.integerlen,
@@ -873,12 +878,14 @@ do
 
         cal = master.calculate,
         div = media.cdiv,
+        unm = media.unm,
 
-        equal = media.equal,
-        less = media.less,
-        more = media.more,
+        equal = master.equation.equal,
+        less = master.equation.less,
+        more = master.equation.more,
         
-        setmetatable = setmetatable
+        setmetatable = setmetatable,
+        print = print
     }
 
     -- Build metatable --
@@ -911,6 +918,7 @@ do
             return setmetatable(raw, master._metatable)
         end,
         __div = div,
+        __unm = unm,
         __mod = media.fmod,
         __pow = media.pow,
         __idiv = function(x, y)

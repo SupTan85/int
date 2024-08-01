@@ -6,7 +6,7 @@
 
 This module unlock the limit for calculate large number in Lua. *This project is in beta!*
 
-**Support & Verify: Lua 5.2, Lua 5.3, Lua 5.4**
+**Support & Verify: Lua 5.2, Lua 5.3, Lua 5.4**\
 **Check by [example.lua](example.lua) file**
 
 ---
@@ -70,35 +70,36 @@ very easy, right?
 
 ## function & methods
 
-all function is in version: **build 184**
+all function is in version: **build 185**
 
 - **module function**
-  - int.new
+  - int.abs
+  - int.ceil
   - int.cnew
-  - int.tostring
-  - int.tonumber
-  - int.equal
-  - int.less
-  - int.more
+  - int.cround
   - int.eqless
   - int.eqmore
-  - int.abs
-  - int.fact
-  - int.ln
+  - int.equal
   - int.exp
-  - int.sqrt
-  - int.pow
-  - int.ceil
+  - int.fact
   - int.fdigitlen
   - int.floor
-  - int.cround
   - int.fmod
   - int.fractionlen
   - int.integerlen
+  - int.less
+  - int.ln
   - int.max
   - int.min
   - int.modf
+  - int.more
+  - int.new
+  - int.pow
   - int.sign
+  - int.sqrt
+  - int.tonumber
+  - int.tostring
+  - int.unm
 
 **Example to call a function:**
 
@@ -117,29 +118,30 @@ print(int.floor(x, 2)) -- output: 14.69
 
 - **methods**
   - abs
-  - fact
-  - ln
-  - exp
-  - sqrt
-  - pow
   - ceil
+  - cround
   - eqless
   - eqmore
   - equal
+  - exp
+  - fact
   - fdigitlen
   - floor
-  - cround
   - fmod
   - fractionlen
   - integerlen
   - less
+  - ln
   - max
   - min
   - modf
   - more
+  - pow
   - sign
+  - sqrt
   - tonumber
   - tostring
+  - unm
 
 **Example to call a function:**
 
