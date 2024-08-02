@@ -11,6 +11,59 @@ This module unlock the limit for calculate large number in Lua. *This project is
 
 ---
 
+## how to use
+
+Require a module with `require` function in Lua
+
+```lua
+local int = require("int")
+```
+
+Use this module you should to make a new object
+
+```lua
+local int = require("int")
+
+local x = int.new("13") -- input can be a number or string! *recommend to use string*
+
+print(x) -- output: "13"
+```
+
+Use [Calculation operators](#operators) to calculate math.
+
+**Note:** only operator that in support
+
+```lua
+-- require a module
+local int = require("int")
+
+-- build a new int object
+local x, y = int.new("20", "10")
+
+print(x + y) -- output: 30
+```
+
+---
+
+## feature
+
+- **Calculate**
+  - addition `+`
+  - subtraction `-`
+  - multiplication `*`
+  - division `\, \\`
+  - modulo `%`
+  - power `^`
+  - sqrt
+- **Equation**
+  - equal
+  - less than
+  - more than
+
+**and more...**
+
+---
+
 ## design
 
 This a example inside table of [int object](#int-object)
@@ -158,10 +211,57 @@ print(x:floor(2)) -- output: 14.69
 
 ---
 
+## operators
+
+- **Calculation**
+  - addition `+`
+  - subtraction `-`
+  - multiplication `*`
+  - division `\`
+  - floor division `\\` *-- some version of Lua are not support (Lua 5.3 >=)*
+  - modulo `%` *-- some version of Lua are not support (Lua 5.1 >=)*
+  - power `^` *-- some version of Lua are not support (Lua 5.1 >=)*
+
+**Example to using a calculation operator:**
+
+```lua
+local int = require("int")
+
+local x, y = int.new("4", "2")
+
+print(x / y) -- output: 2
+```
+
+**Note:** some version of Lua you can use calculation operator with number & string
+
+---
+
+- **Equation**
+  - equal `==`
+  - equal or less `<=`
+  - equal or more `>=`
+  - less than `<`
+  - more than `>`
+
+**Example to using a equation operator:**
+
+```lua
+local int = require("int")
+
+local x, y = int.new("4", "2")
+
+print(x > y) -- output: true
+```
+
+**Note:** some version of Lua you can use equation operator with number & string
+
+---
+
 ## limit
 
 - some function won't support a super very large data, however that function i didn't find it. lol
 </br>
+
 - Maximum digit of integer is 9223372036854775806
   - Set `_size` to `9` maximum digit of integer is `83010348331692982254 (9223372036854775806 * 9)`
 
