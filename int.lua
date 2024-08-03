@@ -1,7 +1,7 @@
 ----------------------------------------------------
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
--- MODULE VERSION: 185 (02/08/2024) dd:mm:yyyy
+-- MODULE VERSION: 185 (03/08/2024) dd:mm:yyyy
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int
@@ -69,6 +69,8 @@ local master = {
 local OPTION = master._config.OPTION
 local ACCURACY_LIMIT = master._config.ACCURACY_LIMIT
 
+---@diagnostic disable-next-line: deprecated
+table.unpack = table.unpack or unpack
 local max, min, floor, ceil = math.max, math.min, math.floor, math.ceil
 
 master.convert = function(st, s)
@@ -97,26 +99,23 @@ end
 
 master.deconvert = function(a)
     assert(type(a or error("[DECONVERT] INPUT_VOID")) == "table", ("[DECONVERT] INPUT_TYPE_NOTSUPPORT | attempt to deconvert with a '%s'."):format(type(a)))
-    local em, sm = false, {}
+    local em, sm, fm = false, {}, {}
     for i = a._dlen or 1, 0 do
-        if em then
-            sm[-i] = a[i]
-        else
-            if a[i] <= 0 then
-                a._dlen, a[i] = a._dlen + 1, nil
-            else
-                sm[-i], em = a[i], true
-            end
-        end
-    end
-    for i = #a, 2, -1 do
-        if a[i] <= 0 then
+        if not em and a[i] <= 0 then
             a[i] = nil
         else
-            break
+            sm[-i], em = a[i], true
         end
     end
-    return table.concat(a)..(em and "."..table.concat(sm, "", 0):match("(%d-)0*$") or "")
+    em = false
+    for i = #a, 1, -1 do
+        if not em and a[i] <= 0 then
+            a[i] = nil
+        else
+            fm[#fm+1], em = a[i], true
+        end
+    end
+    return (fm[1] and table.concat(fm) or "0")..(sm[0] and "."..table.concat(sm, "", 0):match("(%d-)0*$") or "")
 end
 
 local Cmaster, Dmaster = master.convert, master.deconvert
@@ -893,53 +892,53 @@ do
 
         -- Calculation operators --
         __add = function(x, y)
-            x, y = vtype(x, y)
+            x, y = _ENV.vtype(x, y)
             if x.sign == y.sign then
-                local raw = cal:add(x, y)
+                local raw = _ENV.cal:add(x, y)
                 raw.sign = x.sign or "+"
                 return setmetatable(raw, master._metatable)
             end
-            local reg = more(x, y)
-            local raw = cal:sub(reg and x or y, reg and y or x)
+            local reg = _ENV.more(x, y)
+            local raw = _ENV.cal:sub(reg and x or y, reg and y or x)
             raw.sign = (reg and x or y).sign or "+"
             return setmetatable(raw, master._metatable)
         end,
         __sub = function (x, y)
-            x, y = vtype(x, y)
-            local reg = more(x, y)
-            local raw = (x.sign == y.sign) and cal:sub(reg and x or y, reg and y or x) or cal:add(x, y)
+            x, y = _ENV.vtype(x, y)
+            local reg = _ENV.more(x, y)
+            local raw = (x.sign == y.sign) and _ENV.cal:sub(reg and x or y, reg and y or x) or _ENV.cal:add(x, y)
             raw.sign = ((y.sign == "+" and reg) or (y.sign == "-" and not reg)) and "+" or "-"
             return setmetatable(raw, master._metatable)
         end,
         __mul = function(x, y)
-            x, y = vtype(x, y)
-            local raw = cal:mul(x, y)
-            raw.sign = smul(x, y)
+            x, y = _ENV.vtype(x, y)
+            local raw = _ENV.cal:mul(x, y)
+            raw.sign = _ENV.smul(x, y)
             return setmetatable(raw, master._metatable)
         end,
-        __div = div,
-        __unm = unm,
+        __div = _ENV.div,
+        __unm = _ENV.unm,
         __mod = media.fmod,
         __pow = media.pow,
         __idiv = function(x, y)
-            x, y = vtype(x, y)
-            local d, f = modf(div(x, y))
-            local sign = smul(x, y)
-            local raw = sign == "-" and more(f, vtype(0)) and cal:add(d, vtype(1)) or d
+            x, y = _ENV.vtype(x, y)
+            local d, f = _ENV.modf(_ENV.div(x, y))
+            local sign = _ENV.smul(x, y)
+            local raw = sign == "-" and _ENV.more(f, _ENV.vtype(0)) and _ENV.cal:add(d, _ENV.vtype(1)) or d
             raw.sign = sign
             return setmetatable(raw, master._metatable)
         end,
 
         -- Equation operators --
         __eq = function(x, y)
-            return equal(vtype(x, y))
+            return _ENV.equal(_ENV.vtype(x, y))
         end,
         __lt = function(x, y)
-            return less(vtype(x, y))
+            return _ENV.less(_ENV.vtype(x, y))
         end,
         __le = function(x, y)
-            x, y = vtype(x, y)
-            return equal(x, y) or less(x, y)
+            x, y = _ENV.vtype(x, y)
+            return _ENV.equal(x, y) or _ENV.less(x, y)
         end,
 
         -- Misc --

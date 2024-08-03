@@ -6,7 +6,7 @@
 
 This module unlock the limit for calculate large number in Lua. *This project is in beta!*
 
-**Support & Verify: Lua 5.2, Lua 5.3, Lua 5.4**\
+**Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4**\
 **Check by [example.lua](example.lua) file**
 
 ---
