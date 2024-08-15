@@ -2,7 +2,7 @@
 
 ![https://github.com/SupTan85/int](cover.png)
 
-## Let's unlimit the number in Lua
+## Let's calculate large number in Lua
 
 This module unlock the limit for calculate large number in Lua. *This project is in beta!*
 
@@ -13,7 +13,8 @@ This module unlock the limit for calculate large number in Lua. *This project is
 
 ## how to use
 
-Require a module with `require` function in Lua
+**Frist, download the [module](int.lua) and place it in your folder or somewhere you can access it.**\
+Import the module with `require` function in Lua
 
 ```lua
 local int = require("int")
@@ -128,18 +129,18 @@ all function is in version: **build 185**
 - **module function**
   - int.abs
   - int.ceil
-  - int.cnew
-  - int.cround
+  - int.cnew *-- custom int.new function*
+  - int.cround *-- custom int.round function*
   - int.eqless
   - int.eqmore
   - int.equal
   - int.exp
   - int.fact
-  - int.fdigitlen
+  - int.fdigitlen *-- full digit length*
   - int.floor
   - int.fmod
-  - int.fractionlen
-  - int.integerlen
+  - int.fractionlen *-- only fraction length*
+  - int.integerlen *-- only integer length*
   - int.less
   - int.ln
   - int.max
@@ -172,17 +173,17 @@ print(int.floor(x, 2)) -- output: 14.69
 - **methods**
   - abs
   - ceil
-  - cround
+  - cround *-- custom int.round function*
   - eqless
   - eqmore
   - equal
   - exp
   - fact
-  - fdigitlen
+  - fdigitlen *-- full digit length*
   - floor
   - fmod
-  - fractionlen
-  - integerlen
+  - fractionlen *-- only fraction length*
+  - integerlen *-- only integer length*
   - less
   - ln
   - max

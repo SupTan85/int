@@ -63,7 +63,7 @@ local master = {
         MAXIMUM_LUA_INTEGER = 9223372036854775807 -- math.maxinteger
     },
 
-    _VERSION = "184"
+    _VERSION = "185"
 }
 
 local OPTION = master._config.OPTION
@@ -97,22 +97,23 @@ master.convert = function(st, s)
     return result
 end
 
-master.deconvert = function(a)
-    assert(type(a or error("[DECONVERT] INPUT_VOID")) == "table", ("[DECONVERT] INPUT_TYPE_NOTSUPPORT | attempt to deconvert with a '%s'."):format(type(a)))
-    local em, sm, fm = false, {}, {}
-    for i = a._dlen or 1, 0 do
-        if not em and a[i] <= 0 then
-            a[i] = nil
+master.deconvert = function(x)
+    assert(type(x or error("[DECONVERT] INPUT_VOID")) == "table", ("[DECONVERT] INPUT_TYPE_NOTSUPPORT | attempt to deconvert with a '%s'."):format(type(x)))
+    local em, sm, fm, s = false, {}, {}, x._size or 1
+    for i = x._dlen or 1, 0 do
+        if not em and x[i] <= 0 then
+            x[i] = nil
         else
-            sm[-i], em = a[i], true
+            local v = tostring(x[i])
+            sm[-i], em = ("0"):rep(s - #v)..v, true
         end
     end
     em = false
-    for i = #a, 1, -1 do
-        if not em and a[i] <= 0 then
-            a[i] = nil
+    for i = #x, 1, -1 do
+        if not em and x[i] <= 0 then
+            x[i] = nil
         else
-            fm[#fm+1], em = a[i], true
+            fm[#fm+1], em = x[i], true
         end
     end
     return (fm[1] and table.concat(fm) or "0")..(sm[0] and "."..table.concat(sm, "", 0):match("(%d-)0*$") or "")
@@ -120,10 +121,10 @@ end
 
 local Cmaster, Dmaster = master.convert, master.deconvert
 master.objfloor = {
-    _floor = function(x, length, s, c)
-        local rev, dlen = length < 0, x._dlen or 1
+    _floor = function(x, length, s)
+        local rev, dlen, ispr = length < 0, x._dlen or 1, true
         length = rev and math.abs(((dlen - 1) * s) + (s - #(tostring(x[dlen]):match("^(%d-)0*$") or ""))) + length or length
-        local endp, ispr
+        local endp
         if rev or ceil(-length / s) > dlen - 1 then
             endp = ceil(-length / s)
             for i = dlen, min(endp, 0) do
@@ -132,7 +133,7 @@ master.objfloor = {
                     local hofu = tonumber(shift..("0"):rep(s - #shift))
                     ispr = ispr or (length % s) < #(tostring(x[i]):match("^(%d-)0*$") or "")
                     x[i] = hofu ~= 0 and hofu
-                    if not x[i] and not c then
+                    if not x[i] then
                         endp = endp + 1
                         for i = endp, 0 do
                             if x[i] == 0 then
@@ -143,12 +144,12 @@ master.objfloor = {
                         end
                     end
                 else
-                    x[i], ispr = nil, true
+                    x[i] = nil
                 end
             end
             x._dlen = endp
         end
-        return {x, ispr or false, endp or dlen}
+        return {x, ispr, endp or dlen}
     end,
 
     floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
@@ -174,7 +175,7 @@ master.objfloor = {
         if length < 0 and length + 1 == 0 then
             ispr, endp = true, x._dlen or 1
         else
-            x, ispr, endp = table.unpack(self._floor(x, length + 1, s, false))
+            x, ispr, endp = table.unpack(self._floor(x, length + 1, s))
         end
         if ispr and (x._dlen or 1) < 1 then
             local i, iu, dx, U
@@ -413,11 +414,12 @@ master.calculate = {
         local auto_acc, more, less, right = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less, master.roll.right
         local one = Cmaster(1, s)
         local accuracy, uc = 0, 0
+        local lastpoint, fin, mark
         local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_FLOATING_POINT and (function(b)
             local p = tostring("1" / b)
             if p:find("e") then
-                local L = p:match("^[-+]?(%d-%.?%d+)e")
-                local R = p:match("e[-+]?(%d+)$")
+                local L, R = p:match("^[-+]?(%d-%.?%d+)e"), p:match("e[-+]?(%d+)$")
+                L, lastpoint = L:sub(1, -2), L:sub(-2, -2)
                 local S = L:match("^(%d+)%."):len()
                 if tonumber(R) > master._config.MAXIMUM_LUA_INTEGER then
                     return {L:gsub("%.", ""), self.sub(Cmaster(R, s), Cmaster(S, s))}
@@ -481,7 +483,6 @@ master.calculate = {
             end
             return false, low
         end
-        local lastpoint, fin, mark
         if d then
             if type(d) == "table" then
                 local fp, bp = d[2], d[1]
@@ -503,7 +504,7 @@ master.calculate = {
             else
                 d = d:sub(1, auto_acc and Dmaster(accuracy) or accuracy)
                 accuracy = auto_acc and self.sub(accuracy, Cmaster(d:len())) or accuracy - d:match("%.(.+)$"):len()
-                d = Cmaster(d, s)
+                d, lastpoint = Cmaster(d, s), lastpoint or d:match("(%d)0*$")
             end
         end
         while auto_acc and more(accuracy, Cmaster(0, s)) or not auto_acc and accuracy > 0 do
