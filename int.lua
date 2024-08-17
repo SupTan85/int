@@ -19,13 +19,13 @@ local master = {
         },
 
         OPTION = {
-            --[[ MASTER DIVISION | BYPASS FLOATING POINT >>
+            --[[ MASTER DIVISION | BYPASS GENERATE FLOATING POINT >>
                 How dose it work :
-                    optimize division process by less loop calculate cycle.
+                    Optimize the division process by reducing the number of loop iterations. However, this approach may not be effective for very large numbers.
 
                 Copy right (C) 2024 SupTan85
             << BUILD-IN >>]]
-            MASTER_CALCULATE_DIV_BYPASS_FLOATING_POINT = true,
+            MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = true,
 
             --[[ MASTER DIVISION | AUTO CONFIG ITERATIONS LIMIT >>
                 How dose it work :
@@ -104,8 +104,8 @@ master.deconvert = function(x)
         if not em and x[i] <= 0 then
             x[i] = nil
         else
-            local v = tostring(x[i])
-            sm[-i], em = ("0"):rep(s - #v)..v, true
+            local v = tostring(x[i] or error(("[DECONVERT] DAMAGED_OBJECT | missing fraction value. index[%s]"):format(i)))
+            sm[-i], em = (v):match("%.") and error(("[DECONVERT] DAMAGED_OBJECT | data issue at fraction value. index[%s]"):format(i)) or ("0"):rep(s - #v)..v, true
         end
     end
     em = false
@@ -113,7 +113,8 @@ master.deconvert = function(x)
         if not em and x[i] <= 0 then
             x[i] = nil
         else
-            fm[#fm+1], em = x[i], true
+            local v = tostring(x[i] or error(("[DECONVERT] DAMAGED_OBJECT | missing integer value. index[%s]"):format(i)))
+            fm[#fm+1], em = (v):match("%.") and error(("[DECONVERT] DAMAGED_OBJECT | data issue at integer value. index[%s]"):format(i)) or v, true
         end
     end
     return (fm[1] and table.concat(fm) or "0")..(sm[0] and "."..table.concat(sm, "", 0):match("(%d-)0*$") or "")
@@ -381,20 +382,23 @@ master.calculate = {
         local cd
         for i = a._dlen or 1, #a do
             local block_a = a[i]
-            for i2 = b._dlen or 1, #b do
-                local calcul, offset = block_a * b[i2], i + i2 - 1
-                local block_data = (calcul + (result[offset] or 0))
-                local next = floor(block_data / s)
-                block_data = block_data % s
-                cd = (cd or block_data ~= 0) and true or nil
-                result[offset] = (offset >= 1 or cd) and block_data or nil
-                op = result[offset] and min(op, offset) or op
-                result[offset + 1] = (next ~= 0 and (next + (result[offset + 1] or 0))) or result[offset + 1]
-            end
-            if e and #result >= 1 then
-                if #result > 1 or (#result == 1 and result[1] ~= 0) then
-                    break
+            if block_a ~= 0 then
+                for i2 = b._dlen or 1, #b do
+                    local calcul, offset = block_a * b[i2], i + i2 - 1
+                    local block_data = (calcul + (result[offset] or 0))
+                    local next = floor(block_data / s)
+                    block_data = block_data % s
+                    cd = cd or block_data ~= 0
+                    result[offset] = (offset > 0 or cd) and block_data
+                    result[offset + 1], op = (next ~= 0 and (next + (result[offset + 1] or 0))) or result[offset + 1], result[offset] and min(op, offset) or op
                 end
+                if e and #result >= 1 then
+                    if #result > 1 or (#result == 1 and result[1] ~= 0) then
+                        break
+                    end
+                end
+            elseif i > 0 then
+                result[i] = 0
             end
         end
         for i = #result, 2, -1 do
@@ -415,7 +419,7 @@ master.calculate = {
         local one = Cmaster(1, s)
         local accuracy, uc = 0, 0
         local lastpoint, fin, mark
-        local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_FLOATING_POINT and (function(b)
+        local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT and (function(b)
             local p = tostring("1" / b)
             if p:find("e") then
                 local L, R = p:match("^[-+]?(%d-%.?%d+)e"), p:match("e[-+]?(%d+)$")
