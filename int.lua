@@ -463,7 +463,7 @@ master.calculate = {
             if c then
                 map = {}
                 for i = 0, 9 do
-                    map[i + 1] = (i % 2 == 0 and (c - ceil(i / 2)) or (c + ceil(i / 2))) % 10
+                    map[i + 1] = (i % 2 ~= 0 and (c - ceil(i / 2)) or (c + ceil(i / 2))) % 10
                 end
             else
                 map = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
