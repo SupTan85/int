@@ -1,10 +1,11 @@
 # int
 
-![https://github.com/SupTan85/int](cover.png)
+![https://github.com/SupTan85/int](.doc/cover.png)
 
 ## Let's calculate large number in Lua
 
-This module unlock the limit for calculate large number in Lua. *This project is in beta!*
+The `int` module extends Lua capability to handle large numbers.\
+**note:** This project is currently in beta.
 
 **Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4**\
 **Check by [example.lua](example.lua) file**
@@ -129,25 +130,25 @@ all function is in version: **build 185**
 - **module function**
   - int.abs
   - int.ceil
-  - int.cnew *-- custom int.new function*
+  - [int.cnew](.doc/int.cnew.md#function) *-- custom int.new function*
   - int.cround *-- custom int.round function*
-  - int.eqless
-  - int.eqmore
+  - int.eqless *-- equal or less then*
+  - int.eqmore *-- equal or more then*
   - int.equal
   - int.exp
   - int.fact
-  - int.fdigitlen *-- full digit length*
+  - [int.fdigitlen](.doc/int.fdigitlen.md#function) *-- return length of digits*
   - int.floor
-  - int.fmod
-  - int.fractionlen *-- only fraction length*
-  - int.integerlen *-- only integer length*
+  - int.fmod *-- modulo function*
+  - [int.fractionlen](.doc/int.fractionlen.md#function) *-- return only length of fraction*
+  - [int.integerlen](.doc/int.integerlen.md#function) *-- return only length of integer*
   - int.less
   - int.ln
   - int.max
   - int.min
   - int.modf
   - int.more
-  - int.new
+  - [int.new](.doc/int.new.md#function)
   - int.pow
   - int.sign
   - int.sqrt
@@ -174,16 +175,16 @@ print(int.floor(x, 2)) -- output: 14.69
   - abs
   - ceil
   - cround *-- custom int.round function*
-  - eqless
-  - eqmore
+  - eqless *-- equal or less then*
+  - eqmore *-- equal or more then*
   - equal
   - exp
   - fact
-  - fdigitlen *-- full digit length*
+  - [fdigitlen](.doc/int.fdigitlen.md#methods) *-- return length of digits*
   - floor
-  - fmod
-  - fractionlen *-- only fraction length*
-  - integerlen *-- only integer length*
+  - fmod *-- modulo function*
+  - [fractionlen](.doc/int.fractionlen.md#methods) *-- return only length of fraction*
+  - [integerlen](.doc/int.integerlen.md#methods) *-- return only length of integer*
   - less
   - ln
   - max
@@ -238,11 +239,11 @@ print(x / y) -- output: 2
 ---
 
 - **Equation**
-  - equal `==`
-  - equal or less `<=`
-  - equal or more `>=`
-  - less than `<`
-  - more than `>`
+  - `==` equal
+  - `<=` equal or less then
+  - `>=` equal or more then
+  - `<` less than
+  - `>` more than
 
 **Example to using a equation operator:**
 
@@ -271,7 +272,8 @@ print(x > y) -- output: true
 
 ---
 
-reason why this module name is "int"? because in this module always use integer to calculate math.\
-**feel free to use!**
+reason why this module name is "int"? because in this module always use integer to calculate math,\
+and feel free to use!\
+**doc version: 0x12**
 
-![end](image-d.png)
+![end](.doc/image-d.png)
