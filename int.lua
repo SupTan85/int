@@ -60,7 +60,7 @@ local master = {
         },
 
         MAXIMUM_SIZE_PERBLOCK = 9, -- stable size is 9
-        MAXIMUM_LUA_INTEGER = 9223372036854775807 -- math.maxinteger
+        MAXIMUM_LUA_INTEGER = "9223372036854775807" -- math.maxinteger
     },
 
     _VERSION = "185"
@@ -425,20 +425,23 @@ master.calculate = {
                 local L, R = p:match("^[-+]?(%d-%.?%d+)e"), p:match("e[-+]?(%d+)$")
                 L, lastpoint = L:sub(1, -2), L:sub(-2, -2)
                 local S = L:match("^(%d+)%."):len()
-                if tonumber(R) > master._config.MAXIMUM_LUA_INTEGER then
+                if R > master._config.MAXIMUM_LUA_INTEGER then
                     return {L:gsub("%.", ""), self.sub(Cmaster(R, s), Cmaster(S, s))}
                 end
                 return "0."..("0"):rep(tonumber(R) - S)..L:gsub("%.", "")
             end
             return p ~= "0.0" and p
         end)(Dmaster(b))
+        if not d and #b > 1 then
+            d = "0."..("0"):rep(#b - 2)
+        end
         if auto_acc then
             local function HF(x)
                 return (s - #tostring(x[#x])) + ((x._dlen or 1) < 1 and s - #tostring(x[x._dlen] or "") or 0)
             end
             local AN, BN = (#a + math.abs((a._dlen or 1) - 1)) * s, (#b + math.abs(b_dlen - 1)) * s
             local NV = AN > BN
-            if (NV and AN or BN) < master._config.MAXIMUM_LUA_INTEGER then
+            if (NV and AN or BN) < tonumber(master._config.MAXIMUM_LUA_INTEGER) then
                 accuracy, auto_acc = (NV and AN or BN) - HF(NV and a or b) + f, false
             else
                 local AS, BS = self.add(Cmaster(#a, s), Cmaster(math.abs((a._dlen or 1) - 1), s)), self.add(Cmaster(#b, s), Cmaster(math.abs(b_dlen - 1), s))
@@ -621,7 +624,7 @@ local media = {
             result = setmetatable(Cmaster("1", s or master._config.SETINTEGER_PERBLOCK.DEFAULT), master._metatable)
             result.sign = "+"
         end
-        if tostring(n) >= tostring(master._config.MAXIMUM_LUA_INTEGER) then
+        if tostring(n) >= master._config.MAXIMUM_LUA_INTEGER then
             while tostring(n) > "0" do
                 result, n = result * n, n - 1
             end

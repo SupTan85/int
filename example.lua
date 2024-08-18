@@ -13,14 +13,14 @@ for i = 1, MAXLOOP do
         if not ALLSAME then
             n, c = {}, {}
         end
-        for _ = 1, arg[2] and tonumber(arg[2]:match("(%d+)$")) or 1000 do
+        for _ = 1, arg[2] and tonumber(arg[2]:match("(%d+)$")) or 300 do
             n[#n + 1] = math.random(0, 9)
             c[#c + 1] = math.random(0, 9)
         end
     end
     local x, y = int.new(table.concat(n), table.concat(c))
     local start = os.clock()
-    local result = x / y
+    local result = x % y
     -- loading bar --
     local bar, res = ("|"):rep(math.floor((i / MAXLOOP) * 100)), os.clock() - start
     if avg.i >= 10 then
