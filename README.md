@@ -97,7 +97,8 @@ local example_int_table = {
 
 ## int object
 
-A table but you can call a function with it and can calculate with using operators
+A table but you can call a function with it and can calculate with using operators\
+or uses with [function & methods](#function--methods)
 
 **example script:**
 
@@ -274,6 +275,6 @@ print(x > y) -- output: true
 
 reason why this module name is "int"? because in this module always use integer to calculate math,\
 and feel free to use!\
-**doc version: 0x12**
+**doc version: 0x13**
 
 ![end](.doc/image-d.png)
