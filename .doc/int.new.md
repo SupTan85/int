@@ -5,13 +5,15 @@
 ## function
 
 This function is used to create multiple objects at once, This function uses the default size settings per block.\
-**Note: It is recommended to use string type as input, also you can input number.**
+**Note: It is recommended to use string type as input, also you can input number type.**
+
+**Input type:**
+
+- **...args** -- string / number only
 
 ```lua
-int.new = function(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
+function int.new(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
 ```
-
----
 
 **Example:**
 

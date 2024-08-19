@@ -4,16 +4,17 @@
 
 ## function
 
-This function counts and return length of integer.\
-**Note: input [int object](../README.md#int-object) only.**
+This function counts and return length of integer.
+
+**Input type:**
+
+- **x** -- [int object](../README.md#int-object) only.
 
 ```lua
-function media.integerlen(x) -- Returns length of `INTEGER`.
+function int.integerlen(x) -- Returns length of `INTEGER`.
 ```
 
 It does not include fraction.
-
----
 
 **Example:**
 
@@ -49,6 +50,11 @@ also you can do like this:
 local int = require("int") -- import module
 
 local x, y = int.new("12.34", "123.4")
+
+-- this works like "int.integerlen(x)"
+print(y.integerlen(x)) -- output: 2
+
+-- this works like "int.integerlen(y)"
 print(x.integerlen(y)) -- output: 3
 ```
 

@@ -1,17 +1,17 @@
-# int.fdigitlen
+# int.abs
 
 ![https://github.com/SupTan85/int](cover.png)
 
 ## function
 
-This function counts and return length of digits.
+This function returns the absolute value.
 
 **Input type:**
 
 - **x** -- [int object](../README.md#int-object) only.
 
 ```lua
-function int.fdigitlen(x) -- Returns length of `INTEGER` + length of `FRACTION`.
+function int.abs(x) -- Returns the absolute value of `x`.
 ```
 
 **Example:**
@@ -19,9 +19,9 @@ function int.fdigitlen(x) -- Returns length of `INTEGER` + length of `FRACTION`.
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12.34", "123.4")
-print(int.fdigitlen(x)) -- output: 4
-print(int.fdigitlen(y)) -- output: 4
+local x, y = int.new("-15", "13")
+print(int.abs(x)) -- output: 15
+print(int.abs(y)) -- output: 13
 ```
 
 ---
@@ -35,9 +35,9 @@ This feature support to call in object.
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12.34", "123.4")
-print(x:fdigitlen()) -- output: 4
-print(y:fdigitlen()) -- output: 4
+local x, y = int.new("-15", "13")
+print(x:abs()) -- output: 15
+print(y:abs()) -- output: 13
 ```
 
 also you can do like this:
@@ -47,13 +47,13 @@ also you can do like this:
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12.34", "123.4")
+local x, y = int.new("-15", "13")
 
--- this works like "print(int.fdigitlen(x))"
-print(y.fdigitlen(x)) -- output: 4
+-- this works like "print(int.abs(x))"
+print(y.abs(x)) -- output: 15
 
--- this works like "print(int.fdigitlen(y))"
-print(x.fdigitlen(y)) -- output: 4
+-- this works like "print(int.abs(y))"
+print(x.abs(y)) -- output: 13
 ```
 
 ---

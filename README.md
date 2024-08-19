@@ -129,7 +129,7 @@ very easy, right?
 all function is in version: **build 185**
 
 - **module function**
-  - int.abs
+  - [int.abs](.doc/int.abs.md#function)
   - int.ceil
   - [int.cnew](.doc/int.cnew.md#function) *-- custom int.new function*
   - int.cround *-- custom int.round function*
@@ -139,7 +139,7 @@ all function is in version: **build 185**
   - int.exp
   - int.fact
   - [int.fdigitlen](.doc/int.fdigitlen.md#function) *-- return length of digits*
-  - int.floor
+  - [int.floor](.doc/int.floor.md#function)
   - int.fmod *-- modulo function*
   - [int.fractionlen](.doc/int.fractionlen.md#function) *-- return only length of fraction*
   - [int.integerlen](.doc/int.integerlen.md#function) *-- return only length of integer*
@@ -173,7 +173,7 @@ print(int.floor(x, 2)) -- output: 14.69
 ---
 
 - **methods**
-  - abs
+  - [abs](.doc/int.abs.md#methods)
   - ceil
   - cround *-- custom int.round function*
   - eqless *-- equal or less then*
@@ -182,7 +182,7 @@ print(int.floor(x, 2)) -- output: 14.69
   - exp
   - fact
   - [fdigitlen](.doc/int.fdigitlen.md#methods) *-- return length of digits*
-  - floor
+  - [floor](.doc/int.floor.md#methods)
   - fmod *-- modulo function*
   - [fractionlen](.doc/int.fractionlen.md#methods) *-- return only length of fraction*
   - [integerlen](.doc/int.integerlen.md#methods) *-- return only length of integer*
@@ -275,6 +275,6 @@ print(x > y) -- output: true
 
 reason why this module name is "int"? because in this module always use integer to calculate math,\
 and feel free to use!\
-**doc version: 0x13**
+**doc version: 0x14**
 
 ![end](.doc/image-d.png)

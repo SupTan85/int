@@ -4,16 +4,17 @@
 
 ## function
 
-This function counts and return length of fraction.\
-**Note: input [int object](../README.md#int-object) only.**
+This function counts and return length of fraction.
+
+**Input type:**
+
+- **x** -- [int object](../README.md#int-object) only.
 
 ```lua
-function media.fractionlen(x) -- Returns length of `FRACTION`.
+function int.fractionlen(x) -- Returns length of `FRACTION`.
 ```
 
 It does not include integer.
-
----
 
 **Example:**
 
@@ -49,6 +50,11 @@ also you can do like this:
 local int = require("int") -- import module
 
 local x, y = int.new("12.34", "123.4")
+
+-- this works like "print(int.fractionlen(x))"
+print(y.fractionlen(x)) -- output: 2
+
+-- this works like "print(int.fractionlen(y))"
 print(x.fractionlen(y)) -- output: 1
 ```
 
