@@ -21,7 +21,8 @@ Import the module with `require` function in Lua
 local int = require("int")
 ```
 
-Use this module you should to make a new object
+Next, to create a new object,\
+you need to use [int.new](.doc/int.new.md#function) function.
 
 ```lua
 local int = require("int")
@@ -33,7 +34,7 @@ print(x) -- output: "13"
 
 Use [Calculation operators](#operators) to calculate math.
 
-**Note:** only operator that in support
+**Note:** only operator that is supported.
 
 ```lua
 -- require a module
