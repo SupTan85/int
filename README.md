@@ -5,7 +5,8 @@
 ## Let's calculate large number in Lua
 
 The `int` module extends Lua capability to handle large numbers.\
-**note:** This project is currently in beta.
+> [!NOTE]
+> This project is currently in beta.
 
 > [!IMPORTANT]  
 > **Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4**\
