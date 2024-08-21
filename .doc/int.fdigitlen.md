@@ -2,11 +2,11 @@
 
 ![https://github.com/SupTan85/int](cover.png)
 
-## function
+## Function
 
 This function counts and return length of digits.
 
-**Input type:**
+## Input type
 
 - **x** -- [int object](../README.md#int-object) only.
 
@@ -14,7 +14,7 @@ This function counts and return length of digits.
 function int.fdigitlen(x) -- Returns length of `INTEGER` + length of `FRACTION`.
 ```
 
-**Example:**
+## Example
 
 ```lua
 local int = require("int") -- import module
@@ -30,7 +30,8 @@ print(int.fdigitlen(y)) -- output: 4
 
 This feature support to call in object.
 
-**This example call function inside object and return self object as input.**
+> [!TIP]
+> **This example call function inside object and return self object as input.**
 
 ```lua
 local int = require("int") -- import module
@@ -40,9 +41,10 @@ print(x:fdigitlen()) -- output: 4
 print(y:fdigitlen()) -- output: 4
 ```
 
-also you can do like this:
+Also you can do like this ??
 
-**This example call function inside object but didn't return self object as input.**
+> [!TIP]
+> **This example call function inside object but didn't return self object as input.**
 
 ```lua
 local int = require("int") -- import module

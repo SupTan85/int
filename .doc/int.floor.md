@@ -2,11 +2,11 @@
 
 ![https://github.com/SupTan85/int](cover.png)
 
-## function
+## Function
 
 This function returns the largest integral value. However, you can custom it.
 
-**Input type:**
+## Input type
 
 - **x** -- [int object](../README.md#int-object) only.
 - **length** -- number only.
@@ -15,7 +15,7 @@ This function returns the largest integral value. However, you can custom it.
 function int.floor(x, length) -- Returns the largest integral value smaller than or equal to `x`, or Custom a `x` fraction.
 ```
 
-**Example:**
+## Example
 
 ```lua
 local int = require("int") -- import module
@@ -31,7 +31,8 @@ print(int.floor(y, 2)) -- output: 12.34
 
 This feature support to call in object.
 
-**This example call function inside object and return self object as input.**
+> [!TIP]
+> **This example call function inside object and return self object as input.**
 
 ```lua
 local int = require("int") -- import module
@@ -41,9 +42,10 @@ print(x:floor()) -- output: 12
 print(y:floor(2)) -- output: 12.34
 ```
 
-also you can do like this:
+Also you can do like this ??
 
-**This example call function inside object but didn't return self object as input.**
+> [!TIP]
+> **This example call function inside object but didn't return self object as input.**
 
 ```lua
 local int = require("int") -- import module

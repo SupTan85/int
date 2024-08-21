@@ -2,12 +2,13 @@
 
 ![https://github.com/SupTan85/int](cover.png)
 
-## function
+## Function
 
 This function is used to create multiple objects at once, This function uses the default size settings per block.\
-**Note: It is recommended to use string type as input, also you can input number type.**
+> [!TIP]
+> **It is recommended to use string type as input, also you can input number type.**
 
-**Input type:**
+## Input type
 
 - **...args** -- string / number only
 
@@ -15,7 +16,7 @@ This function is used to create multiple objects at once, This function uses the
 function int.new(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
 ```
 
-**Example:**
+## Example
 
 ```lua
 local int = require("int") -- import module

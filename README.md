@@ -7,22 +7,25 @@
 The `int` module extends Lua capability to handle large numbers.\
 **note:** This project is currently in beta.
 
-**Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4**\
-**Check by [example.lua](example.lua) file**
+> [!IMPORTANT]  
+> **Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4**\
+> **Check by [example.lua](example.lua) file**
 
 ---
 
-## how to use
+## How to use ??
 
-**Frist, download the [module](int.lua) and place it in your folder or somewhere you can access it.**\
-Import the module with `require` function in Lua
+> [!TIP]
+> **Frist, download the [module](int.lua) and place it in your folder or somewhere you can access it.**\
+> Import the module with `require` function in Lua
 
 ```lua
 local int = require("int")
 ```
 
-Next, to create a new object,\
-you need to use [int.new](.doc/int.new.md#function) function.
+> [!TIP]
+> Next, to create a new object,\
+> you need to use [int.new](.doc/int.new.md#function) function.
 
 ```lua
 local int = require("int")
@@ -32,9 +35,9 @@ local x = int.new("13") -- input can be a number or string! *recommend to use st
 print(x) -- output: "13"
 ```
 
-Use [Calculation operators](#operators) to calculate math.
-
-**Note:** only operator that is supported.
+> [!NOTE]
+> Use [Calculation operators](#operators) to calculate math.\
+> Only operator that is supported.
 
 ```lua
 -- require a module
@@ -48,7 +51,7 @@ print(x + y) -- output: 30
 
 ---
 
-## feature
+## Feature 💻
 
 - **Calculate**
   - addition `+`
@@ -67,7 +70,7 @@ print(x + y) -- output: 30
 
 ---
 
-## design
+## Design 🎨
 
 This a example inside table of [int object](#int-object)
 
@@ -101,7 +104,7 @@ local example_int_table = {
 A table but you can call a function with it and can calculate with using operators\
 or uses with [function & methods](#function--methods)
 
-**example script:**
+## Example script
 
 ```lua
 local int = require("int") -- don't forgot to require a module!
@@ -110,7 +113,7 @@ local x, y = int.new("12", "14")
 print(x + y) -- output: 26
 ```
 
-**or:**
+### Or
 
 ```lua
 local int = require("int") -- don't forgot to require a module!
@@ -121,13 +124,14 @@ if x:eqmore("12") then -- some Lua version will not suport, that why i recommend
 end
 ```
 
-very easy, right?
+> [!TIP]
+> Very easy !! Right?
 
 ---
 
-## function & methods
+## Function & Methods
 
-all function is in version: **build 185**
+All function is in version: **build 185**
 
 - **module function**
   - [int.abs](.doc/int.abs.md#function)
@@ -158,7 +162,7 @@ all function is in version: **build 185**
   - int.tostring
   - int.unm
 
-**Example to call a function:**
+## Example to call a function
 
 ```lua
 -- require a module.
@@ -200,7 +204,7 @@ print(int.floor(x, 2)) -- output: 14.69
   - tostring
   - unm
 
-**Example to call a function:**
+## Example to call a function
 
 ```lua
 -- require a module.
@@ -215,7 +219,7 @@ print(x:floor(2)) -- output: 14.69
 
 ---
 
-## operators
+## Operators
 
 - **Calculation**
   - addition `+`
@@ -226,7 +230,7 @@ print(x:floor(2)) -- output: 14.69
   - modulo `%` *-- some version of Lua are not support (Lua 5.1 >=)*
   - power `^` *-- some version of Lua are not support (Lua 5.1 >=)*
 
-**Example to using a calculation operator:**
+## Example to using a calculation operator
 
 ```lua
 local int = require("int")
@@ -236,7 +240,8 @@ local x, y = int.new("4", "2")
 print(x / y) -- output: 2
 ```
 
-**Note:** some version of Lua you can use calculation operator with number & string
+> [!NOTE]
+> Some version of Lua you can use calculation operator with number & string
 
 ---
 
@@ -247,7 +252,7 @@ print(x / y) -- output: 2
   - `<` less than
   - `>` more than
 
-**Example to using a equation operator:**
+## Example to using a equation operator
 
 ```lua
 local int = require("int")
@@ -257,13 +262,15 @@ local x, y = int.new("4", "2")
 print(x > y) -- output: true
 ```
 
-**Note:** some version of Lua you can use equation operator with number & string
+> [!NOTE] 
+> some version of Lua you can use equation operator with number & string
 
 ---
 
-## limit
+## Limit 🛡️
 
-- some function won't support a super very large data, however that function i didn't find it. lol
+> [!CAUTION]
+> - Some function won't support a super very large data, however that function i didn't find it. lol
 </br>
 
 - Maximum digit of integer is 9223372036854775806
@@ -274,8 +281,11 @@ print(x > y) -- output: true
 
 ---
 
-reason why this module name is "int"? because in this module always use integer to calculate math,\
-and feel free to use!\
-**doc version: 0x14**
+> [!IMPORTANT]
+> reason why this module name is "int"? because in this module always use integer to calculate math,\
+> and feel free to use!
+
+> [!TIP]
+> **doc version: 0x14**
 
 ![end](.doc/image-d.png)
