@@ -1,19 +1,18 @@
-# int.floor
+# int.ceil
 
 ![https://github.com/SupTan85/int](cover.png)
 
 ## function
 
-This function returns the largest integral value of the given number. However, you can custom it.\
+This function returns the smallest integer greater than or equal to the given value.\
 **Note: When inputting negative numbers, the function will behave oppositely.**
 
 **Input type:**
 
 - **x** -- [int object](../README.md#int-object) only.
-- **length** -- number only.
 
 ```lua
-function int.floor(x, length) -- Returns the largest integral value smaller than or equal to `x`, or Custom a `x` fraction.
+function int.ceil(x) -- Returns the smallest integral value larger than or equal to `x`.
 ```
 
 **Example:**
@@ -21,9 +20,9 @@ function int.floor(x, length) -- Returns the largest integral value smaller than
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12.2", "12.3456")
-print(int.floor(x)) -- output: 12
-print(int.floor(y, 2)) -- output: 12.34
+local x, y = int.new("12.1", "14")
+print(int.ceil(x)) -- output: 13
+print(int.ceil(y)) -- output: 14
 ```
 
 ---
@@ -37,9 +36,9 @@ This feature support to call in object.
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12.2", "12.3456")
-print(x:floor()) -- output: 12
-print(y:floor(2)) -- output: 12.34
+local x, y = int.new("12.1", "14")
+print(x:ceil()) -- output: 13
+print(y:ceil()) -- output: 14
 ```
 
 also you can do like this:
@@ -49,13 +48,13 @@ also you can do like this:
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12.2", "12.3456")
+local x, y = int.new("12.1", "14")
 
--- this works like "print(int.floor(x))"
-print(y.floor(x)) -- output: 15
+-- this works like "print(int.ceil(x))"
+print(y.ceil(x)) -- output: 13
 
--- this works like "print(int.floor(y, 2))"
-print(x.floor(y, 2)) -- output: 13
+-- this works like "print(int.ceil(y))"
+print(x.ceil(y)) -- output: 14
 ```
 
 ---

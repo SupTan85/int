@@ -4,7 +4,7 @@
 
 ## function
 
-This function returns the absolute value.
+This function returns the absolute value of the given number.
 
 **Input type:**
 

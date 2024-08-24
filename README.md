@@ -27,13 +27,12 @@ you need to use [int.new](.doc/int.new.md#function) function.
 ```lua
 local int = require("int")
 
-local x = int.new("13") -- input can be a number or string! *recommend to use string*
+local x = int.new("13") -- input can be either a number or a string! *recommend to use string*
 
 print(x) -- output: "13"
 ```
 
-Use [Calculation operators](#operators) to calculate math.
-
+Use [Calculation operators](#operators) to calculate math.\
 **Note:** only operator that is supported.
 
 ```lua
@@ -131,9 +130,9 @@ all function is in version: **build 185**
 
 - **module function**
   - [int.abs](.doc/int.abs.md#function)
-  - int.ceil
+  - [int.ceil](.doc/int.ceil.md#function)
   - [int.cnew](.doc/int.cnew.md#function) *-- custom int.new function*
-  - int.cround *-- custom int.round function*
+  - int.cround
   - int.eqless *-- equal or less then*
   - int.eqmore *-- equal or more then*
   - int.equal
@@ -141,7 +140,7 @@ all function is in version: **build 185**
   - int.fact
   - [int.fdigitlen](.doc/int.fdigitlen.md#function) *-- return length of digits*
   - [int.floor](.doc/int.floor.md#function)
-  - int.fmod *-- modulo function*
+  - [int.fmod](.doc/int.fmod.md#function) *-- modulo function*
   - [int.fractionlen](.doc/int.fractionlen.md#function) *-- return only length of fraction*
   - [int.integerlen](.doc/int.integerlen.md#function) *-- return only length of integer*
   - int.less
@@ -151,7 +150,7 @@ all function is in version: **build 185**
   - int.modf
   - int.more
   - [int.new](.doc/int.new.md#function)
-  - int.pow
+  - int.pow *-- power function*
   - int.sign
   - int.sqrt
   - int.tonumber
@@ -175,8 +174,8 @@ print(int.floor(x, 2)) -- output: 14.69
 
 - **methods**
   - [abs](.doc/int.abs.md#methods)
-  - ceil
-  - cround *-- custom int.round function*
+  - [ceil](.doc/int.ceil.md#methods)
+  - cround
   - eqless *-- equal or less then*
   - eqmore *-- equal or more then*
   - equal
@@ -184,7 +183,7 @@ print(int.floor(x, 2)) -- output: 14.69
   - fact
   - [fdigitlen](.doc/int.fdigitlen.md#methods) *-- return length of digits*
   - [floor](.doc/int.floor.md#methods)
-  - fmod *-- modulo function*
+  - [fmod](.doc/int.fmod.md#methods) *-- modulo function*
   - [fractionlen](.doc/int.fractionlen.md#methods) *-- return only length of fraction*
   - [integerlen](.doc/int.integerlen.md#methods) *-- return only length of integer*
   - less
@@ -193,7 +192,7 @@ print(int.floor(x, 2)) -- output: 14.69
   - min
   - modf
   - more
-  - pow
+  - pow *-- power function*
   - sign
   - sqrt
   - tonumber
@@ -222,9 +221,9 @@ print(x:floor(2)) -- output: 14.69
   - subtraction `-`
   - multiplication `*`
   - division `\`
-  - floor division `\\` *-- some version of Lua are not support (Lua 5.3 >=)*
-  - modulo `%` *-- some version of Lua are not support (Lua 5.1 >=)*
-  - power `^` *-- some version of Lua are not support (Lua 5.1 >=)*
+  - floor division `\\` *-- some version of Lua are not support (require Lua 5.3 >=)*
+  - [modulo](.doc/int.fmod.md#operator) `%` *-- some version of Lua are not support (require Lua 5.1 >=)*
+  - power `^` *-- some version of Lua are not support (require Lua 5.1 >=)*
 
 **Example to using a calculation operator:**
 
@@ -276,6 +275,6 @@ print(x > y) -- output: true
 
 reason why this module name is "int"? because in this module always use integer to calculate math,\
 and feel free to use!\
-**doc version: 0x14**
+**doc version: 0x15 - 185**
 
 ![end](.doc/image-d.png)
