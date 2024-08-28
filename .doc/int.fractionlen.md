@@ -4,6 +4,7 @@
 
 ## function
 
+> [!NOTE] Information
 This function counts and return length of fraction.
 
 **Input type:**
@@ -32,7 +33,8 @@ print(int.fractionlen(y)) -- output: 1
 
 This feature support to call in object.
 
-**This example call function inside object and return self object as input.**
+> [!TIP]
+This example call function inside object and return self object as input.
 
 ```lua
 local int = require("int") -- import module
@@ -44,7 +46,8 @@ print(y:fractionlen()) -- output: 1
 
 also you can do like this:
 
-**This example call function inside object but didn't return self object as input.**
+> [!TIP]
+This example call function inside object but didn't return self object as input.
 
 ```lua
 local int = require("int") -- import module

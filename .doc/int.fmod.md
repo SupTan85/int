@@ -4,6 +4,7 @@
 
 ## function
 
+> [!NOTE] Information
 This function returns the result of a modulo operation.
 
 **Input type:**
@@ -30,7 +31,7 @@ print(int.fmod(x, y)) -- output: 2
 
 use operator to calculate number, support either an [int object](../README.md#int-object), a string, a number.
 
->modulo operator "%"
+> [!WARNING] Requirement of modulo operator "%"
 some version of Lua are not support (require Lua 5.1 >=)
 
 **Example:**
@@ -58,7 +59,8 @@ print(x % 5) -- output: 2 (not recommend for large number or very less number of
 
 This feature support to call in object.
 
-**This example call function inside object and return self object as input.**
+> [!TIP]
+This example call function inside object and return self object as input.
 
 ```lua
 local int = require("int") -- import module
@@ -69,7 +71,8 @@ print(x:fmod(y)) -- output: 2
 
 also you can do like this:
 
-**This example call function inside object but didn't return self object as input.**
+> [!TIP]
+This example call function inside object but didn't return self object as input.
 
 ```lua
 local int = require("int") -- import module

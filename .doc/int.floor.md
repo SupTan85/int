@@ -4,8 +4,9 @@
 
 ## function
 
+> [!NOTE] Information
 This function returns the largest integral value of the given number. However, you can custom it.\
-**Note: When inputting negative numbers, the function will behave oppositely.**
+**When inputting negative numbers, the function will behave oppositely.**
 
 **Input type:**
 
@@ -32,7 +33,8 @@ print(int.floor(y, 2)) -- output: 12.34
 
 This feature support to call in object.
 
-**This example call function inside object and return self object as input.**
+> [!TIP]
+This example call function inside object and return self object as input.
 
 ```lua
 local int = require("int") -- import module
@@ -44,7 +46,8 @@ print(y:floor(2)) -- output: 12.34
 
 also you can do like this:
 
-**This example call function inside object but didn't return self object as input.**
+> [!TIP]
+This example call function inside object but didn't return self object as input.
 
 ```lua
 local int = require("int") -- import module
