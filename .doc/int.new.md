@@ -4,9 +4,9 @@
 
 ## function
 
-> [!NOTE] Information
-This function is used to create multiple objects at once, This function uses the default setting of size per block.\
-**It is recommended to use string type as input, also you can input number type.**
+> [!NOTE]
+**Information:** This function is used to create multiple objects at once, This function uses the default setting of size per block.\
+*It is recommended to use string type as input, also you can input number type.*
 
 **Input type:**
 

@@ -665,15 +665,15 @@ function media.more(x, y) -- work same `equation.more` but support sign config.
     return nox and ys == "-" or (not nox and master.equation.more(x, y))
 end
 
-function media.integerlen(x) -- Returns length of `INTEGER`.
+function media.integerlen(x) -- Returns the length of integer path.
     local le = #x
     return #(tostring(x[le] or "") + ((media.convert(le) - 1):max(0) * x._size)):max(1)
 end
-function media.fractionlen(x) -- Returns length of `FRACTION`.
+function media.fractionlen(x) -- Returns the length of fraction part.
     local le = math.abs((x._dlen or 1) - 1)
     return #tostring(x[le] or "") + ((media.convert(le) - 1):max(0) * x._size)
 end
-function media.fdigitlen(x) -- Returns length of `INTEGER` + length of `FRACTION`.
+function media.fdigitlen(x) -- Returns the sum of the length of the integer part and the length of the fraction part.
     return media.integerlen(x) + media.fractionlen(x)
 end
 

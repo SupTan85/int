@@ -4,15 +4,15 @@
 
 ## function
 
-> [!NOTE] Information
-This function counts and return length of integer.
+> [!NOTE]
+**Information:** This function returns the length of integer path.
 
 **Input type:**
 
 - **x** -- [int object](../README.md#int-object) only.
 
 ```lua
-function int.integerlen(x) -- Returns length of `INTEGER`.
+function int.integerlen(x) -- Returns the length of integer path.
 ```
 
 It does not include fraction.

@@ -4,9 +4,9 @@
 
 ## function
 
-> [!NOTE] Information
-This function returns the largest integral value of the given number. However, you can custom it.\
-**When inputting negative numbers, the function will behave oppositely.**
+> [!NOTE]
+**Information:** This function returns the largest integral value of the given number. However, you can custom it.\
+*When inputting negative numbers, the function will behave oppositely.*
 
 **Input type:**
 

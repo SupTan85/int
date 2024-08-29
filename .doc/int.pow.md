@@ -4,8 +4,8 @@
 
 ## function
 
-> [!NOTE] Information
-This function returns the result of a modulo operation.
+> [!NOTE]
+**Information:** This function returns the result of a modulo operation.
 
 **Input type:**
 
@@ -31,7 +31,8 @@ print(int.fmod(x, y)) -- output: 2
 
 use operator to calculate number, support either an [int object](../README.md#int-object), a string, a number.
 
-> [!WARNING] Requirement of power operator "^"
+> [!WARNING]
+**Requirement of power operator "^"**\
 some version of Lua are not support (require Lua 5.1 >=)
 
 **Example:**

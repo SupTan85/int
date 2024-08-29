@@ -4,8 +4,8 @@
 
 ## function
 
-> [!NOTE] Information
-This function returns the absolute value of the given number.
+> [!NOTE]
+**Information:** This function returns the absolute value of the given number.
 
 **Input type:**
 

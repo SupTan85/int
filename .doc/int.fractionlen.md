@@ -4,15 +4,15 @@
 
 ## function
 
-> [!NOTE] Information
-This function counts and return length of fraction.
+> [!NOTE]
+**Information:** This function returns the length of fraction part.
 
 **Input type:**
 
 - **x** -- [int object](../README.md#int-object) only.
 
 ```lua
-function int.fractionlen(x) -- Returns length of `FRACTION`.
+function int.fractionlen(x) -- Returns the length of fraction part.
 ```
 
 It does not include integer.

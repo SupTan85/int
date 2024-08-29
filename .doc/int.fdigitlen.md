@@ -4,15 +4,15 @@
 
 ## function
 
-> [!NOTE] Information
-This function counts and return length of digits.
+> [!NOTE]
+**Information:** Returns the sum of the length of the integer part and the length of the fraction part.
 
 **Input type:**
 
 - **x** -- [int object](../README.md#int-object) only.
 
 ```lua
-function int.fdigitlen(x) -- Returns length of `INTEGER` + length of `FRACTION`.
+function int.fdigitlen(x) -- Returns the sum of the length of the integer part and the length of the fraction part.
 ```
 
 **Example:**
@@ -24,6 +24,9 @@ local x, y = int.new("12.34", "123.4")
 print(int.fdigitlen(x)) -- output: 4
 print(int.fdigitlen(y)) -- output: 4
 ```
+
+> [!IMPORTANT]
+This function counts and calculates the total length by adding the length of the integer part to the length of the fraction part, enabling accurate measurement of the length of numbers.
 
 ---
 

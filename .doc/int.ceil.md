@@ -4,9 +4,9 @@
 
 ## function
 
-> [!NOTE] Information
-This function returns the smallest integer greater than or equal to the given value.\
-**When inputting negative numbers, the function will behave oppositely.**
+> [!NOTE]
+**Information:** This function returns the smallest integer greater than or equal to the given value.\
+*When inputting negative numbers, the function will behave oppositely.*
 
 **Input type:**
 
