@@ -4,9 +4,8 @@
 
 ## function
 
-> [!NOTE] Information
 This function returns the smallest integer greater than or equal to the given value.\
-**When inputting negative numbers, the function will behave oppositely.**
+**Note: When inputting negative numbers, the function will behave oppositely.**
 
 **Input type:**
 
@@ -32,8 +31,7 @@ print(int.ceil(y)) -- output: 14
 
 This feature support to call in object.
 
-> [!TIP]
-> This example call function inside object and return self object as input.
+**This example call function inside object and return self object as input.**
 
 ```lua
 local int = require("int") -- import module
@@ -45,8 +43,7 @@ print(y:ceil()) -- output: 14
 
 also you can do like this:
 
-> [!TIP]
-This example call function inside object but didn't return self object as input.
+**This example call function inside object but didn't return self object as input.**
 
 ```lua
 local int = require("int") -- import module
