@@ -4,8 +4,28 @@
 
 ## function
 
-> [!NOTE] Information
-This function returns the absolute value of the given number.
+<div style="
+    padding: 0.5rem 1rem;
+    margin-bottom: 16px;
+    color: inherit;
+    border-left: .25em solid #0969da;
+    display: block;
+    unicode-bidi: isolate;
+">
+<p style="
+    color: #0969da;
+    display: flex;
+    font-weight: 500;
+    align-items: center;
+    line-height: 1;
+">
+<img src="note icon.png" style="margin-right: 0.5rem;"></img>
+Information
+</p>
+<p data-line="6" class="code-line" dir="auto" style="
+    margin-bottom: 0;
+">This function returns the absolute value of the given number.</p>
+</div>
 
 **Input type:**
 
