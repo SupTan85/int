@@ -4,6 +4,7 @@
 
 ## function
 
+> [!NOTE] Information
 This function returns the absolute value of the given number.
 
 **Input type:**
@@ -30,7 +31,8 @@ print(int.abs(y)) -- output: 13
 
 This feature support to call in object.
 
-**This example call function inside object and return self object as input.**
+> [!TIP]
+This example call function inside object and return self object as input.
 
 ```lua
 local int = require("int") -- import module
@@ -42,7 +44,8 @@ print(y:abs()) -- output: 13
 
 also you can do like this:
 
-**This example call function inside object but didn't return self object as input.**
+> [!TIP]
+This example call function inside object but didn't return self object as input.
 
 ```lua
 local int = require("int") -- import module

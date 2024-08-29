@@ -4,8 +4,10 @@
 
 ## Let's calculate large number in Lua
 
-The `int` module extends Lua capability to handle large numbers.\
-**note:** This project is currently in beta.
+The `int` module extends Lua capability to handle large numbers.
+
+> [!WARNING]
+This project is currently in beta.
 
 **Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4**\
 **Check by [example.lua](example.lua) file**
@@ -32,8 +34,9 @@ local x = int.new("13") -- input can be either a number or a string! *recommend 
 print(x) -- output: "13"
 ```
 
-Use [Calculation operators](#operators) to calculate math.\
-**Note:** only operator that is supported.
+Use [Calculation operators](#operators) to calculate math.
+> [!CAUTION]
+only operator that is supported.
 
 ```lua
 -- require a module
@@ -127,6 +130,9 @@ very easy, right?
 ## function & methods
 
 all function is in version: **build 185**
+
+> [!NOTE]
+recommend to read in visual studio code
 
 - **module function**
   - [int.abs](.doc/int.abs.md#function)
@@ -235,7 +241,8 @@ local x, y = int.new("4", "2")
 print(x / y) -- output: 2
 ```
 
-**Note:** some version of Lua you can use calculation operator with number & string
+> [!IMPORTANT]
+some version of Lua you can use calculation operator with number & string
 
 ---
 
@@ -256,7 +263,8 @@ local x, y = int.new("4", "2")
 print(x > y) -- output: true
 ```
 
-**Note:** some version of Lua you can use equation operator with number & string
+> [!IMPORTANT]
+some version of Lua you can use equation operator with number & string
 
 ---
 
@@ -273,6 +281,7 @@ print(x > y) -- output: true
 
 ---
 
+> [!NOTE]
 reason why this module name is "int"? because in this module always use integer to calculate math,\
 and feel free to use!\
 **doc version: 0x15 - 185**
