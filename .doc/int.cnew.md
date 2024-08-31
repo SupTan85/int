@@ -30,6 +30,10 @@ local x = int.cnew("12", 1) -- set size per block to 1 of the object
 print(x) -- output: 12
 ```
 
+>[!TIP]
+if you want to create new a lot of object in one time without custom anything,\
+you can use [**int.new**](int.new.md) function!
+
 ---
 
 [**Home**](../README.md#function--methods)

@@ -4,7 +4,7 @@
 -- MODULE VERSION: 185
 -- BUILD  VERSION: 2 (24/08/2024) dd:mm:yyyy
 -- USER FEATURE: 03/08/2024
--- DEV  FEATURE: 28/08/2024
+-- DEV  FEATURE: 31/08/2024
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int
@@ -561,9 +561,13 @@ master.calculate = {
 
 local media = {
     assets = {
-        FSZero = function(x, y) -- return the same sign when number is *zero*
-            local ze, equal = Cmaster(0, x._size), master.equation.equal
-            return equal(x, ze) and "+" or x.sign or "+", equal(y, ze) and "+" or y.sign or "+"
+        FSZero = function(...) -- update sign to plus when number is zero, for fix issue *zero*
+            local equal, pack, cahce = master.equation.equal, {...}, nil
+            for i, v in ipairs(pack) do
+                cahce = cahce or Cmaster(0, v._size)
+                pack[i].sign = equal(v, cahce) and "+" or v.sign or "+"
+            end
+            return table.unpack(pack)
         end
     },
 
@@ -656,22 +660,24 @@ function media.equal(x, y) -- work same `equation.equal` but support sign config
 end
 function media.less(x, y) -- work same `equation.less` but support sign config.
     local xs, ys = assets.FSZero(x, y)
+    xs, ys = xs.sign, ys.sign
     local nox = xs ~= ys
     return nox and ys == "+" or (not nox and master.equation.less(x, y))
 end
 function media.more(x, y) -- work same `equation.more` but support sign config.
     local xs, ys = assets.FSZero(x, y)
+    xs, ys = xs.sign, ys.sign
     local nox = xs ~= ys
     return nox and ys == "-" or (not nox and master.equation.more(x, y))
 end
 
 function media.integerlen(x) -- Returns the length of integer path.
     local le = #x
-    return #(tostring(x[le] or "") + ((media.convert(le) - 1):max(0) * x._size)):max(1)
+    return #tostring(x[le] or "") + ((media.convert(le, x._size) - 1):max(0) * x._size)
 end
 function media.fractionlen(x) -- Returns the length of fraction part.
-    local le = math.abs((x._dlen or 1) - 1)
-    return #tostring(x[le] or "") + ((media.convert(le) - 1):max(0) * x._size)
+    local le = x._dlen or 1
+    return le < 1 and #tostring(x[le] or ""):match("^(%d-)0*$") + ((media.convert(math.abs(le), x._size) - 1):max(0) * x._size) or media.convert(0, x._size)
 end
 function media.fdigitlen(x) -- Returns the sum of the length of the integer part and the length of the fraction part.
     return media.integerlen(x) + media.fractionlen(x)
@@ -681,8 +687,8 @@ function media.tonumber(x) -- Deconvert table to number. *not recommend*
     return tonumber(media.tostring(x))
 end
 
-function assets.vtype(...) -- This function make table can mix a number and string. *return table*
-    local stack, v = {}, {...}
+function assets.vtype(...) -- asset for vtype function.
+    local stack, v = {...}, {...}
     local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERBLOCK.DEFAULT
     table.sort(v, function(a, b) return (SOFT[type(a)] or 0) > (SOFT[type(b)] or 0) end)
     for _, s in ipairs(v) do
@@ -692,7 +698,7 @@ function assets.vtype(...) -- This function make table can mix a number and stri
             break
         end
     end
-    for i, s in ipairs({...}) do
+    for i, s in ipairs(stack) do
         local ty = type(s)
         if ty == "string" or ty =="number" then
             stack[i] = media.convert(s, INTEGER)
@@ -888,8 +894,7 @@ do
         less = master.equation.less,
         more = master.equation.more,
         
-        setmetatable = setmetatable,
-        print = print
+        setmetatable = setmetatable
     }
 
     -- Build metatable --

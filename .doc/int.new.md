@@ -16,6 +16,9 @@
 function int.new(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
 ```
 
+> [!IMPORTANT]
+The [int object](../README.md#int-object) is represented as a table in Lua, designed for calculation purposes within the int module. This table includes numerical data and calculation-related information, and it supports a metatable to facilitate ease of use.
+
 **Example:**
 
 ```lua
@@ -25,6 +28,10 @@ local x, y = int.new(1, 2)
 print(x) -- output: 1
 print(y) -- output: 2
 ```
+
+>[!TIP]
+if you want to custom when create one object,\
+you can use [**int.cnew**](int.cnew.md) function!
 
 ---
 
