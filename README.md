@@ -156,7 +156,7 @@ recommend to read in visual studio code
   - int.modf
   - int.more
   - [int.new](.doc/int.new.md#function)
-  - int.pow *-- power function*
+  - [int.pow](.doc/int.pow.md#function) *-- power function*
   - int.sign
   - int.sqrt
   - int.tonumber
@@ -198,7 +198,7 @@ print(int.floor(x, 2)) -- output: 14.69
   - min
   - modf
   - more
-  - pow *-- power function*
+  - [pow](.doc/int.pow.md#methods) *-- power function*
   - sign
   - sqrt
   - tonumber
@@ -229,7 +229,7 @@ print(x:floor(2)) -- output: 14.69
   - division `\`
   - floor division `\\` *-- some version of Lua are not support (require Lua 5.3 >=)*
   - [modulo](.doc/int.fmod.md#operator) `%` *-- some version of Lua are not support (require Lua 5.1 >=)*
-  - power `^` *-- some version of Lua are not support (require Lua 5.1 >=)*
+  - [power](.doc/int.pow.md#operator) `^` *-- some version of Lua are not support (require Lua 5.1 >=)*
 
 **Example to using a calculation operator:**
 

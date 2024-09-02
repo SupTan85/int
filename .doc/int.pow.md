@@ -21,8 +21,8 @@ function int.pow(x, y, f, l) -- Returns `x ^ y`. (`f` The maxiumum number of fra
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12", "5")
-print(int.fmod(x, y)) -- output: 2
+local x, y = int.new("2", "3")
+print(int.pow(x, y)) -- output: 8
 ```
 
 ---
@@ -40,8 +40,8 @@ some version of Lua are not support (require Lua 5.1 >=)
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12", "5")
-print(x % y) -- output: 2
+local x, y = int.new("2", "3")
+print(x ^ y) -- output: 8
 ```
 
 **also you can do this:**
@@ -49,9 +49,9 @@ print(x % y) -- output: 2
 ```lua
 local int = require("int") -- import module
 
-local x = int.new("12")
-print(x % "5") -- output: 2 (recommend)
-print(x % 5) -- output: 2 (not recommend for large number or very less number of number type)
+local x = int.new("2")
+print(x ^ "3") -- output: 8 (recommend)
+print(x ^ 3) -- output: 8 (not recommend for large number or very less number of number type)
 ```
 
 ---
@@ -66,8 +66,8 @@ This example call function inside object and return self object as input.
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12", "5")
-print(x:fmod(y)) -- output: 2
+local x, y = int.new("2", "3")
+print(x:pow(y)) -- output: 8
 ```
 
 also you can do like this:
@@ -78,13 +78,13 @@ This example call function inside object but didn't return self object as input.
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12", "5")
+local x, y = int.new("2", "3")
 
 -- this works like "print(int.fmod(x, y))"
-print(y.fmod(x, y)) -- output: 2
+print(y.pow(x, y)) -- output: 8
 
 -- this works like "print(int.fmod(x, y))"
-print(x.fmod(x, y)) -- output: 2
+print(x.pow(x, y)) -- output: 8
 ```
 
 ---
