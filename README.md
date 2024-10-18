@@ -7,7 +7,7 @@
 The **int** module extends Lua capability to handle large numbers.
 
 > [!NOTE]
-> This project is currently in beta.
+This project is currently in beta.
 
 Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4\
 Check by [example.lua](example.lua) file
@@ -51,6 +51,9 @@ print(x + y) -- output: 30
 ---
 
 ## feature
+
+> [!TIP]
+before use any function, don't forget to read function [performance](#performance)!
 
 - **Calculate**
   - addition `+`
@@ -262,6 +265,31 @@ print(x > y) -- output: true
 
 > [!IMPORTANT]
 some version of Lua you can use equation operator with number & string
+
+---
+
+## performance
+
+> [!NOTE]
+Lua didn't support hyper threading system, mean we can't use full performance of cpu!\
+*however some function not support hyper threading system.*
+
+- **Calculation**
+  - `+` **addition &** `-` **subtraction** - very fast
+  - `*` **multiplication** - fast
+  - `\` **division &** `\\` **floor division** - slow *"because didn't support hyper threading"*
+  - `%` **modulo** - slow *"because didn't support hyper threading"*
+  - `^` **power** - very very slow *"because didn't support hyper threading & use a lot of memory"*
+
+- **Equation**
+  - `==` **equal** - very fast *"Difference is a factor."*
+  - `<=` **equal** or **less then** - very fast *"Difference is a factor."*
+  - `>=` **equal** or **more then** - very fast *"Difference is a factor."*
+  - `<` **less than** - very fast
+  - `>` **more than** - very fast
+
+- **ETC**
+  - some other function didn't make for very large data, don't forget to report bug!
 
 ---
 
