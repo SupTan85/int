@@ -1,16 +1,16 @@
 # int
 
-![https://github.com/SupTan85/int](.doc/cover.png)
+![conver](.doc/cover.png)
 
-## Let's calculate large number in Lua
+## Make it possible to calculate large number in Lua
 
-The `int` module extends Lua capability to handle large numbers.
+The **int** module extends Lua capability to handle large numbers.
 
-> [!WARNING]
-This project is currently in beta.
+> [!NOTE]
+> This project is currently in beta.
 
-**Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4**\
-**Check by [example.lua](example.lua) file**
+Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4\
+Check by [example.lua](example.lua) file
 
 ---
 
@@ -24,7 +24,7 @@ local int = require("int")
 ```
 
 Next, to create a new object,\
-you need to use [int.new](.doc/int.new.md#function) function.
+you need to use int.new function.
 
 ```lua
 local int = require("int")
@@ -65,13 +65,13 @@ print(x + y) -- output: 30
   - less than
   - more than
 
-**and more...**
-
 ---
 
 ## design
 
-This a example inside table of [int object](#int-object)
+This a example inside table of int object.
+
+![design](.doc/design.png)
 
 ```lua
 local example_int_table = {
@@ -129,34 +129,31 @@ very easy, right?
 
 ## function & methods
 
-all function is in version: **build 185**
-
-> [!NOTE]
-recommend to read in visual studio code
+all function is in version: **186**
 
 - **module function**
-  - [int.abs](.doc/int.abs.md#function)
-  - [int.ceil](.doc/int.ceil.md#function)
-  - [int.cnew](.doc/int.cnew.md#function) *-- custom int.new function*
+  - int.abs
+  - int.ceil
+  - int.cnew *-- custom int.new function*
   - int.cround
   - int.eqless *-- equal or less then*
   - int.eqmore *-- equal or more then*
   - int.equal
   - int.exp
   - int.fact
-  - [int.fdigitlen](.doc/int.fdigitlen.md#function) *-- return length of digits*
-  - [int.floor](.doc/int.floor.md#function)
-  - [int.fmod](.doc/int.fmod.md#function) *-- modulo function*
-  - [int.fractionlen](.doc/int.fractionlen.md#function) *-- return only length of fraction*
-  - [int.integerlen](.doc/int.integerlen.md#function) *-- return only length of integer*
+  - int.fdigitlen *-- return sum of number integer digits and number decimal digits.*
+  - int.floor
+  - int.fmod *-- modulo function*
+  - int.decimallen *-- return number of decimal digits*
+  - int.integerlen *-- return number of integer digits*
   - int.less
   - int.ln
   - int.max
   - int.min
   - int.modf
   - int.more
-  - [int.new](.doc/int.new.md#function)
-  - [int.pow](.doc/int.pow.md#function) *-- power function*
+  - int.new
+  - int.pow *-- power function*
   - int.sign
   - int.sqrt
   - int.tonumber
@@ -179,26 +176,26 @@ print(int.floor(x, 2)) -- output: 14.69
 ---
 
 - **methods**
-  - [abs](.doc/int.abs.md#methods)
-  - [ceil](.doc/int.ceil.md#methods)
+  - abs
+  - ceil
   - cround
   - eqless *-- equal or less then*
   - eqmore *-- equal or more then*
   - equal
   - exp
   - fact
-  - [fdigitlen](.doc/int.fdigitlen.md#methods) *-- return length of digits*
-  - [floor](.doc/int.floor.md#methods)
-  - [fmod](.doc/int.fmod.md#methods) *-- modulo function*
-  - [fractionlen](.doc/int.fractionlen.md#methods) *-- return only length of fraction*
-  - [integerlen](.doc/int.integerlen.md#methods) *-- return only length of integer*
+  - fdigitlen *-- return sum of number integer digits and number decimal digits.*
+  - floor
+  - fmod *-- modulo function*
+  - decimallen *-- return only length of fraction*
+  - integerlen *-- return only length of integer*
   - less
   - ln
   - max
   - min
   - modf
   - more
-  - [pow](.doc/int.pow.md#methods) *-- power function*
+  - pow *-- power function*
   - sign
   - sqrt
   - tonumber
@@ -228,8 +225,8 @@ print(x:floor(2)) -- output: 14.69
   - multiplication `*`
   - division `\`
   - floor division `\\` *-- some version of Lua are not support (require Lua 5.3 >=)*
-  - [modulo](.doc/int.fmod.md#operator) `%` *-- some version of Lua are not support (require Lua 5.1 >=)*
-  - [power](.doc/int.pow.md#operator) `^` *-- some version of Lua are not support (require Lua 5.1 >=)*
+  - modulo `%` *-- some version of Lua are not support (require Lua 5.1 >=)*
+  - power `^` *-- some version of Lua are not support (require Lua 5.1 >=)*
 
 **Example to using a calculation operator:**
 
@@ -270,20 +267,20 @@ some version of Lua you can use equation operator with number & string
 
 ## limit
 
-- some function won't support a super very large data, however that function i didn't find it. lol
+- some function won't support a super very large data.
 </br>
 
-- Maximum digit of integer is 9223372036854775806
-  - Set `_size` to `9` maximum digit of integer is `83010348331692982254 (9223372036854775806 * 9)`
+- Maximum integer path is 9223372036854775806
+  - Set `_size` to `9` maximum integer path is `83010348331692982254 (9223372036854775806 * 9)`
 
-- Maximum digit of fraction is 9223372036854775808
-  - Set `_size` to `9` maximum fraction of integer is `83010348331692982263 (9223372036854775808 * 9)`
+- Maximum decimal path is 9223372036854775808
+  - Set `_size` to `9` maximum decimal path is `83010348331692982263 (9223372036854775808 * 9)`
 
 ---
 
 > [!NOTE]
 reason why this module name is "int"? because in this module always use integer to calculate math,\
 and feel free to use!\
-**doc version: 0x15 - 185**
+**186 - 3**
 
-![end](.doc/image-d.png)
+![bar](.doc/bar.png)
