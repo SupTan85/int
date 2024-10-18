@@ -2,7 +2,7 @@ local int = require("int")
 local loaded = os.clock()
 
 os.execute("cls")
-print(("\n>> Hello!\nUSING MODULE VERSION: %s (%s)"):format(int._VERSION, _VERSION))
+print(("\n>> Hello!\nUSING MODULE VERSION: %s (%s)"):format(int._VERSION or "UNKNOW", _VERSION))
 local MAXLOOP = arg[1] and tonumber(arg[1]:match("(%d+)$")) or 1000
 local ALLSAME = false
 local n, c = {}, {}
