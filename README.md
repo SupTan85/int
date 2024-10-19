@@ -80,6 +80,8 @@ This a example inside table of int object.
 
 ![design](.doc/design.png)
 
+### inside object
+
 ```lua
 local example_int_table = {
     -- digit --
@@ -102,6 +104,18 @@ local example_int_table = {
     _size = 1 -- mean per size of block *just maximum digit per value in the digit block* **DO NOT CHANGE. HAVE LIMIT!!**
 }
 ```
+
+### inside module
+
+![image1](.doc/image1.png)
+
+- **master** library for build-in function.
+- **media** library for other build-in function. *-- require master*
+- **int** library for call function in the module. *-- require master & media*
+
+> [!IMPORTANT]
+when you use `require`, `loadfile` or `dofile` function to load the module,\
+the module will return only table that name **int** only
 
 ---
 
