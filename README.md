@@ -1,6 +1,6 @@
 # int
 
-![conver](.doc/cover.png)
+![https://github.com/SupTan85/int](.doc/.assets/cover.png)
 
 ## Make it possible to calculate large number in Lua
 
@@ -10,7 +10,7 @@ The **int** module extends Lua capability to handle large numbers.
 This project is currently in beta.
 
 Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4\
-Check by [example.lua](example.lua) file
+Check by [**example.lua**](example.lua) file
 
 ---
 
@@ -23,7 +23,7 @@ Import the module with `require` function in Lua
 local int = require("int")
 ```
 
-Next, to create a new object, you have to use int.new function.
+Next, to create a new object, you have to use [**int.new**](.doc/int.new.md) function.
 
 ```lua
 local int = require("int")
@@ -33,12 +33,12 @@ local x = int.new("13") -- input can be either a number or a string! *recommend 
 print(x) -- output: "13"
 ```
 
-To use [calculation operators](#operators) to calculate math.
+To use [**calculation operators**](#operators) to calculate math.
 
 > [!CAUTION]
 only operator that is supported.
 
-![video1](.doc/video1.gif)
+![video1](.doc/.assets/video1.gif)
 
 you can do like this:
 
@@ -57,7 +57,7 @@ print(x + y) -- output: 30
 ## feature
 
 > [!TIP]
-before use any function, don't forget to read function [performance](#performance)!
+before use any function, don't forget to read function [**performance**](#performance)!
 
 - **Calculate**
   - addition `+`
@@ -76,9 +76,9 @@ before use any function, don't forget to read function [performance](#performanc
 
 ## design
 
-This a example inside table of int object.
+This a example inside [**table**](.doc/type.table.md) of int object.
 
-![design](.doc/design.png)
+![design](.doc/.assets/design.png)
 
 ### inside object
 
@@ -107,7 +107,7 @@ local example_int_table = {
 
 ### inside module
 
-![image1](.doc/image1.png)
+![image1](.doc/.assets/image1.png)
 
 - **master** library for build-in function.
 - **media** library for other build-in function. *-- require master*
@@ -115,14 +115,14 @@ local example_int_table = {
 
 > [!IMPORTANT]
 when you use `require`, `loadfile` or `dofile` function to load the module,\
-the module will return only table that name **int** only
+the module will return only [**table**](.doc/type.table.md) that name **int** only
 
 ---
 
 ## int object
 
-A table but you can call a function with it and can calculate with using operators\
-or uses with [function & methods](#function--methods)
+A [**table**](.doc/type.table.md) but you can call a function with it and can calculate with using operators\
+or uses with [**function & methods**](#function--methods)
 
 **example script:**
 
@@ -152,10 +152,13 @@ very easy, right?
 
 all function is in version: **186**
 
+>[!NOTE]
+Recommend to read in visual studio code.
+
 - **module function**
   - int.abs
   - int.ceil
-  - int.cnew *-- custom int.new function*
+  - [int.cnew](.doc/int.cnew.md) *-- custom int.new function*
   - int.cround
   - int.eqless *-- equal or less then*
   - int.eqmore *-- equal or more then*
@@ -173,7 +176,7 @@ all function is in version: **186**
   - int.min
   - int.modf
   - int.more
-  - int.new
+  - [int.new](.doc/int.new.md)
   - int.pow *-- power function*
   - int.sign
   - int.sqrt
@@ -329,4 +332,4 @@ reason why this module name is "int"? because in this module always use integer 
 and feel free to use!\
 **186 - 3**
 
-![bar](.doc/bar.png)
+![bar](.doc/.assets/bar.png)
