@@ -1,6 +1,6 @@
 # int
 
-![https://github.com/SupTan85/int](.doc/.assets/cover.png)
+![https://github.com/SupTan85/int.lua](.doc/.assets/cover.png)
 
 ## Make it possible to calculate large number in Lua
 

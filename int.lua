@@ -7,7 +7,7 @@
 -- DEV  FEATURE: 19/10/2024
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
--- LINK: https://github.com/SupTan85/int
+-- LINK: https://github.com/SupTan85/int.lua
 -- 
 ----------------------------------------------------
 

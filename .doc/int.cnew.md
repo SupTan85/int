@@ -1,6 +1,6 @@
 # int.cnew
 
-![https://github.com/SupTan85/int](.assets/cover.png)
+![https://github.com/SupTan85/int.lua](.assets/cover.png)
 
 ## function
 

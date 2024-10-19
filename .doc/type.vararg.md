@@ -1,6 +1,6 @@
 # variable arguments
 
-![https://github.com/SupTan85/int](.assets/cover.png)
+![https://github.com/SupTan85/int.lua](.assets/cover.png)
 
 >[!NOTE]
 In Lua, the `...` symbol is called **vararg** (variable arguments). It indicates that a function can take multiple or an indefinite number of arguments. When you're unsure how many arguments a caller will pass, you can use `...` to capture all the passed arguments.
