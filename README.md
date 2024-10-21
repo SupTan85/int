@@ -76,11 +76,11 @@ before use any function, don't forget to read function [**performance**](#perfor
 
 ## design
 
-This a example inside [**table**](.doc/type.table.md) of int object.
-
 ![design](.doc/.assets/design.png)
 
 ### inside object
+
+This a example inside [**table**](.doc/type.table.md) of [**int object**](.doc/type.intobj.md).
 
 ```lua
 local example_int_table = {
@@ -119,35 +119,6 @@ the module will return only [**table**](.doc/type.table.md) that name **int** on
 
 ---
 
-## int object
-
-A [**table**](.doc/type.table.md) but you can call a function with it and can calculate with using operators\
-or uses with [**function & methods**](#function--methods)
-
-**example script:**
-
-```lua
-local int = require("int") -- don't forgot to require a module!
-
-local x, y = int.new("12", "14")
-print(x + y) -- output: 26
-```
-
-**or:**
-
-```lua
-local int = require("int") -- don't forgot to require a module!
-
-local x = int.new("14")
-if x:eqmore("12") then -- some Lua version will not suport, that why i recommend you to use function.
-    print("omg yes") -- output: omg yes
-end
-```
-
-very easy, right?
-
----
-
 ## function & methods
 
 all function is in version: **186**
@@ -166,7 +137,7 @@ Recommend to read in visual studio code.
   - int.exp
   - int.fact
   - int.fdigitlen *-- return sum of number integer digits and number decimal digits.*
-  - int.floor
+  - [int.floor](.doc/int.floor.md)
   - int.fmod *-- modulo function*
   - int.decimallen *-- return number of decimal digits*
   - int.integerlen *-- return number of integer digits*
@@ -209,7 +180,7 @@ print(int.floor(x, 2)) -- output: 14.69
   - exp
   - fact
   - fdigitlen *-- return sum of number integer digits and number decimal digits.*
-  - floor
+  - [floor](.doc/int.floor.md#methods)
   - fmod *-- modulo function*
   - decimallen *-- return only length of fraction*
   - integerlen *-- return only length of integer*
@@ -298,14 +269,14 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 - **Calculation**
   - `+` **addition &** `-` **subtraction** - very fast
   - `*` **multiplication** - fast
-  - `\` **division &** `\\` **floor division** - slow *"because didn't support hyper threading"*
-  - `%` **modulo** - slow *"because didn't support hyper threading"*
-  - `^` **power** - very very slow *"because didn't support hyper threading & use a lot of memory"*
+  - `\` **division &** `\\` **floor division** - slow
+  - `%` **modulo** - slow
+  - `^` **power** - very very slow *"because use a lot of memory"*
 
 - **Equation**
-  - `==` **equal** - very fast *"Difference is a factor."*
-  - `<=` **equal** or **less then** - very fast *"Difference is a factor."*
-  - `>=` **equal** or **more then** - very fast *"Difference is a factor."*
+  - `==` **equal** - very fast *"difference is a factor."*
+  - `<=` **equal** or **less then** - very fast *"difference is a factor."*
+  - `>=` **equal** or **more then** - very fast *"difference is a factor."*
   - `<` **less than** - very fast
   - `>` **more than** - very fast
 

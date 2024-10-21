@@ -11,6 +11,10 @@ The [**int object**](../README.md#int-object) is represented as a table in Lua, 
 
 - [**arg(...)**](type.vararg.md) -- either a string or a number.
 
+**Output type:**
+
+- [**int object**](type.intobj.md)
+
 ```lua
 function int.new(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
 ```
@@ -26,7 +30,7 @@ print(y) -- output: 2
 ```
 
 >[!TIP]
-if you want to custom when create one object,\
+if you want to custom when create one [**int object**](type.intobj.md) only,\
 you can use [**int.cnew**](int.cnew.md) function!
 
 ---
