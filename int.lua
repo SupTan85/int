@@ -2,9 +2,9 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 3 (24/08/2024) dd:mm:yyyy
--- USER FEATURE: 19/10/2024
--- DEV  FEATURE: 19/10/2024
+-- BUILD  VERSION: 4 (9/12/2024) dd:mm:yyyy
+-- USER FEATURE: 9/12/2024
+-- DEV  FEATURE: 9/12/2024
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
@@ -66,11 +66,14 @@ local master = {
         MAXIMUM_LUA_INTEGER = "9223372036854775807" -- math.maxinteger
     },
 
-    _VERSION = "186"
+    _VERSION = "186",
+    _BUILD = "186.4"
 }
 
 local OPTION = master._config.OPTION
 local ACCURACY_LIMIT = master._config.ACCURACY_LIMIT
+local OBJECT_CODENAME = "int object"
+local OBJECT_PROFILE = ({(OBJECT_CODENAME):gsub("%s+", "-")})[1] -- auto create profile
 
 ---@diagnostic disable-next-line: deprecated
 table.unpack = table.unpack or unpack
@@ -83,6 +86,16 @@ local function sign(number) -- Returns -1 if `x < 0`, 0 if `x == 0`, or 1 if `x 
         return -1
     end
     return 0
+end
+
+local function istableobj(...)
+    for _, v in ipairs({...}) do
+        local itype = type(v)
+        if itype ~= "table" and itype ~= OBJECT_CODENAME then
+            return false
+        end
+    end
+    return true
 end
 
 master.convert = function(st, s)
@@ -110,7 +123,7 @@ master.convert = function(st, s)
 end
 
 master.deconvert = function(x)
-    assert(type(x or error("[DECONVERT] VOID_INPUT")) == "table", ("[DECONVERT] INVALID_INPUT_TYPE | attempt to deconvert with a '%s'."):format(type(x)))
+    assert(istableobj(x or error("[DECONVERT] VOID_INPUT")), ("[DECONVERT] INVALID_INPUT_TYPE | attempt to deconvert with a '%s'."):format(type(x)))
     local em, sm, fm, s = false, {}, {}, x._size or 1
     for i = x._dlen or 1, 0 do
         local v = tostring(x[i] or error(("[DECONVERT] DAMAGED_OBJECT | missing decimal part value. index[%s]"):format(i)))
@@ -205,7 +218,7 @@ master.custom = {
     end,
 
     _floor = function(x) -- Returns the largest integral value smaller than or equal to `x`.
-        assert(type(x) == "table", ("[FLOOR] INVALID_INPUT_TYPE | x: table (not %s)"):format(type(x)))
+        assert(istableobj(x or error("[FLOOR] VOID_INPUT")), ("[FLOOR] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
         for i = x._dlen or 1, 0 do
             x[i] = nil
         end
@@ -215,13 +228,13 @@ master.custom = {
 
     cfloor = function(self, x, length) -- Custom a `x` decimal part. *use ":" to call a function*
         assert(type(length) == "number", ("[CFLOOR] INVALID_INPUT_TYPE | length: number (not %s)"):format(type(length)))
-        assert(type(x) == "table", ("[CFLOOR] INVALID_INPUT_TYPE | x: table (not %s)"):format(type(x)))
+        assert(istableobj(x or error("[CFLOOR] VOID_INPUT")), ("[CFLOOR] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
         return self._cfloor(x, length, true)
     end,
 
     cround = function(self, x, length, center) -- Custom a `x` decimal part, with automatic round system. (`center` The number of rounding centers) *use ":" to call a function*
         assert(type(length) == "number", ("[CROUND] INVALID_INPUT_TYPE | length: number (not %s)"):format(type(length)))
-        assert(type(x) == "table", ("[CROUND] INVALID_INPUT_TYPE | x: table (not %s)"):format(type(x)))
+        assert(istableobj(x or error("[CROUND] VOID_INPUT")), ("[CROUND] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
         local x, endp, prlen = table.unpack(length == -1 and {x, x._dlen or 1} or {self._cfloor(x, length + 1)})
         if prlen and prlen >= 0 then
             x = self._refresh(x, tostring(x[endp]):match("(%d)0*$") > (center and tostring(center) or "5") and 1 or 0, endp)
@@ -266,6 +279,14 @@ master.equation = {
 }
 
 master.concat = {
+    _creq = function(self, x, y, force)
+        assert(type(self) == "table" and self._seek and self._deep, "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
+        assert(x and y, ("[CONCAT] VOID_INPUT |%s%s"):format(not x and " x: nil (input-required)" or "", not y and " y: nil (input-required)" or ""))
+        assert(istableobj(x), ("[CONCAT] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_CODENAME, type(x)))
+        assert(force or (istableobj(y) and (y._dlen or 1) >= 1) or (not istableobj(y) and tonumber(y) % 1 == 0), "[CONCAT] INVALID_INPUT | y: integer (not decimal)")
+        return true
+    end,
+
     _deep = function(var, reverse, dlen) -- Returns number of block, that are start first.
         -- BUILD 3
         local dlen = dlen or var._dlen or 1
@@ -300,7 +321,7 @@ master.concat = {
         end
         offset = tonumber(offset) or 0
         assert(offset % 1 == 0, "[SEEK] INVALID_INPUT | offset: integer (not decimal)")
-        if type(var) == "table" then
+        if istableobj(var) then
             local result = {}
             local size, dlen = (var._size or 1), (var._dlen or 1)
             local shift, skip = offset % size, floor(offset / size)
@@ -349,12 +370,10 @@ master.concat = {
 
     left = function(self, x, y, ignore, shift, copy, force)
         -- BUILD 3
-        assert(type(self) == "table" and self._seek and self._deep, "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
-        assert(x and y, ("[CONCAT] VOID_INPUT |%s%s"):format(not x and " x: nil (input-required)" or "", not y and " y: nil (input-required)" or ""))
-        assert(force or (type(y) == "table" and (y._dlen or 1) >= 1) or (type(y) ~= "table" and tonumber(y) % 1 == 0), "[CONCAT] INVALID_INPUT | y: integer (not decimal)")
+        assert(type(self) == "table" and self._creq and self:_creq(x, y, force), "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
         x = copy and master.copy(x) or x
-        shift = max(shift or 0, 0)
-        local i, istable = (not ignore and #x or self._deep(x)), type(y) ~= "table"
+        shift = max(tonumber(shift) or 0, 0)
+        local i, istable = (not ignore and #x or self._deep(x)), istableobj(y)
         local size = x._size or 1
         local offset, ishift, skip = 0, shift % size, floor(shift / size)
         if shift > 0 and skip > 0 then
@@ -389,13 +408,11 @@ master.concat = {
 
     right = function(self, x, y, ignore, shift, copy, force)
         -- BUILD 3
-        assert(type(self) == "table" and self._seek and self._deep, "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
-        assert(x and y, ("[CONCAT] VOID_INPUT |%s%s"):format(not x and " x: nil (input-required)" or "", not y and " y: nil (input-required)" or ""))
-        assert(force or (type(y) == "table" and (y._dlen or 1) >= 1) or (type(y) ~= "table" and tonumber(y) % 1 == 0), "[CONCAT] INVALID_INPUT | y: integer (not decimal)")
+        assert(type(self) == "table" and self._creq and self:_creq(x, y, force), "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
         x = copy and master.copy(x) or x
-        shift = max(shift or 0, 0)
+        shift = max(tonumber(shift) or 0, 0)
         local dlen = x._dlen or 1
-        local i, istable = (not ignore and min(dlen, 0) or self._deep(x, true)), type(y) ~= "table"
+        local i, istable = (not ignore and min(dlen, 0) or self._deep(x, true)), istableobj(y)
         local size, dhead, xlogic = x._size or 1, i, (dlen < 1 and #x <= 1)
         local offset, ishift, skip = 0, shift % size, floor(shift / size)
         if shift > 0 and skip > 0 then
@@ -437,7 +454,7 @@ master.concat = {
 master.calculate = {
     _verify = function(a, b, MAXIUMUM_SIZE, CODE_NAME)
         assert(a and b, ("[%s] VOID_INPUT |%s%s"):format(CODE_NAME or "UNKNOW", not a and " a: nil (input-required)" or "", not b and " b: nil (input-required)" or ""))
-        assert(type(a) == "table" and type(b) == "table", ("[%s] INVALID_INPUT |%s%s"):format(CODE_NAME or "UNKNOW", type(a) == "table" and "" or (" a: table (not %s)"):format(type(a)), type(b) == "table" and "" or (" b: table (not %s)"):format(type(b))))
+        assert(istableobj(a, b), ("[%s] INVALID_INPUT |%s%s"):format(CODE_NAME or "UNKNOW", istableobj(a) and "" or (" a: table/%s (not %s)"):format(OBJECT_PROFILE, type(a)), istableobj(b) and "" or (" b: table/%s (not %s)"):format(OBJECT_PROFILE, type(b))))
         assert((a._size or 1) == (b._size or 1), ("[%s] INVALID_SIZE_PERBLOCK | _size: (%s != %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, b._size or 1))
         assert(not ((a._size or 1) > MAXIUMUM_SIZE), ("[%s] INVALID_SIZE_PERBLOCK | _size: (%s > %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, MAXIUMUM_SIZE))
     end,
@@ -632,7 +649,7 @@ master.calculate = {
             return false, low
         end
         if d then
-            if type(d) == "table" then
+            if istableobj(d) then
                 local fp, bp = d[2], d[1]
                 accuracy = auto_acc and self.sub(accuracy, bp) or accuracy - masterD(bp)
                 d = {0, _size = s, _dlen = 1}
@@ -747,14 +764,14 @@ local media = {
     end,
 
     abs = function(x) -- Returns the absolute value of `x`.
-        assert(type(x) == "table", ("[ABS] INVALID_INPUT_TYPE | x: table (not %s)"):format(type(x)))
+        assert(istableobj(x), ("[ABS] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
         x.sign = "+"
         return setmetatable(x, master._metatable)
     end,
 
     fact = function(n, s) -- Factorial function
         local result
-        if type(n) == "table" then
+        if istableobj(n) then
             result = setmetatable(masterC("1", n._size), master._metatable)
             result.sign, n.sign = n.sign or "+", "+"
         else
@@ -777,7 +794,7 @@ local media = {
     floor = function(x, length) -- Returns the largest integral value smaller than or equal to `x`, or Custom a `x` decimal part.
         if x.sign == "-" then
             if length then
-                return setmetatable(length and custom:cround(x, length, 0), master._metatable)
+                return setmetatable(custom:cround(x, length, 0), master._metatable)
             end
             return -((x._dlen or 1) < 1 and 1 or 0) + setmetatable(custom._floor(x), master._metatable)
         end
@@ -831,7 +848,7 @@ function assets.vtype(...) -- asset for vtype function.
     local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERBLOCK.DEFAULT
     table.sort(v, function(a, b) return (SOFT[type(a)] or 0) > (SOFT[type(b)] or 0) end)
     for _, s in ipairs(v) do
-        if type(s) == "table" then
+        if istableobj(s) then
             INTEGER = s._size or INTEGER
         else
             break
@@ -841,7 +858,7 @@ function assets.vtype(...) -- asset for vtype function.
         local ty = type(s)
         if ty == "string" or ty =="number" then
             stack[i] = media.convert(s, INTEGER)
-        elseif ty == "table" then
+        elseif istableobj(s) then
             stack[i] = s
         else
             error(("[VTYPE] attempt to perform arithmetic on a (%s) value"):format(ty))
@@ -1093,7 +1110,7 @@ do
         -- Misc --
         __tostring = media.tostring,
         __mode = "v",
-        __name = "int object",
+        __name = OBJECT_CODENAME,
 
         -- Index --
         __index = mediaobj,
