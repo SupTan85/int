@@ -22,7 +22,7 @@ for i = 1, MAXLOOP do
     local start = os.clock()
     local result = x % y
     -- loading bar --
-    local bar, res = ("|"):rep(math.floor((i / MAXLOOP) * 100)), os.clock() - start
+    local bar, res = ("|"):rep(math.floor((i / MAXLOOP) * 50)), os.clock() - start
     if avg.i >= 10 then
         avg.i = 0
     end

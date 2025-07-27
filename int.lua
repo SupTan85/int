@@ -794,6 +794,7 @@ local media = {
     floor = function(x, length) -- Returns the largest integral value smaller than or equal to `x`, or Custom a `x` decimal part.
         if x.sign == "-" then
             if length then
+                ---@diagnostic disable-next-line: param-type-mismatch
                 return setmetatable(custom:cround(x, length, 0), master._metatable)
             end
             return -((x._dlen or 1) < 1 and 1 or 0) + setmetatable(custom._floor(x), master._metatable)
@@ -801,6 +802,7 @@ local media = {
         return setmetatable(length and custom:cfloor(x, length) or custom._floor(x), master._metatable)
     end,
     cround = function(x, length) -- Custom a `x` decimal part, with automatic round system.
+        ---@diagnostic disable-next-line: param-type-mismatch
         return setmetatable(length and custom:cround(x, length) or custom._floor(x), master._metatable)
     end,
 
@@ -876,6 +878,7 @@ function media.cdiv(x, y, f, l) -- Custom division function. (`f` The maxiumum n
     local raw = master.calculate:div(x, y, x._size, f, l)
     local x_sign, y_sign = x.sign or "+", y.sign or "+"
     raw.sign = (#x_sign == 1 and x_sign or "+") == (#y_sign == 1 and y_sign or "+") and "+" or "-"
+    ---@diagnostic disable-next-line: param-type-mismatch
     return setmetatable(raw, master._metatable)
 end
 
