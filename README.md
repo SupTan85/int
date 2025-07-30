@@ -10,7 +10,7 @@ The **int** module extends Lua capability to handle large numbers.
 This project is currently in beta.
 
 Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4\
-Check by [**TestSuite**](testsuite.lua) file
+Check by [**TestSuite**](testsuite.lua)
 
 ---
 
