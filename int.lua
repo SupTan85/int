@@ -25,10 +25,11 @@ local master = {
             --[[ MASTER DIVISION | BYPASS GENERATE FLOATING POINT >>
                 How dose it work :
                     Optimize the division process by reducing the number of loop iterations. However, this approach may not be effective for very large numbers.
+                    note: Some version of lua is not support this feature.
 
                 By SupTan85
             << BUILD-IN >>]]
-            MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = true,
+            MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false,
 
             --[[ MASTER DIVISION | AUTO CONFIG ITERATIONS LIMIT >>
                 How dose it work :
@@ -88,7 +89,7 @@ local function sign(number) -- Returns -1 if `x < 0`, 0 if `x == 0`, or 1 if `x 
     return 0
 end
 
-local function istableobj(...)
+local function istableobj(...) -- All value are table/int-object, else return false.
     for _, v in ipairs({...}) do
         local itype = type(v)
         if itype ~= "table" and itype ~= OBJECT_CODENAME then
@@ -572,7 +573,7 @@ master.calculate = {
         local lastpoint, fin, mark
         b = self:mul(b, masterC("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT and (function(b)
-            local p = tostring("1" / b)
+            local p = b == "1" and "1.0" or tostring("1" / b)
             if p:find("e") then
                 local L, R = p:match("^[-+]?(%d-%.?%d+)e"), p:match("e[-+]?(%d+)$")
                 L, lastpoint = L:sub(1, -2), L:sub(-2, -2)
@@ -674,7 +675,7 @@ master.calculate = {
         end
         while auto_acc and more(accuracy, masterC(0, s)) or not auto_acc and accuracy > 0 do
             local dv, lp = calcu(lastpoint)
-            assert(lp, ("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\ndata: %s\n"):format(masterD(a), masterD(b), masterD(d)))
+            assert(lp, ("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\ndata: %s\n"):format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR", (d and masterD(d)) or "ERROR"))
             d, lastpoint = d and concat:right(d, lp, false, uc) or not d and masterC(lp, s) or d, lp
             uc = lp == 0 and mark and (uc) + 1 or 0
             mark = mark or d ~= nil
@@ -981,11 +982,13 @@ function media.sqrt(x, f, l) -- Returns the square root of `x`. (`f` The maxiumu
     x = media.vtype(x or error("[SQRT] VOID_INPUT"))
     -- Newton's Method --
     assert(tostring(x) >= "0", "[SQRT] INVALID_INPUT | Cannot compute the square root of a negative number.")
+    assert(not f or type(f) == "number", ("[SQRT] INVALID_INPUT_TYPE | Type of maxiumum number of decimal part should be integer (not %s)"):format(type(f)))
     local res = x / 2
     local TOLERANCE = f or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_TOLERANCE
     for _ = 1, l or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS do
         local nes = 0.5 * (res + (x / res))
-        if media.decimallen(nes - res) >= TOLERANCE then
+        local dl, tl = media.vtype(media.decimallen(nes - res), TOLERANCE)
+        if dl >= tl then
             return custom:cround(nes, TOLERANCE)
         end
         res = nes

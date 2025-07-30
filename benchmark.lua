@@ -2,12 +2,13 @@ local int = require("int")
 local loaded = os.clock()
 
 os.execute("cls")
-print(("\n>> Hello!\nUSING MODULE VERSION: %s (%s)"):format(int._VERSION or "UNKNOW", _VERSION))
-local MAXLOOP = arg[1] and tonumber(arg[1]:match("(%d+)$")) or 1000
+print(("\nUsing Benchmark.\nUsing module version: %s (%s)"):format(int._VERSION or "UNKNOW", _VERSION))
+local MAXLOOP = arg[1] and tonumber(arg[1]:match("(%d+)$")) or 700
 local ALLSAME = false
 local n, c = {}, {}
 
 local avg = {i = 0, avg = 0}
+local operation_start = os.clock()
 for i = 1, MAXLOOP do
     if not ALLSAME or not n or not c then
         if not ALLSAME then
@@ -35,11 +36,10 @@ for i = 1, MAXLOOP do
     end
     ]]
 end
-
+local operation_time = os.clock() - operation_start
 for _, v in ipairs(avg) do
     avg.avg = avg.avg + v
 end
-
 local per = math.floor((avg.avg / #avg) * 1000)
-print(("\n\nModule load/Setup time: %.3fs\nOperation time: %.3fs (%s per time)\nGoodbye! <<"):format(loaded, avg.avg, tostring(per) == "inf" and "> 1ms" or per.."ms"))
+print(("\n\nModule load/Setup time: %.3fs\nOperation time: %.3fs (%s per time)\n"):format(loaded, operation_time, tostring(per) == "inf" and "> 1ms" or per.."ms"))
 os.execute("pause")
