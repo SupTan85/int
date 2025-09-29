@@ -2,7 +2,7 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 5 (7/30/2025) dd:mm:yyyy
+-- BUILD  VERSION: 5 (7/29/2025) dd:mm:yyyy
 -- USER FEATURE: 9/12/2024
 -- DEV  FEATURE: 9/12/2024
 -- AUTHOR: SupTan85
@@ -972,10 +972,15 @@ end
 
 function media.pow(x, y, f, l) -- Returns `x ^ y`. (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.)
     assert(x and y, "[POW] VOID_INPUT")
+    if x.sign == "-" then
+        assert(y._dlen == 1, ("[POW] INVALID_INPUT | A negative base can only be raised to an integer exponent. (%s)"):format(tostring(y)))
+        if (y[1] or 0) % 2 == 0 then
+            x = media.unm(x)
+        end
+    end
     x, y = media.vtype(x, y)
-    local ysign = y.sign
     y.sign, l = "+", l or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_ACCURATE_LIMIT
-    return ysign == "-" and media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or custom:cfloor(assets:vpow(x, y, l), l)
+    return y.sign == "-" and media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or custom:cfloor(assets:vpow(x, y, l), l)
 end
 
 function media.sqrt(x, f, l) -- Returns the square root of `x`. (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.)

@@ -5,14 +5,14 @@ print(("\nOpen TestSuite.\nUsing module version: %s (%s)"):format(int._VERSION o
 
 local INT_LEN = arg[2] and tonumber(arg[2]:match("(%d+)$")) or 10
 local DEC_LEN = arg[3] and tonumber(arg[3]:match("(%d+)$")) or 10
-local SIMPLE_PRESUITE = arg[1] and tonumber(arg[1]:match("(%d+)$")) or 10
+local SIMPLE_PERSUITE = arg[1] and tonumber(arg[1]:match("(%d+)$")) or 10
 
 print(([[SETTING INFOMATION:
     << |INT_LEN| . |DEC_LEN| >>
     INT_LEN = %d,
     DEC_LEN = %d,
 
-    SIMPLE_PRESUITE = %d]]):format(INT_LEN, DEC_LEN, SIMPLE_PRESUITE))
+    SIMPLE_PERSUITE = %d]]):format(INT_LEN, DEC_LEN, SIMPLE_PERSUITE))
 
 local function create_simple()
     local simple = {}
@@ -38,17 +38,17 @@ local function benchmark(head, function_call)
     print("SELECT FUNCTION: "..string.upper(head))
     local avg = {i = 0, avg = 0}
     local operation_start = os.clock()
-    for i = 1, SIMPLE_PRESUITE do
+    for i = 1, SIMPLE_PERSUITE do
         local x, y = create_simple(), create_simple()
         local start = os.clock()
         function_call(x, y)
         -- loading bar --
-        local bar, res = ("|"):rep(math.floor((i / SIMPLE_PRESUITE) * 50)), os.clock() - start
+        local bar, res = ("|"):rep(math.floor((i / SIMPLE_PERSUITE) * 50)), os.clock() - start
         if avg.i >= 10 then
             avg.i = 0
         end
         avg[avg.i + 1], avg.i = res, avg.i + 1
-        io.write("\r"..bar..(" "):rep(((5 - bar:len()) % 5) + 3), ("[%s] %.2f %% (%d ms) | using: %s"):format(i == SIMPLE_PRESUITE and "/" or ("/-\\|"):sub((((math.floor((i / SIMPLE_PRESUITE) * 500))) % 4) + 1, ((math.floor((i / SIMPLE_PRESUITE) * 500)) % 4) + 1), (i / SIMPLE_PRESUITE) * 100, math.floor(res * 1000), math.floor(collectgarbage("count") * 1024).." Byte"))
+        io.write("\r"..bar..(" "):rep(((5 - bar:len()) % 5) + 3), ("[%s] %.2f %% (%d ms) | using: %s"):format(i == SIMPLE_PERSUITE and "/" or ("/-\\|"):sub((((math.floor((i / SIMPLE_PERSUITE) * 500))) % 4) + 1, ((math.floor((i / SIMPLE_PERSUITE) * 500)) % 4) + 1), (i / SIMPLE_PERSUITE) * 100, math.floor(res * 1000), math.floor(collectgarbage("count") * 1024).." Byte"))
     end
     local operation_time = os.clock() - operation_start
     for _, v in ipairs(avg) do
@@ -75,7 +75,7 @@ benchmark("mod", function(x, y)
     return int.fmod(x, y)
 end)
 benchmark("pow", function(x, y)
-    return x:pow(y)
+    return x:pow(x.sign == "+" and y or y:floor())
 end)
 benchmark("sqrt", function(x, _)
     return x:sqrt()
