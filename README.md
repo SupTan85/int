@@ -264,24 +264,27 @@ some version of Lua you can use equation operator with number & string
 
 > [!NOTE]
 Lua didn't support hyper threading system, mean we can't use full performance of cpu!\
-*however some function not support hyper threading system.*
+**however some function not support hyper threading system.*
 
 - **Calculation**
   - `+` **addition &** `-` **subtraction** - very fast
   - `*` **multiplication** - fast
   - `\` **division &** `\\` **floor division** - slow
   - `%` **modulo** - slow
-  - `^` **power** - very very slow *"because use a lot of memory"*
+  - `^` **power** - very slow
 
-- **Equation**
-  - `==` **equal** - very fast *"difference is a factor."*
-  - `<=` **equal** or **less then** - very fast *"difference is a factor."*
-  - `>=` **equal** or **more then** - very fast *"difference is a factor."*
+- **Equation** "difference is a factor."
+  - `==` **equal** - very fast
+  - `<=` **equal** or **less then** - very fast
+  - `>=` **equal** or **more then** - very fast
   - `<` **less than** - very fast
   - `>` **more than** - very fast
 
 - **ETC**
-  - some other function didn't make for very large data, don't forget to report bug!
+  - `media.unm` Negation - very fast
+  - `media.sqrt` Square root - slow
+  - `media.ln` Natural logarithm - very slow
+  - `media.exp` Exponential - very slow
 
 ---
 

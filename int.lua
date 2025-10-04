@@ -983,7 +983,7 @@ function media.pow(x, y, f, l) -- Returns `x ^ y`. (`f` The maxiumum number of d
     return y.sign == "-" and media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or custom:cfloor(assets:vpow(x, y, l), l)
 end
 
-function media.sqrt(x, f, l) -- Returns the square root of `x`. (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.)
+function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.)
     x = media.vtype(x or error("[SQRT] VOID_INPUT"))
     -- Newton's Method --
     assert(tostring(x) >= "0", "[SQRT] INVALID_INPUT | Cannot compute the square root of a negative number.")
@@ -1001,7 +1001,7 @@ function media.sqrt(x, f, l) -- Returns the square root of `x`. (`f` The maxiumu
     return custom:cround(res, TOLERANCE)
 end
 
-function media.unm(x)
+function media.unm(x) -- negation
     x.sign = x.sign == "-" and "+" or "-"
     return x
 end
