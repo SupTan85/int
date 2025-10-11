@@ -2,9 +2,9 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 5 (7/29/2025) dd:mm:yyyy
+-- BUILD  VERSION: 5 (11/10/2025) dd:mm:yyyy
 -- USER FEATURE: 9/12/2024
--- DEV  FEATURE: 9/12/2024
+-- DEV  FEATURE: 11/10/2025
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
@@ -81,12 +81,7 @@ table.unpack = table.unpack or unpack
 local max, min, floor, ceil = math.max, math.min, math.floor, math.ceil
 
 local function sign(number) -- Returns -1 if `x < 0`, 0 if `x == 0`, or 1 if `x > 0`.
-    if number > 0 then
-        return 1
-    elseif number < 0 then
-        return -1
-    end
-    return 0
+    return (number == 0 and 0) or (number < 0 and -1 or 1)
 end
 
 local function istableobj(...) -- All value are table/int-object, else return false.
@@ -105,8 +100,8 @@ master.convert = function(st, s)
     assert(not (s <= 0), ("[CONVERT] SETTING_SIZE_ISSUE | size per block is less then one. (%s < 1)"):format(s))
     assert(not (s > master._config.MAXIMUM_SIZE_PERBLOCK), ("[CONVERT] INVALID_SIZE_PERBLOCK | size per block is more then maxiumum setting. (%s > %s)"):format(s, master._config.MAXIMUM_SIZE_PERBLOCK))
     local result, step = {_size = s}, 0
-    local i, i2 = st:match("^(%d+)%.(%d+)$")
-    i, i2 = (i or st):reverse(), (i2 or ""):match("^(.-)0*$")
+    local i, i2 = st:match("^0*(.-)%.(.-)0*$")
+    i, i2 = (i or st):reverse(), (i2 or "")
     local len_i, len_i2 = #i, #i2
     for index = 1, max(len_i, len_i2), s do
         step = step + 1
@@ -725,6 +720,27 @@ local media = {
                 pack[i].sign = equal(v, cahce) and "+" or v.sign or "+"
             end
             return table.unpack(pack)
+        end,
+        EQMatch = function(n, e) -- check if n (int object) is equal e (number|string). *but not support decimal*
+            if n._dlen < 1 then
+                return false
+            end
+            e = tostring(e)
+            local n_size = n._size
+            local ipointer = 0
+            local e_len = e:len()
+            for i, v in ipairs(n) do
+                local current_block = tostring(v)
+                local current_cut = (i - 1) * n_size
+                for i2 = 1, n_size do
+                    ipointer = ipointer + 1
+                    local cut_as = current_cut + i2
+                    if ipointer > e_len or e:sub(ipointer, ipointer) ~= current_block:sub(cut_as, cut_as) then
+                        return false
+                    end
+                end
+            end
+            return true
         end
     },
 
@@ -953,14 +969,13 @@ end
 
 function assets.vpow(self, x, y, l) -- pow function assets. `y >= 0`
     assert(x and y, "[VPOW] VOID_INPUT")
-    assert(tostring(y) >= "0", ("[VPOW] FUNCTION_NOT_SUPPORT | y (%s) is less then 0."):format(tostring(y)))
-    if tostring(y % 1) == "0" then
-        local st = tostring(y)
-        if st == "0" then
-            return tostring(x) == "0" and error("[VPOW] INVALID_INPUT | cannot divide itself by zero.") or media.convert(1, x._size)
-        elseif st == "1" then
+    assert(y.sign == "+" or (y._dlen >= 1 and #y <= 1 and (y[1] or 0) == 0), ("[VPOW] FUNCTION_NOT_SUPPORT | y (%s) is less then 0."):format(tostring(y)))
+    if y._dlen >= 1 then
+        if assets.EQMatch(y, 0) then
+            return media.convert(1, x._size)
+        elseif assets.EQMatch(y, 1) then
             return custom:cfloor(x, l)
-        elseif tostring(y % 2) == "0" then
+        elseif (y[1] or 0) % 2 == 0 and y._dlen >= 1 then
             local half_power = self:vpow(x, media.cdiv(y, 2, 0, l), l)
             return half_power * half_power * (x.sign == "-" and -1 or 1)
         end
@@ -972,15 +987,16 @@ end
 
 function media.pow(x, y, f, l) -- Returns `x ^ y`. (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.)
     assert(x and y, "[POW] VOID_INPUT")
+    x, y = media.vtype(x, y)
     if x.sign == "-" then
-        assert(y._dlen == 1, ("[POW] INVALID_INPUT | A negative base can only be raised to an integer exponent. (%s)"):format(tostring(y)))
+        assert(y._dlen >= 1, ("[POW] INVALID_INPUT | A negative base can only be raised to an integer exponent. (%s)"):format(tostring(y)))
         if (y[1] or 0) % 2 == 0 then
             x = media.unm(x)
         end
     end
-    x, y = media.vtype(x, y)
+    local y_sign = y.sign
     y.sign, l = "+", l or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_ACCURATE_LIMIT
-    return y.sign == "-" and media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or custom:cfloor(assets:vpow(x, y, l), l)
+    return y_sign == "-" and media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or custom:cfloor(assets:vpow(x, y, l), l)
 end
 
 function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.)
