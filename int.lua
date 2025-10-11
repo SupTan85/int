@@ -68,7 +68,7 @@ local master = {
     },
 
     _VERSION = "186",
-    _BUILD = "186.4"
+    _BUILD = "186.5"
 }
 
 local OPTION = master._config.OPTION
