@@ -38,7 +38,7 @@ To use [**calculation operators**](#operators) to calculate math.
 > [!CAUTION]
 only operator that is supported.
 
-![video1](.doc/.assets/video1.gif)
+<img src=".doc\.assets\video1.gif" alt="demo" width="100%"/>
 
 you can do like this:
 
