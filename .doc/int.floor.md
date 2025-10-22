@@ -10,8 +10,12 @@ This function returns the largest integral value of the given number. However, y
 
 **Input type:**
 
-- **x** -- [**int object**](../README.md#int-object) only.
+- **x** -- [**int object**](type.intobj.md) only.
 - **length** -- number only.
+
+**Output type:**
+
+- [**int object**](type.intobj.md)
 
 ```lua
 function int.floor(x, length) -- Returns the largest integral value smaller than or equal to `x`, or Custom a `x` fraction.

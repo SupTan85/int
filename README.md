@@ -83,7 +83,7 @@ before use any function, don't forget to read function [**performance**](#perfor
 This a example inside [**table**](.doc/type.table.md) of [**int object**](.doc/type.intobj.md).
 
 ```lua
-local example_int_table = {
+local example_intobj_table = {
     -- digit --
     [1] = 1, -- this a digit block
     [0] = 0,
@@ -151,8 +151,8 @@ Recommend to read in visual studio code.
   - int.pow *-- power function*
   - int.sign
   - int.sqrt
-  - int.tonumber
-  - int.tostring
+  - [int.tonumber](.doc/int.tonumber.md)
+  - [int.tostring](.doc/int.tostring.md)
   - int.unm
 
 **Example to call a function:**
@@ -193,8 +193,8 @@ print(int.floor(x, 2)) -- output: 14.69
   - pow *-- power function*
   - sign
   - sqrt
-  - tonumber
-  - tostring
+  - [tonumber](.doc/int.tonumber.md)
+  - [tostring](.doc/int.tostring.md)
   - unm
 
 **Example to call a function:**
