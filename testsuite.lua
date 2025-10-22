@@ -1,8 +1,9 @@
+local import_time = os.clock()
 local int = require("int") -- import module
 
 os.execute("cls")
 print(("\nOpen TestSuite.\nUsing module version: %s (%s)"):format(int._VERSION or "UNKNOW", _VERSION))
-
+print(("Import time: %ss"):format(tostring(os.clock() - import_time)))
 local INT_LEN = arg[2] and tonumber(arg[2]:match("(%d+)$")) or 10
 local DEC_LEN = arg[3] and tonumber(arg[3]:match("(%d+)$")) or 10
 local SIMPLE_PERSUITE = arg[1] and tonumber(arg[1]:match("(%d+)$")) or 10

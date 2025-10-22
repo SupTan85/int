@@ -790,13 +790,14 @@ local media = {
         local result
         if istableobj(n) then
             result = setmetatable(masterC("1", n._size), master._metatable)
-            result.sign, n.sign = n.sign or "+", "+"
-        else
-            result = setmetatable(masterC("1", s or master._config.SETINTEGER_PERBLOCK.DEFAULT), master._metatable)
             result.sign = "+"
+        else
+            n = setmetatable(masterC(n, s or master._config.SETINTEGER_PERBLOCK.DEFAULT), master._metatable)
+            result = setmetatable(masterC("1", s or master._config.SETINTEGER_PERBLOCK.DEFAULT), master._metatable)
+            n.sign, result.sign = "+", "+"
         end
-        if tostring(n) >= master._config.MAXIMUM_LUA_INTEGER then
-            while tostring(n) > "0" do
+        if n >= master._config.MAXIMUM_LUA_INTEGER then
+            while n > 0 do
                 result, n = result * n, n - 1
             end
         else
