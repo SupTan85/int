@@ -2,9 +2,9 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 5 (11/10/2025) dd:mm:yyyy
--- USER FEATURE: 9/12/2024
--- DEV  FEATURE: 11/10/2025
+-- BUILD  VERSION: 5 (02/11/2025) dd:mm:yyyy
+-- USER FEATURE: 02/11/2025
+-- DEV  FEATURE: 02/11/2025
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
@@ -13,12 +13,12 @@
 
 local master = {
     _config = {
-        SETINTEGER_PERBLOCK = {
+        SETINTEGER_PERCHUNK = {
             STABLE = 1,
             BALANCE = 4,
             FASTEST = 9,
 
-            DEFAULT = 9,
+            DEFAULT = string.format("%.0f", 2^63) == "9223372036854775808" and 9 or 7, -- recommend
         },
 
         OPTION = {
@@ -29,7 +29,7 @@ local master = {
 
                 By SupTan85
             << BUILD-IN >>]]
-            MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false,
+            MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = true,
 
             --[[ MASTER DIVISION | AUTO CONFIG ITERATIONS LIMIT >>
                 How dose it work :
@@ -63,7 +63,7 @@ local master = {
             INTEGER = "9223372036854775806",    DECIMAL = "9223372036854775808"
         },
 
-        MAXIMUM_SIZE_PERBLOCK = 9, -- stable size is 9
+        MAXIMUM_SIZE_PERCHUNK = 9, -- stable size is 9
         MAXIMUM_LUA_INTEGER = "9223372036854775807" -- math.maxinteger
     },
 
@@ -97,8 +97,8 @@ end
 master.convert = function(st, s)
     assert(type(st) == "string" or type(st) == "number", ("[CONVERT] INVALID_INPUT_TYPE | attempt to convert with a '%s'."):format(type(st)))
     st, s = tostring(st), s or 1
-    assert(not (s <= 0), ("[CONVERT] SETTING_SIZE_ISSUE | size per block is less then one. (%s < 1)"):format(s))
-    assert(not (s > master._config.MAXIMUM_SIZE_PERBLOCK), ("[CONVERT] INVALID_SIZE_PERBLOCK | size per block is more then maxiumum setting. (%s > %s)"):format(s, master._config.MAXIMUM_SIZE_PERBLOCK))
+    assert(not (s <= 0), ("[CONVERT] SETTING_SIZE_ISSUE | size per chunk is less then one. (%s < 1)"):format(s))
+    assert(not (s > master._config.MAXIMUM_SIZE_PERCHUNK), ("[CONVERT] INVALID_SIZE_PERCHUNK | size per chunk is more then maxiumum setting. (%s > %s)"):format(s, master._config.MAXIMUM_SIZE_PERCHUNK))
     local result, step = {_size = s}, 0
     local i, i2 = st:match("^0*(.-)%.(.-)0*$")
     i, i2 = (i or st):reverse(), (i2 or "")
@@ -241,8 +241,8 @@ master.custom = {
 
 local custom = master.custom
 master.equation = {
-    equal = function(x, y) -- block size should be same
-        assert((x._size or 1) == (y._size or 1), ("[EQUATION] INVALID_SIZE_PERBLOCK (%s, %s)"):format(x._size or 1, y._size or 1))
+    equal = function(x, y) -- chunk size should be same
+        assert((x._size or 1) == (y._size or 1), ("[EQUATION] INVALID_SIZE_PERCHUNK (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x == #y and (x._dlen or 1) == (y._dlen or 1) then
             for i = x._dlen or 1, #x do
                 if x[i] ~= y[i] then
@@ -253,8 +253,8 @@ master.equation = {
         end
         return false
     end,
-    less = function(x, y) -- block size should be same
-        assert((x._size or 1) == (y._size or 1), ("[EQUATION] INVALID_SIZE_PERBLOCK (%s, %s)"):format(x._size or 1, y._size or 1))
+    less = function(x, y) -- chunk size should be same
+        assert((x._size or 1) == (y._size or 1), ("[EQUATION] INVALID_SIZE_PERCHUNK (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x < #y then
             return true
         elseif #x == #y or x[#x] == 0 or y[#y] == 0 then
@@ -269,7 +269,7 @@ master.equation = {
         end
         return false
     end,
-    more = function(x, y) -- block size should be same
+    more = function(x, y) -- chunk size should be same
         return not master.equation.less(x, y) and not master.equation.equal(x, y)
     end
 }
@@ -283,7 +283,7 @@ master.concat = {
         return true
     end,
 
-    _deep = function(var, reverse, dlen) -- Returns number of block, that are start first.
+    _deep = function(var, reverse, dlen) -- Returns number of chunk, that are start first.
         -- BUILD 3
         local dlen = dlen or var._dlen or 1
         while var[dlen - 1] do
@@ -336,9 +336,7 @@ master.concat = {
                 if reqsize < 1 then
                     break
                 end
-                if not reverse then
-                    i = (dlen - i) + vlen
-                end
+                local i = reverse and (dlen - i) + vlen or i
                 local curr = tostring(var[i] or "")
                 if i ~= vlen then
                     curr = ("0"):rep(size - #curr)..curr
@@ -451,20 +449,20 @@ master.calculate = {
     _verify = function(a, b, MAXIUMUM_SIZE, CODE_NAME)
         assert(a and b, ("[%s] VOID_INPUT |%s%s"):format(CODE_NAME or "UNKNOW", not a and " a: nil (input-required)" or "", not b and " b: nil (input-required)" or ""))
         assert(istableobj(a, b), ("[%s] INVALID_INPUT |%s%s"):format(CODE_NAME or "UNKNOW", istableobj(a) and "" or (" a: table/%s (not %s)"):format(OBJECT_PROFILE, type(a)), istableobj(b) and "" or (" b: table/%s (not %s)"):format(OBJECT_PROFILE, type(b))))
-        assert((a._size or 1) == (b._size or 1), ("[%s] INVALID_SIZE_PERBLOCK | _size: (%s != %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, b._size or 1))
-        assert(not ((a._size or 1) > MAXIUMUM_SIZE), ("[%s] INVALID_SIZE_PERBLOCK | _size: (%s > %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, MAXIUMUM_SIZE))
+        assert((a._size or 1) == (b._size or 1), ("[%s] INVALID_SIZE_PERCHUNK | _size: (%s != %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, b._size or 1))
+        assert(not ((a._size or 1) > MAXIUMUM_SIZE), ("[%s] INVALID_SIZE_PERCHUNK | _size: (%s > %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, MAXIUMUM_SIZE))
     end,
 
-    add = function(self, a, b, s)  -- _size maxiumum 18 **block size should be same**
+    add = function(self, a, b, s)  -- _size maxiumum 18 **chunk size should be same**
         self._verify(a, b, 18, "ADD")
         local result = {_size = a._size or s or 1}
         local s, c, d = floor(10 ^ (result._size)), false, false
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
-            local block_result = (a[i] or 0) + (b[i] or 0)
-            local next = floor(block_result / s)
+            local chunk_result = (a[i] or 0) + (b[i] or 0)
+            local next = floor(chunk_result / s)
             result[i + 1] = (next ~= 0 and next) or nil
-            if i >= 1 or c == true or block_result ~= 0 then
-                result[i], c = (block_result % s) + (result[i] or 0), true
+            if i >= 1 or c == true or chunk_result ~= 0 then
+                result[i], c = (chunk_result % s) + (result[i] or 0), true
                 if d == false then
                     result._dlen = (i < 1 and i) or 1
                     d = true
@@ -473,22 +471,22 @@ master.calculate = {
         end
         return result
     end,
-    sub = function(self, a, b, s)  -- _size maxiumum 18 (to use this function `a >= b` else result will been wrong!) **block size should be same**
+    sub = function(self, a, b, s)  -- _size maxiumum 18 (to use this function `a >= b` else result will been wrong!) **chunk size should be same**
         self._verify(a, b, 18, "SUB")
         local result = {_size = a._size or s or 1}
         local s, d = floor(10 ^ (result._size)), false
         local stack
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
-            local block_result = (a[i] or 0) - (b[i] or 0)
-            local callback = (block_result % s) - (result[i] or 0)
-            local block_data = callback % s
-            result[i] = block_data
-            if not d and block_data ~= 0 then
+            local chunk_result = (a[i] or 0) - (b[i] or 0)
+            local callback = (chunk_result % s) - (result[i] or 0)
+            local chunk_data = callback % s
+            result[i] = chunk_data
+            if not d and chunk_data ~= 0 then
                 result._dlen, d = (i < 1 and i) or 1, true
             end
-            stack = (block_data == 0 and ((stack and {stack[1], i}) or {i, i})) or nil
+            stack = (chunk_data == 0 and ((stack and {stack[1], i}) or {i, i})) or nil
             result[i + 1] = (callback < 0 and (floor((callback % s) / s) + (((callback % s) ~= 0 and 1) or 0))) or nil
-            result[i + 1] = (block_result < 0 and (result[i + 1] or 0) + (floor((block_result % s) / s) + (((block_result % s) ~= 0 and 1) or 0))) or result[i + 1]
+            result[i + 1] = (chunk_result < 0 and (result[i + 1] or 0) + (floor((chunk_result % s) / s) + (((chunk_result % s) ~= 0 and 1) or 0))) or result[i + 1]
         end
         if stack then
             for i = stack[1], stack[2] do
@@ -501,7 +499,7 @@ master.calculate = {
         end
         return result
     end,
-    mul = function(self, a, b, s, e) -- _size maxiumum 9 (`e` switch for division process.) **block size should be same**
+    mul = function(self, a, b, s, e) -- _size maxiumum 9 (`e` switch for division process.) **chunk size should be same**
         self._verify(a, b, 9, "MUL")
         local result = {_size = a._size or s or 1}
         local s, op = floor(10 ^ (result._size)), 1
@@ -511,13 +509,14 @@ master.calculate = {
             if BA and BA ~= 0 then
                 for i2 = b._dlen or 1, #b do
                     local calcul, offset = BA * (b[i2] or 0), i + i2 - 1
-                    local block_data = (calcul + (result[offset] or 0))
-                    local next = floor(block_data / s)
-                    block_data = block_data % s
+                    -- print(("%09d"):format(BA), ("%09d"):format(b[i2] or 0), "=", calcul)
+                    local chunk_data = (calcul + (result[offset] or 0))
+                    local next = floor(chunk_data / s)
+                    chunk_data = chunk_data % s
                     if not cd then
-                        cd = block_data ~= 0
+                        cd = chunk_data ~= 0
                     end
-                    result[offset] = (offset > 0 or cd) and block_data or nil
+                    result[offset] = (offset > 0 or cd) and chunk_data or nil
                     result[offset + 1], op = (next ~= 0 and (next + (result[offset + 1] or 0))) or ((offset > 0 or cd) and 0) or result[offset + 1], result[offset] and min(op, offset) or op
                 end
                 if e and #result >= 1 then
@@ -558,7 +557,7 @@ master.calculate = {
         result._dlen = op
         return result
     end,
-    div = function(self, a, b, s, f, l) -- _size maxiumum 9 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **block size should be same**
+    div = function(self, a, b, s, f, l) -- _size maxiumum 9 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
         self._verify(a, b, 9, "DIV")
         assert(not master.equation.equal(b, masterC(0, b._size or 1)), "[DIV] INVALID_INPUT | divisor cannot be zero.")
         local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV
@@ -609,6 +608,7 @@ master.calculate = {
         local function check(n)
             local dc = d and setmetatable({}, {__index = d, __len = function() return #d end}) or masterC(n, s)
             local nc = self:mul(b, d and concat:right(dc, n, false, uc) or dc, s, true)
+            -- print(n, masterD(nc))
             if more(nc, one) then
                 return 1
             elseif less(nc, one) then
@@ -627,7 +627,7 @@ master.calculate = {
             end
             local high, low, code
             for i = 1, 10 do
-                i = map[i]
+                local i = map[i]
                 if i >= (low or 0) and i <= (high or 9) then
                     code = check(i)
                     if code == 0 then
@@ -642,6 +642,7 @@ master.calculate = {
                     end
                 end
             end
+            -- print(high, low, code)
             return false, low
         end
         if d then
@@ -670,7 +671,16 @@ master.calculate = {
         end
         while auto_acc and more(accuracy, masterC(0, s)) or not auto_acc and accuracy > 0 do
             local dv, lp = calcu(lastpoint)
-            assert(lp, ("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\ndata: %s\n"):format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR", (d and masterD(d)) or "ERROR"))
+            -- issue checker >>
+            if not lp and master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT then
+                print(("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n"):format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR", (d and masterD(d)) or "ERROR"))
+                print("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result while using the option <MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT>.\nmodule will automatically disable this option permanent and recalculate the result again. some versions of Lua cannot using this option!\nset: master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false\n")
+                master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false
+                return master.calculate:div(a, b, s, f, l)
+            end
+            assert(lp, ("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n"):format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR", (d and masterD(d)) or "ERROR"))
+            -- print((d and masterD(d)) or "ERROR")
+            -- issue checker <<
             d, lastpoint = d and concat:right(d, lp, false, uc) or not d and masterC(lp, s) or d, lp
             uc = lp == 0 and mark and (uc) + 1 or 0
             mark = mark or d ~= nil
@@ -730,12 +740,12 @@ local media = {
             local ipointer = 0
             local e_len = e:len()
             for i, v in ipairs(n) do
-                local current_block = tostring(v)
+                local current_chunk = tostring(v)
                 local current_cut = (i - 1) * n_size
                 for i2 = 1, n_size do
                     ipointer = ipointer + 1
                     local cut_as = current_cut + i2
-                    if ipointer > e_len or e:sub(ipointer, ipointer) ~= current_block:sub(cut_as, cut_as) then
+                    if ipointer > e_len or e:sub(ipointer, ipointer) ~= current_chunk:sub(cut_as, cut_as) then
                         return false
                     end
                 end
@@ -792,11 +802,11 @@ local media = {
             result = setmetatable(masterC("1", n._size), master._metatable)
             result.sign = "+"
         else
-            n = setmetatable(masterC(n, s or master._config.SETINTEGER_PERBLOCK.DEFAULT), master._metatable)
-            result = setmetatable(masterC("1", s or master._config.SETINTEGER_PERBLOCK.DEFAULT), master._metatable)
+            n = setmetatable(masterC(n, s or master._config.SETINTEGER_PERCHUNK.DEFAULT), master._metatable)
+            result = setmetatable(masterC("1", s or master._config.SETINTEGER_PERCHUNK.DEFAULT), master._metatable)
             n.sign, result.sign = "+", "+"
         end
-        if n >= master._config.MAXIMUM_LUA_INTEGER then
+        if n:eqmore(master._config.MAXIMUM_LUA_INTEGER) then
             while n > 0 do
                 result, n = result * n, n - 1
             end
@@ -865,7 +875,7 @@ end
 
 function assets.vtype(...) -- asset for vtype function.
     local stack, v = {...}, {...}
-    local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERBLOCK.DEFAULT
+    local SOFT, INTEGER = {table = 1}, master._config.SETINTEGER_PERCHUNK.DEFAULT
     table.sort(v, function(a, b) return (SOFT[type(a)] or 0) > (SOFT[type(b)] or 0) end)
     for _, s in ipairs(v) do
         if istableobj(s) then
@@ -1147,14 +1157,14 @@ end
 
 local int = setmetatable({
 
-    _defaultsize = master._config.SETINTEGER_PERBLOCK.DEFAULT,
+    _defaultsize = master._config.SETINTEGER_PERCHUNK.DEFAULT,
     _VERSION = master._VERSION
 }, {
     -- metatable --
     __index = mediaobj
 })
 
-int.new = function(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
+int.new = function(...) -- (string|number) For only create. alway use default size! **CHUNK SIZE SHOULD BE SAME WHEN CALCULATE**
     local stack, em = {}, false
     for i, s in ipairs({...}) do
         stack[i], em = media.convert(s, int._defaultsize), true
@@ -1165,8 +1175,8 @@ int.new = function(...) -- (string|number) For only create. alway use default si
     return table.unpack(stack)
 end
 
-int.cnew = function(number, size) -- (number:string|number, size:string|number) For setting a size per block. **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
-    return media.convert(number or 0, size and (tonumber(size) or master._config.SETINTEGER_PERBLOCK[size:upper()]) or int._defaultsize)
+int.cnew = function(number, size) -- (number:string|number, size:string|number) For setting a size per chunk. **CHUNK SIZE SHOULD BE SAME WHEN CALCULATE**
+    return media.convert(number or 0, size and (tonumber(size) or master._config.SETINTEGER_PERCHUNK[size:upper()]) or int._defaultsize)
 end
 
 int._maximum_digit = { -- limit of digit per table.

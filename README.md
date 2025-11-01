@@ -85,7 +85,7 @@ This a example inside [**table**](.doc/type.table.md) of [**int object**](.doc/t
 ```lua
 local example_intobj_table = {
     -- digit --
-    [1] = 1, -- this a digit block
+    [1] = 1, -- chunk
     [0] = 0,
     [-1] = 1,
 
@@ -101,7 +101,7 @@ local example_intobj_table = {
     sign = "+",
 
     _dlen = -1, -- digit of fraction *this for calculate a fraction* **DO NOT CHANGE. HAVE LIMIT!!**
-    _size = 1 -- mean per size of block *just maximum digit per value in the digit block* **DO NOT CHANGE. HAVE LIMIT!!**
+    _size = 1 -- mean per size of chunk *just maximum digit per value in the digit chunk* **DO NOT CHANGE. HAVE LIMIT!!**
 }
 ```
 
@@ -304,6 +304,6 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 > [!NOTE]
 reason why this module name is "int"? because in this module always use integer to calculate math,\
 and feel free to use!\
-**186 - 3**
+**186 - 5**
 
 ![bar](.doc/.assets/bar.png)

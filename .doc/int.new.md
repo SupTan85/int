@@ -16,7 +16,7 @@ The [**int object**](../README.md#int-object) is represented as a table in Lua, 
 - [**int object**](type.intobj.md)
 
 ```lua
-function int.new(...) -- (string|number) For only create. alway use default size! **BLOCK SIZE SHOULD BE SAME WHEN CALCULATE**
+function int.new(...) -- (string|number) For only create. alway use default size! **CHUNK SIZE SHOULD BE SAME WHEN CALCULATE**
 ```
 
 **Example:**
