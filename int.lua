@@ -2,23 +2,29 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 5 (02/11/2025) dd:mm:yyyy
--- USER FEATURE: 02/11/2025
--- DEV  FEATURE: 02/11/2025
+-- BUILD  VERSION: 186.5 (08/11/2025) dd:mm:yyyy
+-- USER FEATURE: 08/11/2025
+-- DEV  FEATURE: 08/11/2025
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
 -- 
 ----------------------------------------------------
 
+local intcur =  -- 64 bit
+                (string.format("%.0f", 2^63) == "9223372036854775808"   and     {9, "9223372036854775808"}) or -- Lua 5.2+
+                (string.format("%.0f", 2^56) == "72057594037927936"     and     {7, "72057594037927936"})   or -- Lua 5.1
+                -- 32 bit
+                {4, "2147483648"}
+
 local master = {
     _config = {
         SETINTEGER_PERCHUNK = {
             STABLE = 1,
-            BALANCE = 4,
-            FASTEST = 9,
+            BALANCE = math.floor(intcur[1] / 2),
+            FASTEST = intcur[1],
 
-            DEFAULT = string.format("%.0f", 2^63) == "9223372036854775808" and 9 or 7, -- recommend
+            DEFAULT = intcur[1], -- recommend
         },
 
         OPTION = {
@@ -59,12 +65,8 @@ local master = {
         },
 
         -- SYSTEM CONFIG ! DO NOT CHANGE ! --
-        MAXIMUM_DIGIT_PERTABLE = {
-            INTEGER = "9223372036854775806",    DECIMAL = "9223372036854775808"
-        },
-
-        MAXIMUM_SIZE_PERCHUNK = 9, -- stable size is 9
-        MAXIMUM_LUA_INTEGER = "9223372036854775807" -- math.maxinteger
+        MAXIMUM_SIZE_PERCHUNK = intcur[1], -- stable size is 9
+        MAXIMUM_LUA_INTEGER = intcur[2] -- math.maxinteger
     },
 
     _VERSION = "186",
@@ -101,7 +103,7 @@ master.convert = function(st, s)
     assert(not (s > master._config.MAXIMUM_SIZE_PERCHUNK), ("[CONVERT] INVALID_SIZE_PERCHUNK | size per chunk is more then maxiumum setting. (%s > %s)"):format(s, master._config.MAXIMUM_SIZE_PERCHUNK))
     local result, step = {_size = s}, 0
     local i, i2 = st:match("^0*(.-)%.(.-)0*$")
-    i, i2 = (i or st):reverse(), (i2 or "")
+    i, i2 = (i or st):match("^0*(.-)$"):reverse(), (i2 or "")
     local len_i, len_i2 = #i, #i2
     for index = 1, max(len_i, len_i2), s do
         step = step + 1
@@ -191,7 +193,7 @@ master.custom = {
         return x, endp or dlen, prlen
     end,
 
-    _refresh = function(x, lu, endp)
+    _refresh = function(x, lu, endp) -- refresh all chunk that should to be, by fast `ADD` process.
         lu = lu or 0
         local s, endp = x._size or 1, endp or x._dlen or 1
         local re
@@ -209,7 +211,7 @@ master.custom = {
                 x._dlen, x[endp] = x._dlen + 1, nil
             end
         end
-        x._dlen = endp
+        x._dlen = max(endp, x._dlen)
         return x
     end,
 
@@ -453,8 +455,8 @@ master.calculate = {
         assert(not ((a._size or 1) > MAXIUMUM_SIZE), ("[%s] INVALID_SIZE_PERCHUNK | _size: (%s > %s)"):format(CODE_NAME or "UNKNOW", a._size or 1, MAXIUMUM_SIZE))
     end,
 
-    add = function(self, a, b, s)  -- _size maxiumum 18 **chunk size should be same**
-        self._verify(a, b, 18, "ADD")
+    add = function(self, a, b, s)  -- _size maxiumum *2 **chunk size should be same**
+        self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK * 2, "ADD")
         local result = {_size = a._size or s or 1}
         local s, c, d = floor(10 ^ (result._size)), false, false
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
@@ -471,36 +473,35 @@ master.calculate = {
         end
         return result
     end,
-    sub = function(self, a, b, s)  -- _size maxiumum 18 (to use this function `a >= b` else result will been wrong!) **chunk size should be same**
-        self._verify(a, b, 18, "SUB")
+    sub = function(self, a, b, s)  -- _size maxiumum *2 (to use this function `a >= b` else result will been wrong!) **chunk size should be same**
+        self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK * 2, "SUB")
         local result = {_size = a._size or s or 1}
         local s, d = floor(10 ^ (result._size)), false
-        local stack
+        local bottom_trim = false
         for i = min(a._dlen or 1, b._dlen or 1), max(#a, #b) do
             local chunk_result = (a[i] or 0) - (b[i] or 0)
             local callback = (chunk_result % s) - (result[i] or 0)
             local chunk_data = callback % s
-            result[i] = chunk_data
-            if not d and chunk_data ~= 0 then
+            bottom_trim = bottom_trim or chunk_data ~= 0
+            result[i] = bottom_trim and chunk_data or nil
+            if not d and bottom_trim then
                 result._dlen, d = (i < 1 and i) or 1, true
             end
-            stack = (chunk_data == 0 and ((stack and {stack[1], i}) or {i, i})) or nil
             result[i + 1] = (callback < 0 and (floor((callback % s) / s) + (((callback % s) ~= 0 and 1) or 0))) or nil
             result[i + 1] = (chunk_result < 0 and (result[i + 1] or 0) + (floor((chunk_result % s) / s) + (((chunk_result % s) ~= 0 and 1) or 0))) or result[i + 1]
         end
-        if stack then
-            for i = stack[1], stack[2] do
+        for i = #result, 1, -1 do
+            if result[i] == 0 then
                 result[i] = nil
+            else
+                break
             end
         end
         result._dlen = result._dlen or 1
-        if #result == 0 then
-            result[1] = 0
-        end
         return result
     end,
-    mul = function(self, a, b, s, e) -- _size maxiumum 9 (`e` switch for division process.) **chunk size should be same**
-        self._verify(a, b, 9, "MUL")
+    mul = function(self, a, b, s, e) -- _size maxiumum *1 (`e` switch for division process.) **chunk size should be same**
+        self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "MUL")
         local result = {_size = a._size or s or 1}
         local s, op = floor(10 ^ (result._size)), 1
         local cd
@@ -547,7 +548,7 @@ master.calculate = {
             end
             result[i] = 0
         end
-        for i = #result, 2, -1 do
+        for i = #result, 1, -1 do
             if result[i] == 0 then
                 result[i] = nil
             else
@@ -557,8 +558,8 @@ master.calculate = {
         result._dlen = op
         return result
     end,
-    div = function(self, a, b, s, f, l) -- _size maxiumum 9 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
-        self._verify(a, b, 9, "DIV")
+    div = function(self, a, b, s, f, l) -- _size maxiumum *1 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
+        self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "DIV")
         assert(not master.equation.equal(b, masterC(0, b._size or 1)), "[DIV] INVALID_INPUT | divisor cannot be zero.")
         local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV
         local auto_acc, more, less, concat = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less, master.concat
@@ -1178,11 +1179,6 @@ end
 int.cnew = function(number, size) -- (number:string|number, size:string|number) For setting a size per chunk. **CHUNK SIZE SHOULD BE SAME WHEN CALCULATE**
     return media.convert(number or 0, size and (tonumber(size) or master._config.SETINTEGER_PERCHUNK[size:upper()]) or int._defaultsize)
 end
-
-int._maximum_digit = { -- limit of digit per table.
-    integer = master._config.MAXIMUM_DIGIT_PERTABLE.INTEGER,
-    decimal = master._config.MAXIMUM_DIGIT_PERTABLE.DECIMAL
-}
 
 -- print(("MODULE LOADED\nMEMORY USAGE: %.0d B (%s KB)"):format(collectgarbage("count") * 1024, collectgarbage("count")))
 return int

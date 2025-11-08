@@ -291,13 +291,8 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 ## limit
 
 - some function won't support a super very large data.
-</br>
 
-- Maximum integer path is 9223372036854775806
-  - Set `_size` to `9` maximum integer path is `83010348331692982254 (9223372036854775806 * 9)`
-
-- Maximum decimal path is 9223372036854775808
-  - Set `_size` to `9` maximum decimal path is `83010348331692982263 (9223372036854775808 * 9)`
+- on Lua version `5.1` maximum value of `_size` is `7`.
 
 ---
 
