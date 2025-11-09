@@ -182,8 +182,8 @@ print(int.floor(x, 2)) -- output: 14.69
   - fdigitlen *-- return sum of number integer digits and number decimal digits.*
   - [floor](.doc/int.floor.md#methods)
   - fmod *-- modulo function*
-  - decimallen *-- return only length of fraction*
-  - integerlen *-- return only length of integer*
+  - decimallen *-- return number of decimal digits*
+  - integerlen *-- return number of integer digits*
   - less
   - ln
   - max
