@@ -5,6 +5,7 @@
 
 # other
 .lh
+*.out
 test.lua
 mapping.drawio
 desktop.ini
