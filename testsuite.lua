@@ -1,3 +1,16 @@
+local log = io.open("testsuite.log", "w")
+local print = function(...)
+    if log then
+        for _, v in ipairs({...}) do
+            local value = tostring(v)
+            local shift = 8 - (#value % 8)
+            log:write(value..(" "):rep(shift))
+        end
+        log:write("\n")
+    end
+    print(...)
+end
+
 local import_time = os.clock()
 local int = require("int") -- import module
 

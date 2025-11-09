@@ -983,16 +983,21 @@ function assets.vpow(self, x, y, l) -- pow function assets. `y >= 0`
     assert(x and y, "[VPOW] VOID_INPUT")
     assert(y.sign == "+" or (y._dlen >= 1 and #y <= 1 and (y[1] or 0) == 0), ("[VPOW] FUNCTION_NOT_SUPPORT | y (%s) is less then 0."):format(tostring(y)))
     if y._dlen >= 1 then
-        if assets.EQMatch(y, 0) then
+        if self.EQMatch(y, 0) then
             return media.convert(1, x._size)
-        elseif assets.EQMatch(y, 1) then
+        elseif self.EQMatch(y, 1) then
             return custom:cfloor(x, l)
-        elseif (y[1] or 0) % 2 == 0 and y._dlen >= 1 then
-            local half_power = self:vpow(x, media.cdiv(y, 2, 0, l), l)
-            return half_power * half_power * (x.sign == "-" and -1 or 1)
         end
-        local half_power = self:vpow(x, media.cdiv((y - 1), 2, 0, l), l)
-        return x * half_power * half_power
+        local result = media.convert(1, x._size)
+        local exp = y
+        while master.equation.more(exp, masterC(0, x._size)) do
+            if (exp[1] or 0) % 2 == 1 then
+                result = result * x
+            end
+            x = x * x
+            exp = master.custom._floor(exp / 2)
+        end
+        return result
     end
     return media.exp(y * media.ln(x))
 end
