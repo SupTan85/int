@@ -63,7 +63,7 @@ local function benchmark(head, function_call, function_arg)
     local per = math.floor((avg.avg / #avg) * 1000)
     print(("\nOperation time: %.3fs (%s per time)"):format(operation_time, (tostring(per) == "inf" and "> 1ms") or (tostring(per) == "0" and "< 1ms") or per.."ms"))
     if result_table then
-        print(("Result Average: %s"):format(function_arg(result_table)))
+        print(("Result Average: %s\n"):format(function_arg(result_table)))
     end
 end
 
@@ -118,6 +118,10 @@ benchmark("more", function(x, y)
 end)
 
 print("\nUsing CheckAccuracy-Suite")
+benchmark("add, sub", function(x, y)
+    return ((x + y) - x) - y
+end, arg)
+
 benchmark("sub, mul, div", function(x, y)
     return x - ((x / y) * y)
 end, arg)
