@@ -2,7 +2,7 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.5 (08/11/2025) dd:mm:yyyy
+-- BUILD  VERSION: 186.5 (09/11/2025) dd:mm:yyyy
 -- USER FEATURE: 08/11/2025
 -- DEV  FEATURE: 08/11/2025
 -- AUTHOR: SupTan85
@@ -510,17 +510,17 @@ master.calculate = {
             if BA and BA ~= 0 then
                 for i2 = b._dlen or 1, #b do
                     local calcul, offset = BA * (b[i2] or 0), i + i2 - 1
-                    -- print(("%09d"):format(BA), ("%09d"):format(b[i2] or 0), "=", calcul)
                     local chunk_data = (calcul + (result[offset] or 0))
+                    -- print(offset, ("%09d"):format(BA), ("%09d"):format(b[i2] or 0), "=", calcul, "+", result[offset] or 0, "=", chunk_data)
                     local next = floor(chunk_data / s)
                     chunk_data = chunk_data % s
                     if not cd then
                         cd = chunk_data ~= 0
                     end
                     result[offset] = (offset > 0 or cd) and chunk_data or nil
-                    result[offset + 1], op = (next ~= 0 and (next + (result[offset + 1] or 0))) or ((offset > 0 or cd) and 0) or result[offset + 1], result[offset] and min(op, offset) or op
+                    result[offset + 1], op = (next ~= 0 and (next + (result[offset + 1] or 0))) or ((offset > 0 or cd) and result[offset + 1] or 0) or result[offset + 1], result[offset] and min(op, offset) or op
                 end
-                if e and #result >= 1 then
+                if e and #result >= 1 then -- optimize zone for div function
                     if (#result == 1 and result[1] ~= 0) then
                         break
                     end
@@ -576,7 +576,7 @@ master.calculate = {
                 if R > master._config.MAXIMUM_LUA_INTEGER then
                     return {L:gsub("%.", ""), self.sub(masterC(R, s), masterC(S, s))}
                 end
-                return "0."..("0"):rep(tonumber(R) - S)..L:gsub("%.", "")
+                return "0."..("0"):rep(tonumber(R) - S)..L:gsub("%.", ""):sub(1, -3)
             elseif p ~= "0.0" then
                 lastpoint = p:sub(-1)
                 if #p > 13 then
@@ -707,7 +707,7 @@ master.calculate = {
         local raw = self:mul(a, d)
         if lastpoint and -raw._dlen >= floor(f / s) then
             local shf = 0
-            for i = raw._dlen or 1, 0, -1 do
+            for i = 0, raw._dlen or 1, -1 do
                 local sel = raw[i]
                 if sel == 0 then
                     shf = shf + s

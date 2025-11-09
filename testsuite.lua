@@ -35,14 +35,19 @@ local function create_simple()
     return int.new(table.concat(simple))
 end
 
-local function benchmark(head, function_call)
+local function benchmark(head, function_call, function_arg)
     print("SELECT FUNCTION: "..string.upper(head))
     local avg = {i = 0, avg = 0}
     local operation_start = os.clock()
+    local result_table = function_arg and {}
     for i = 1, SIMPLE_PERSUITE do
         local x, y = create_simple(), create_simple()
         local start = os.clock()
-        function_call(x, y)
+        if result_table then
+            result_table[(#result_table % 20) + 1] = {x, y, int.tonumber(function_call(x, y))}
+        else
+            function_call(x, y)
+        end
         -- loading bar --
         local bar, res = ("|"):rep(math.floor((i / SIMPLE_PERSUITE) * 50)), os.clock() - start
         if avg.i >= 10 then
@@ -57,6 +62,19 @@ local function benchmark(head, function_call)
     end
     local per = math.floor((avg.avg / #avg) * 1000)
     print(("\nOperation time: %.3fs (%s per time)"):format(operation_time, (tostring(per) == "inf" and "> 1ms") or (tostring(per) == "0" and "< 1ms") or per.."ms"))
+    if result_table then
+        print(("Result Average: %s"):format(function_arg(result_table)))
+    end
+end
+
+local function arg(t)
+    local result = 0
+    print("index", "x", "y", "result")
+    for i, v in ipairs(t) do
+        result = result + v[3]
+        print(i, v[1], v[2], v[3])
+    end
+    return result / #t
 end
 
 print("\nUsing Calculate-Suite")
@@ -98,3 +116,8 @@ end)
 benchmark("more", function(x, y)
     return x > y
 end)
+
+print("\nUsing CheckAccuracy-Suite")
+benchmark("sub, mul, div", function(x, y)
+    return x - ((x / y) * y)
+end, arg)
