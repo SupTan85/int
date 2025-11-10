@@ -71,6 +71,11 @@ before use any function, don't forget to read function [**performance**](#perfor
   - equal
   - less than
   - more than
+- **Function**
+  - exp
+  - fact
+  - sqrt
+  - *and more...*
 
 ---
 
