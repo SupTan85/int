@@ -6,8 +6,8 @@
 # other
 .lh
 *.out
+*.log
 test.lua
 mapping.drawio
 desktop.ini
 .history
-/testsuite.log

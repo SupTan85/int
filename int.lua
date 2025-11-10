@@ -2,7 +2,7 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.5 (09/11/2025) dd:mm:yyyy
+-- BUILD  VERSION: 186.5 (10/11/2025) dd:mm:yyyy
 -- USER FEATURE: 08/11/2025
 -- DEV  FEATURE: 08/11/2025
 -- AUTHOR: SupTan85
@@ -13,7 +13,7 @@
 
 local intcur =  -- 64 bit
                 (string.format("%.0f", 2^63) == "9223372036854775808"   and     {9, "9223372036854775808"}) or -- Lua 5.2+
-                (string.format("%.0f", 2^56) == "72057594037927936"     and     {7, "72057594037927936"})   or -- Lua 5.1
+                (string.format("%.0f", 2^56) == "72057594037927936"     and     {8, "72057594037927936"})   or -- Lua 5.1
                 -- 32 bit
                 {4, "2147483648"}
 
@@ -576,7 +576,7 @@ master.calculate = {
                 if R > master._config.MAXIMUM_LUA_INTEGER then
                     return {L:gsub("%.", ""), self.sub(masterC(R, s), masterC(S, s))}
                 end
-                return "0."..("0"):rep(tonumber(R) - S)..L:gsub("%.", ""):sub(1, -3)
+                return "0."..("0"):rep(tonumber(R) - S)..L:gsub("%.", ""):sub(1, -4)
             elseif p ~= "0.0" then
                 lastpoint = p:sub(-1)
                 if #p > 13 then

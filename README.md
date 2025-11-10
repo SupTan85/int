@@ -9,7 +9,7 @@ The **int** module extends Lua capability to handle large numbers.
 > [!NOTE]
 This project is currently in beta.
 
-Support & Verify: Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4\
+Support & Verify: LuaJIT, Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4\
 Check by [**TestSuite**](testsuite.lua)
 
 ---
@@ -292,7 +292,7 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 
 - some function won't support a super very large data.
 
-- on Lua version `5.1` maximum value of `_size` is `7`.
+- on Lua version `5.1` maximum value of `_size` is `8`.
 
 ---
 

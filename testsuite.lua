@@ -76,16 +76,16 @@ local function benchmark(head, function_call, function_arg)
     local per = math.floor((avg.avg / #avg) * 1000)
     print(("\nOperation time: %.3fs (%s per time)"):format(operation_time, (tostring(per) == "inf" and "> 1ms") or (tostring(per) == "0" and "< 1ms") or per.."ms"))
     if result_table then
-        print(("Result Average: %s\n"):format(function_arg(result_table)))
+        print(("Loss Average: %s\n"):format(function_arg(result_table)))
     end
 end
 
 local function arg(t)
     local result = 0
-    print("index", "x", "y", "result")
+    print("index", "x", "y", "loss")
     for i, v in ipairs(t) do
-        result = result + v[3]
-        print(i, v[1], v[2], v[3])
+        result = result + math.abs(v[3])
+        print(i, v[1], v[2], math.abs(v[3]))
     end
     return result / #t
 end
