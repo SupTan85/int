@@ -14,10 +14,25 @@ Check by [**TestSuite**](testsuite.lua)
 
 ---
 
+## how to install
+
+install with package manager:
+
+> [!NOTE]
+> To install this module with Luarocks:
+>
+> ```bash
+> luarocks install uint
+> ```
+
+**or download the [module](int.lua) and place it in the working directory or any directory in the package path.**
+
+---
+
 ## how to use
 
-**Frist, download the [module](int.lua) and place it in your folder or somewhere you can access it.**\
-Import the module with `require` function in Lua
+**Frist, install the module by download or install with package manager.**\
+Let's try import the module with `require` function in Lua
 
 ```lua
 local int = require("int")
