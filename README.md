@@ -81,7 +81,6 @@ before use any function, don't forget to read function [**performance**](#perfor
   - division `\, \\`
   - modulo `%`
   - power `^`
-  - sqrt
 - **Equation**
   - equal
   - less than
