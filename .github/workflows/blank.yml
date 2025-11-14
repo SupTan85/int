@@ -1,19 +1,16 @@
-name: Check & Benchmark module.
+name: checker
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build:
+  unified_name_check:
     runs-on: ubuntu-22.04
     steps:
       - name: install luajit
         run: sudo apt-get update && sudo apt-get install luajit -y
-      
-      - name: cleanup
-        run: cd .. && rm -rf luajit
 
       - uses: actions/checkout@v4
       
