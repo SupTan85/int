@@ -10,17 +10,16 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: install luajit
-      - run: apt update && apt install make git -y
-      - run: git clone https://luajit.org/git/luajit.git && cd luajit && make && make install
+        run: apt update && apt install make git -y && git clone https://luajit.org/git/luajit.git && cd luajit && make && make install
       
       - name: cleanup
-      - run: cd .. && rm -rf luajit
+        run: cd .. && rm -rf luajit
 
       - uses: actions/checkout@v4
       
       - name: run testsuite
-      - run: luajit testsuite.lua
+        run: luajit testsuite.lua
 
       - name: run benchmark
-      - run: luajit benchmark.lua
+        run: luajit benchmark.lua
       
