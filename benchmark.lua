@@ -42,7 +42,9 @@ for i = 1, MAXLOOP do
         avg.i = 0
     end
     avg[avg.i + 1], avg.i = res, avg.i + 1
-    io.write("\r"..bar..(" "):rep(((5 - bar:len()) % 5) + 3), ("[%s] %.2f %% (%d ms) | using: %s"):format(i == MAXLOOP and "/" or ("/-\\|"):sub((((math.floor((i / MAXLOOP) * 500))) % 4) + 1, ((math.floor((i / MAXLOOP) * 500)) % 4) + 1), (i / MAXLOOP) * 100, math.floor(res * 1000), math.floor(collectgarbage("count") * 1024).." Byte"))
+    if not arg[3] then
+        io.write("\r"..bar..(" "):rep(((5 - bar:len()) % 5) + 3), ("[%s] %.2f %% (%d ms) | using: %s"):format(i == MAXLOOP and "/" or ("/-\\|"):sub((((math.floor((i / MAXLOOP) * 500))) % 4) + 1, ((math.floor((i / MAXLOOP) * 500)) % 4) + 1), (i / MAXLOOP) * 100, math.floor(res * 1000), math.floor(collectgarbage("count") * 1024).." Byte"))
+    end
     --[[
     if result:eqmore(c) then
         print(n, c)
