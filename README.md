@@ -19,7 +19,7 @@ Check by [**TestSuite**](testsuite.lua)
 install with package manager:
 
 > [!NOTE]
-> To install this module with Luarocks:
+> To install this module with Luarocks
 >
 > ```bash
 > luarocks install uint
