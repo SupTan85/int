@@ -9,8 +9,11 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
+      - name: install make
+        run: apt-get update && apt-get install make git -y
+        
       - name: install luajit
-        run: apt update && apt install make git -y && git clone https://luajit.org/git/luajit.git && cd luajit && make && make install
+        run: git clone https://luajit.org/git/luajit.git && cd luajit && make && make install
       
       - name: cleanup
         run: cd .. && rm -rf luajit
