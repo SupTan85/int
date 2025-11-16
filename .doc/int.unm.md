@@ -1,24 +1,22 @@
-# int.floor
+# int.unm
 
 ![https://github.com/SupTan85/int.lua](.assets/cover.png)
 
 ## function
 
 > [!NOTE]
-This function returns the largest integral value of the given number. However, you can custom it.\
-*When inputting negative numbers, the function will behave oppositely (floor -> ceil).*
+This function is made for a **unary operator**, so it reverses the sign of a number.
 
 **Input type:**
 
 - **x** -- [**int object**](type.intobj.md) only.
-- **length** -- number only.
 
 **Output type:**
 
 - [**int object**](type.intobj.md)
 
 ```lua
-function int.floor(x, length) -- Returns the largest integral value smaller than or equal to `x`, or Custom a `x` fraction.
+function int.unm(x) -- reverses the sign.
 ```
 
 **Example:**
@@ -27,8 +25,25 @@ function int.floor(x, length) -- Returns the largest integral value smaller than
 local int = require("int") -- import module
 
 local x, y = int.new("12.2", "12.3456")
-print(int.floor(x)) -- output: 12
-print(int.floor(y, 2)) -- output: 12.34
+print(int.unm(x)) -- output: -12.2
+print(int.unm(y)) -- output: -12.3456
+```
+
+---
+
+## operators
+
+This feature lets you to call a function with an operator.
+
+> [!IMPORTANT]
+> function was embedded in `__unm` on metadata.
+
+```lua
+local int = require("int") -- import module
+
+local x, y = int.new("123", "12.3456")
+print(-x) -- output: -123
+print(-y) -- output: -12.3456
 ```
 
 ---
@@ -41,8 +56,8 @@ This feature lets you to call functions on an object.
 local int = require("int") -- import module
 
 local x, y = int.new("12.2", "12.3456")
-print(x:floor()) -- output: 12
-print(y:floor(2)) -- output: 12.34
+print(x:unm()) -- output: -12.2
+print(y:unm()) -- output: -12.3456
 ```
 
 > [!TIP]
@@ -55,11 +70,11 @@ local int = require("int") -- import module
 
 local x, y = int.new("12.2", "12.3456")
 
--- this works like "print(int.floor(x))"
-print(y.floor(x)) -- output: 12
+-- this works like "print(int.unm(x))"
+print(y.unm(x)) -- output: -12.2
 
--- this works like "print(int.floor(y, 2))"
-print(x.floor(y, 2)) -- output: 12.34
+-- this works like "print(int.unm(y))"
+print(x.unm(y)) -- output: -12.3456
 ```
 
 > [!TIP]
@@ -67,6 +82,7 @@ In this example, a function inside the object is called but a different object i
 
 ---
 
-[**function & methods**](../README.md#function--methods)
+[**function & methods**](../README.md#function--methods)\
+[**operators**](../README.md#operators)
 
 ![end](.assets/bar.png)

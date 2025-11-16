@@ -2,7 +2,7 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.5 (10/11/2025) dd:mm:yyyy
+-- BUILD  VERSION: 186.5 (16/11/2025) dd:mm:yyyy
 -- USER FEATURE: 08/11/2025
 -- DEV  FEATURE: 08/11/2025
 -- AUTHOR: SupTan85
@@ -64,7 +64,7 @@ local master = {
             MEDIA_DEFAULT_SQRTROOT_TOLERANCE = 14, -- 14
         },
 
-        -- SYSTEM CONFIG ! DO NOT CHANGE ! --
+        -- SYSTEM CONFIG ! Internal use only, Do not modify. ! --
         MAXIMUM_SIZE_PERCHUNK = intcur[1], -- stable size is 9
         MAXIMUM_LUA_INTEGER = intcur[2] -- math.maxinteger
     },
@@ -1034,8 +1034,8 @@ function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumu
     return custom:cround(res, TOLERANCE)
 end
 
-function media.unm(x) -- negation
-    x.sign = x.sign == "-" and "+" or "-"
+function media.unm(x) -- reverses the sign.
+    x.sign = x.sign == "+" and "-" or "+"
     return x
 end
 

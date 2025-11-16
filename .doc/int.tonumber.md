@@ -8,7 +8,7 @@
 This function converts an [**int object**](type.intobj.md) to number.
 
 >[!WARNING]
-We do not recommend using this function with large numbers, because they may be represented in scientific notation or lose precision.<br>
+We do **not recommend** using this function with large numbers, because they may be represented in scientific notation or lose precision.<br>
 please use [**tostring**](int.tostring.md) instead of tonumber!
 
 **Input type:**
@@ -48,10 +48,7 @@ print(tonumber(x)) -- output: 35
 
 ## methods
 
-This feature support to call in object.
-
-> [!TIP]
-This example call function inside object and return self object as input.
+This feature lets you to call functions on an object.
 
 ```lua
 local int = require("int") -- import module
@@ -60,10 +57,10 @@ local x = int.new("35")
 print(x:tonumber()) -- output: 35
 ```
 
-also you can do like this:
-
 > [!TIP]
-This example call function inside object but didn't return self object as input.
+In this example, a function inside the object is called and returns the object itself as the input.
+
+also you can do like this:
 
 ```lua
 local int = require("int") -- import module
@@ -76,6 +73,9 @@ print(y.tonumber(x)) -- output: 35
 -- this works like "print(int.tonumber(y))"
 print(x.tonumber(y)) -- output: 85
 ```
+
+> [!TIP]
+In this example, a function inside the object is called but a different object is used as the input.
 
 ---
 

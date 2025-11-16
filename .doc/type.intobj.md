@@ -2,11 +2,11 @@
 
 ![https://github.com/SupTan85/int.lua](.assets/cover.png)
 
->[!NOTE]
+> [!NOTE]
 A [**table**](type.table.md) that made for calculate, used with operators or use with [**function & methods**](../README.md#function--methods)\
 *"All value type should be a number only and not emply"*
 
->[!WARNING]
+> [!IMPORTANT]
 This object was created for this module only!
 
 Way to create this object:

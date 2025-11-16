@@ -2,14 +2,14 @@
 
 ![https://github.com/SupTan85/int.lua](.doc/.assets/cover.png)
 
-## Make it possible to calculate large number in Lua
+## Enable large-number arithmetic in pure Lua
 
 The **int** module extends Lua capability to handle large numbers.
 
 > [!NOTE]
 This project is currently in beta.
 
-Support & Verify: LuaJIT, Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4\
+Tested with: LuaJIT, Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4\
 Check by [**TestSuite**](testsuite.lua)
 
 ---
@@ -19,7 +19,7 @@ Check by [**TestSuite**](testsuite.lua)
 install with package manager:
 
 > [!NOTE]
-> To install this module with Luarocks
+> Install via LuaRocks (provided by [**lua-uint**](https://github.com/SupTan85/lua-uint)):
 >
 > ```bash
 > luarocks install uint
@@ -31,7 +31,7 @@ install with package manager:
 
 ## how to use
 
-**Frist, install the module by download or install with package manager.**\
+**First, install the module by download or install with package manager.**\
 Let's try import the module with `require` function in Lua
 
 ```lua
@@ -53,7 +53,7 @@ To use [**calculation operators**](#operators) to calculate math.
 > [!CAUTION]
 only operator that is supported.
 
-<img src=".doc\.assets\video1.gif" alt="demo" width="100%"/>
+<img src=".doc/.assets/video1.gif" alt="demo" width="100%"/>
 
 you can do like this:
 
@@ -72,13 +72,14 @@ print(x + y) -- output: 30
 ## feature
 
 > [!TIP]
-before use any function, don't forget to read function [**performance**](#performance)!
+Before using any function, make sure to read about its [**performance**](#performance)!
 
 - **Calculate**
   - addition `+`
   - subtraction `-`
   - multiplication `*`
-  - division `\, \\`
+  - division `/`
+  - floor division `//`
   - modulo `%`
   - power `^`
 - **Equation**
@@ -99,7 +100,7 @@ before use any function, don't forget to read function [**performance**](#perfor
 
 ### inside object
 
-This a example inside [**table**](.doc/type.table.md) of [**int object**](.doc/type.intobj.md).
+This is an example inside [**table**](.doc/type.table.md) of [**int object**](.doc/type.intobj.md).
 
 ```lua
 local example_intobj_table = {
@@ -119,8 +120,8 @@ local example_intobj_table = {
     -- data --
     sign = "+",
 
-    _dlen = -1, -- digit of fraction *this for calculate a fraction* **DO NOT CHANGE. HAVE LIMIT!!**
-    _size = 1 -- mean per size of chunk *just maximum digit per value in the digit chunk* **DO NOT CHANGE. HAVE LIMIT!!**
+    _dlen = -1, -- digit of fraction *this for calculate a fraction* **Internal use only, Do not modify.**
+    _size = 1 -- per number size of chunk *just maximum digit per value in the digit chunk* **Internal use only, Do not modify.**
 }
 ```
 
@@ -150,8 +151,8 @@ Recommend to read in visual studio code.
   - int.ceil
   - [int.cnew](.doc/int.cnew.md) *-- custom int.new function*
   - int.cround
-  - int.eqless *-- equal or less then*
-  - int.eqmore *-- equal or more then*
+  - int.eqless *-- equal or less than*
+  - int.eqmore *-- equal or more than*
   - int.equal
   - int.exp
   - int.fact
@@ -172,7 +173,7 @@ Recommend to read in visual studio code.
   - int.sqrt
   - [int.tonumber](.doc/int.tonumber.md)
   - [int.tostring](.doc/int.tostring.md)
-  - int.unm
+  - [int.unm](.doc/int.unm.md)
 
 **Example to call a function:**
 
@@ -193,8 +194,8 @@ print(int.floor(x, 2)) -- output: 14.69
   - abs
   - ceil
   - cround
-  - eqless *-- equal or less then*
-  - eqmore *-- equal or more then*
+  - eqless *-- equal or less than*
+  - eqmore *-- equal or more than*
   - equal
   - exp
   - fact
@@ -214,7 +215,7 @@ print(int.floor(x, 2)) -- output: 14.69
   - sqrt
   - [tonumber](.doc/int.tonumber.md)
   - [tostring](.doc/int.tostring.md)
-  - unm
+  - [unm](.doc/int.unm.md)
 
 **Example to call a function:**
 
@@ -237,10 +238,10 @@ print(x:floor(2)) -- output: 14.69
   - addition `+`
   - subtraction `-`
   - multiplication `*`
-  - division `\`
-  - floor division `\\` *-- some version of Lua are not support (require Lua 5.3 >=)*
-  - modulo `%` *-- some version of Lua are not support (require Lua 5.1 >=)*
-  - power `^` *-- some version of Lua are not support (require Lua 5.1 >=)*
+  - division `/`
+  - floor division `//` *-- some versions of Lua do not support (require Lua 5.3 >=)*
+  - modulo `%` *-- some versions of Lua do not support (require Lua 5.1 >=)*
+  - power `^` *-- some versions of Lua do not support (require Lua 5.1 >=)*
 
 **Example to using a calculation operator:**
 
@@ -259,8 +260,8 @@ some version of Lua you can use calculation operator with number & string
 
 - **Equation**
   - `==` equal
-  - `<=` equal or less then
-  - `>=` equal or more then
+  - `<=` equal or less than
+  - `>=` equal or more than
   - `<` less than
   - `>` more than
 
@@ -288,14 +289,14 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 - **Calculation**
   - `+` **addition &** `-` **subtraction** - very fast
   - `*` **multiplication** - fast
-  - `\` **division &** `\\` **floor division** - slow
+  - `/` **division &** `//` **floor division** - slow
   - `%` **modulo** - slow
   - `^` **power** - very slow
 
 - **Equation** "difference is a factor."
   - `==` **equal** - very fast
-  - `<=` **equal** or **less then** - very fast
-  - `>=` **equal** or **more then** - very fast
+  - `<=` **equal** or **less than** - very fast
+  - `>=` **equal** or **more than** - very fast
   - `<` **less than** - very fast
   - `>` **more than** - very fast
 
@@ -309,7 +310,7 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 
 ## limit
 
-- some function won't support a super very large data.
+- some function won't support a extremely large values.
 
 - on Lua version `5.1` maximum value of `_size` is `8`.
 
@@ -318,6 +319,6 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 > [!NOTE]
 reason why this module name is "int"? because in this module always use integer to calculate math,\
 and feel free to use!\
-**186 - 5**
+**version: 186 - 5**
 
 ![bar](.doc/.assets/bar.png)
