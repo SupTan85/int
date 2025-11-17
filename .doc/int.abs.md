@@ -1,24 +1,22 @@
-# int.floor
+# int.abs
 
 ![https://github.com/SupTan85/int.lua](.assets/cover.png)
 
 ## function
 
 > [!NOTE]
-This function returns the largest integral value of the given number. However, you can custom it.\
-*When inputting negative numbers, the function will behave oppositely (floor -> ceil).*
+This function always set the sign of a number to positive.
 
 **Input type:**
 
 - **x** -- [**int object**](type.intobj.md) only.
-- **length** -- number only.
 
 **Output type:**
 
 - [**int object**](type.intobj.md)
 
 ```lua
-function int.floor(x, length) -- Returns the largest integral value smaller than or equal to `x`, or Custom a `x` fraction.
+function int.abs(x) -- Returns the absolute value of `x`.
 ```
 
 **Example:**
@@ -26,9 +24,9 @@ function int.floor(x, length) -- Returns the largest integral value smaller than
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("-12.2", "12.3456")
-print(int.floor(x)) -- output: -13
-print(int.floor(y, 2)) -- output: 12.34
+local x, y = int.abs("-3.14", "12.3456")
+print(int.abs(x)) -- output: 3.14
+print(int.abs(y)) -- output: 12.3456
 ```
 
 ---
@@ -41,8 +39,8 @@ This feature lets you to call functions on an object.
 local int = require("int") -- import module
 
 local x, y = int.new("-12.2", "12.3456")
-print(x:floor()) -- output: -13
-print(y:floor(2)) -- output: 12.34
+print(x:abs()) -- output: 12.2
+print(y:abs()) -- output: 12.3456
 ```
 
 > [!TIP]
@@ -55,11 +53,11 @@ local int = require("int") -- import module
 
 local x, y = int.new("-12.2", "12.3456")
 
--- this works like "print(int.floor(x))"
-print(y.floor(x)) -- output: -13
+-- this works like "print(int.abs(x))"
+print(y.abs(x)) -- output: 12.2
 
--- this works like "print(int.floor(y, 2))"
-print(x.floor(y, 2)) -- output: 12.34
+-- this works like "print(int.abs(y))"
+print(x.abs(y)) -- output: 12.3456
 ```
 
 > [!TIP]

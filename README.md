@@ -147,7 +147,7 @@ all function is in version: **186**
 Recommend to read in visual studio code.
 
 - **module function**
-  - int.abs
+  - [int.abs](.doc/int.abs.md)
   - int.ceil
   - [int.cnew](.doc/int.cnew.md) *-- custom int.new function*
   - int.cround
@@ -191,7 +191,7 @@ print(int.floor(x, 2)) -- output: 14.69
 ---
 
 - **methods**
-  - abs
+  - [abs](.doc/int.abs.md)
   - ceil
   - cround
   - eqless *-- equal or less than*

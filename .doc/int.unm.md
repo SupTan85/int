@@ -24,8 +24,8 @@ function int.unm(x) -- reverses the sign.
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12.2", "12.3456")
-print(int.unm(x)) -- output: -12.2
+local x, y = int.new("-12.2", "12.3456")
+print(int.unm(x)) -- output: 12.2
 print(int.unm(y)) -- output: -12.3456
 ```
 
@@ -41,8 +41,8 @@ This feature lets you to call a function with an operator.
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("123", "12.3456")
-print(-x) -- output: -123
+local x, y = int.new("-123", "12.3456")
+print(-x) -- output: 123
 print(-y) -- output: -12.3456
 ```
 
@@ -55,8 +55,8 @@ This feature lets you to call functions on an object.
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12.2", "12.3456")
-print(x:unm()) -- output: -12.2
+local x, y = int.new("-12.2", "12.3456")
+print(x:unm()) -- output: 12.2
 print(y:unm()) -- output: -12.3456
 ```
 
@@ -68,10 +68,10 @@ also you can do like this:
 ```lua
 local int = require("int") -- import module
 
-local x, y = int.new("12.2", "12.3456")
+local x, y = int.new("-12.2", "12.3456")
 
 -- this works like "print(int.unm(x))"
-print(y.unm(x)) -- output: -12.2
+print(y.unm(x)) -- output: 12.2
 
 -- this works like "print(int.unm(y))"
 print(x.unm(y)) -- output: -12.3456
