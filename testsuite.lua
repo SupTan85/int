@@ -82,12 +82,17 @@ local function benchmark(head, function_call, function_arg)
     end
 end
 
+local function format_result(value)
+    local i, d = value:tostring():match("(%d+).?(%d*)")
+    return ("0"):rep(INT_LEN - #i)..i..(d ~= "" and "."..d..("0"):rep(DEC_LEN - #d) or "")
+end
+
 local function farg(t)
     local result_raw = 0
     print("index", "x", "y", "loss")
     for i, v in ipairs(t) do
         result_raw = result_raw + math.abs(v[3])
-        print(i, v[1], v[2], math.abs(v[3]))
+        print(i, format_result(v[1]), format_result(v[2]), math.abs(v[3]))
     end
     local result = result_raw / #t
     if tonumber(arg[6]) and result > tonumber(arg[6]) then
