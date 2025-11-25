@@ -1,7 +1,9 @@
 # vscode config
 .vscode/*
-
 !.vscode/settings.json
+
+# workspace folder
+/.test
 
 # other
 .lh
