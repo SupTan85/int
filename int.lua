@@ -2,9 +2,9 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.6 (22/11/2025) dd:mm:yyyy
--- USER FEATURE: 08/11/2025
--- DEV  FEATURE: 08/11/2025
+-- BUILD  VERSION: 186.6 (25/11/2025) dd:mm:yyyy
+-- USER FEATURE: 25/11/2025
+-- DEV  FEATURE: 25/11/2025
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
@@ -43,14 +43,17 @@ local master = {
                     note: this option causes a division speed slow, but very powerful for high accuracy.
 
                 // DISABLE : MASTER_CALCULATE_DIV_MAXITERATIONS
+                // DISABLE : MASTER_DEFAULT_FRACT_LIMIT_DIV
                 By SupTan85
             << BUILD-IN >>]]
             MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS = true,
+            MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE = true, -- use buff-accurate for more accuracy. note: very slow but high accuracy!
         },
 
         ACCURACY_LIMIT = {
             -- MASTER FUNCTION CONFIG --
             MASTER_CALCULATE_DIV_MAXITERATIONS = 15, -- 15
+            MASTER_CALCULATE_DIV_BUFF_ACCURATE = 2, -- 2
             MASTER_DEFAULT_FRACT_LIMIT_DIV = 14, -- 14
 
             -- MEDIA FUNCTION CONFIG --
@@ -70,7 +73,7 @@ local master = {
     },
 
     _VERSION = "186",
-    _BUILD = "186.5"
+    _BUILD = "186.6"
 }
 
 local OPTION = master._config.OPTION
@@ -527,7 +530,10 @@ master.calculate = {
                     chunk_data = chunk_data % s
                     cd = cd or chunk_data ~= 0
                     result[offset] = (offset > 0 or cd) and chunk_data or nil
-                    result[offset + 1], op = (next ~= 0 and (next + (result[offset + 1] or 0))) or ((offset > 0 or cd) and result[offset + 1] or 0) or result[offset + 1], result[offset] and min(op, offset) or op
+                    result[offset + 1] = (next ~= 0 and (next + (result[offset + 1] or 0))) or ((offset > 0 or cd) and result[offset + 1] or 0) or result[offset + 1]
+                    if offset < 1 and op == 1 then
+                        op = (result[offset] and offset) or (result[offset + 1] and offset + 1)
+                    end
                 end
                 if e and #result >= 1 then -- optimize zone for div function
                     if (#result == 1 and result[1] ~= 0) then
@@ -570,7 +576,7 @@ master.calculate = {
     div = function(self, a, b, s, f, l) -- _size maxiumum *1 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "DIV")
         assert(not master.equation.equal(b, masterC(0, b._size or 1)), "[DIV] INVALID_INPUT | divisor cannot be zero.")
-        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV
+        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or (not OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS and ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV or 0)
         local auto_acc, more, less, concat = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less, master.concat
         local one = masterC(1, s)
         local accuracy, uc = 0, 0
@@ -599,6 +605,7 @@ master.calculate = {
             local FLOAT = ((#b - 1) * s) + #tostring(b[#b]) - 2
             d = FLOAT > 0 and "0."..("0"):rep(FLOAT)
         end
+        local BUFF_ACCURATE_ENABLE = false
         if auto_acc then
             local function HF(x)
                 return (s - #tostring(x[#x])) + (x._dlen < 1 and s - #tostring(x[x._dlen] or "") or 0)
@@ -612,8 +619,12 @@ master.calculate = {
                 local MORE = more(AS, BS)
                 accuracy = self.add(self.add(self.sub(self:mul((MORE and AS or BS), masterC(s, s)), masterC(HF(MORE and a or b), s)), masterC(f, s)), masterC(s, s))
             end
+            if OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE then
+                BUFF_ACCURATE_ENABLE = true
+            end
         else
             accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_DIV_MAXITERATIONS) + 1
+            BUFF_ACCURATE_ENABLE = true
         end
         local function check(n)
             local dc = d and setmetatable({}, {__index = d, __len = function() return #d end}) or masterC(n, s)
@@ -704,17 +715,30 @@ master.calculate = {
                     if less(accuracy, one) then
                         break
                     end
-                    accuracy = self.sub(accuracy, one) or accuracy
+                    accuracy = self.sub(accuracy, one)
                 else
-                    accuracy = (accuracy - 1 or accuracy)
+                    accuracy = accuracy - 1
                 end
             end
         end
         if b_dlen < 1 then
             d = self:mul(d, masterC("1"..("0"):rep(math.abs(b_dlen - 1)), s))
         end
+        -- Newton-Raphson --
+        -- x = x * (2 - a * x)
+        local TWO = masterC(2, s)
+        if BUFF_ACCURATE_ENABLE then
+            for _ = 1, ACCURACY_LIMIT.MASTER_CALCULATE_DIV_BUFF_ACCURATE do
+                local rap = self:sub(TWO, self:mul(b, d))
+                if rap._dlen >= 1 then
+                    break
+                end
+                d = self:mul(d, rap)
+            end
+        end
+        --------------------
         local raw = self:mul(a, d)
-        if lastpoint and -raw._dlen >= floor(f / s) then
+        if f > 0 and lastpoint and -raw._dlen >= floor(f / s) then
             local shf = 0
             for i = 0, raw._dlen or 1, -1 do
                 local sel = raw[i]
