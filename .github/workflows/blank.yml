@@ -43,5 +43,5 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: run testsuite as check loss mode
-        run: luajit testsuite.lua nil nil nil true 1 2
+        run: luajit testsuite.lua nil nil nil true 1 5
         
