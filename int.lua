@@ -2,9 +2,9 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.5 (16/11/2025) dd:mm:yyyy
--- USER FEATURE: 08/11/2025
--- DEV  FEATURE: 08/11/2025
+-- BUILD  VERSION: 186.6 (26/11/2025) dd:mm:yyyy
+-- USER FEATURE: 26/11/2025
+-- DEV  FEATURE: 26/11/2025
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
@@ -43,14 +43,17 @@ local master = {
                     note: this option causes a division speed slow, but very powerful for high accuracy.
 
                 // DISABLE : MASTER_CALCULATE_DIV_MAXITERATIONS
+                // DISABLE : MASTER_DEFAULT_FRACT_LIMIT_DIV
                 By SupTan85
             << BUILD-IN >>]]
             MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS = true,
+            MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE = true, -- use buff-accurate for more accuracy. note: very slow but high accuracy!
         },
 
         ACCURACY_LIMIT = {
             -- MASTER FUNCTION CONFIG --
             MASTER_CALCULATE_DIV_MAXITERATIONS = 15, -- 15
+            MASTER_CALCULATE_DIV_BUFF_ACCURATE = 2, -- 2
             MASTER_DEFAULT_FRACT_LIMIT_DIV = 14, -- 14
 
             -- MEDIA FUNCTION CONFIG --
@@ -70,7 +73,7 @@ local master = {
     },
 
     _VERSION = "186",
-    _BUILD = "186.5"
+    _BUILD = "186.6"
 }
 
 local OPTION = master._config.OPTION
@@ -98,12 +101,13 @@ end
 
 master.convert = function(st, s)
     assert(type(st) == "string" or type(st) == "number", ("[CONVERT] INVALID_INPUT_TYPE | attempt to convert with a '%s'."):format(type(st)))
+    assert(type(st) == "number" or st:find("^%d*%.?%d*$"), ("[CONVERT] MALFORMED_NUMBER | function not support number format or input wans't number format. (%s)"):format(st))
     st, s = tostring(st), s or 1
     assert(not (s <= 0), ("[CONVERT] SETTING_SIZE_ISSUE | size per chunk is less then one. (%s < 1)"):format(s))
     assert(not (s > master._config.MAXIMUM_SIZE_PERCHUNK), ("[CONVERT] INVALID_SIZE_PERCHUNK | size per chunk is more then maxiumum setting. (%s > %s)"):format(s, master._config.MAXIMUM_SIZE_PERCHUNK))
     local result, step = {_size = s}, 0
-    local i, i2 = st:match("^0*(.-)%.(.-)0*$")
-    i, i2 = (i or st):match("^0*(.-)$"):reverse(), (i2 or "")
+    local i, i2 = st:match("^0*(%d*)%.?(%d-)0*$")
+    i, i2 = (i or st):match("^0*(.-)$"):reverse(), i2 or ""
     local len_i, len_i2 = #i, #i2
     for index = 1, max(len_i, len_i2), s do
         step = step + 1
@@ -121,28 +125,42 @@ master.convert = function(st, s)
 end
 
 master.deconvert = function(x)
+    -- BUILD 186.6
     assert(istableobj(x or error("[DECONVERT] VOID_INPUT")), ("[DECONVERT] INVALID_INPUT_TYPE | attempt to deconvert with a '%s'."):format(type(x)))
-    local em, sm, fm, s = false, {}, {}, x._size or 1
+    local chunk_size = x._size or 1
+    local pattern_format = ("%%0%dd"):format(chunk_size)
+    local chunk_decimal = {}
+    local process = false
     for i = x._dlen or 1, 0 do
-        local v = tostring(x[i] or error(("[DECONVERT] DAMAGED_OBJECT | missing decimal part value. index[%s]"):format(i)))
-        assert(type(x[i]) == "number", ("[DECONVERT] DAMAGED_OBJECT | detected invalid type in decimal part data. index[%s]: integer (not %s)"):format(i, type(v)))
-        if not em and x[i] <= 0 then
-            x[i] = nil
+        local v = x[i] or error(("[DECONVERT] DAMAGED_OBJECT | missing decimal part value. index[%s]"):format(i))
+        assert(type(v) == "number", ("[DECONVERT] DAMAGED_OBJECT | detected invalid type in decimal part data. index[%s]: integer (not %s)"):format(i, type(v)))
+        local target = -i + 2
+        if process then
+            chunk_decimal[target] = pattern_format:format(v)
+        elseif v > 0 then
+            process = true
+            chunk_decimal[1] = "."
+            chunk_decimal[target] = pattern_format:format(v):match("^(%d-)0*$")
         else
-            sm[-i], em = tonumber(v) % 1 ~= 0 and error(("[DECONVERT] DAMAGED_OBJECT | data issue at decimal part value. index[%s]"):format(i)) or ("0"):rep(s - #v)..v, true
+            x[i] = nil
         end
     end
-    em = false
+    process = false
+    local chunk_integer = {}
     for i = #x, 1, -1 do
-        local v = tostring(x[i] or error(("[DECONVERT] DAMAGED_OBJECT | missing integer path value. index[%s]"):format(i)))
-        assert(type(x[i]) == "number", ("[DECONVERT] DAMAGED_OBJECT | detected invalid type in integer part data. index[%s]: integer (not %s)"):format(i, type(v)))
-        if not em and x[i] <= 0 then
-            x[i] = nil
+        local v = x[i] or error(("[DECONVERT] DAMAGED_OBJECT | missing integer path value. index[%s]"):format(i))
+        assert(type(v) == "number", ("[DECONVERT] DAMAGED_OBJECT | detected invalid type in integer part data. index[%s]: integer (not %s)"):format(i, type(v)))
+        local i = #x - i + 1
+        if process then
+            chunk_integer[i] = pattern_format:format(v)
+        elseif v > 0 then
+            process = true
+            chunk_integer[i] = pattern_format:format(v):match("^0*(%d-)$")
         else
-            fm[#fm+1], em = tonumber(v) % 1 ~= 0 and error(("[DECONVERT] DAMAGED_OBJECT | data issue at integer path value. index[%s]"):format(i)) or x[i+1] and ("0"):rep(s - #v)..v or v, true
+            x[i] = nil
         end
     end
-    return (fm[1] and table.concat(fm) or "0")..(sm[0] and "."..table.concat(sm, "", 0):match("(%d-)0*$") or "")
+    return (#chunk_integer > 0 and table.concat(chunk_integer) or "0")..(chunk_decimal[2] and table.concat(chunk_decimal) or "")
 end
 
 master.copy = function(x)
@@ -286,7 +304,7 @@ master.concat = {
     end,
 
     _deep = function(var, reverse, dlen) -- Returns number of chunk, that are start first.
-        -- BUILD 3
+        -- BUILD 186.3
         local dlen = dlen or var._dlen or 1
         while var[dlen - 1] do
             dlen = dlen - 1
@@ -309,7 +327,7 @@ master.concat = {
     end,
 
     _seek = function(var, reqsize, offset, reverse, ignore) -- set and gets number position.
-        -- BUILD 3
+        -- BUILD 186.3
         assert(var and reqsize, ("[SEEK] VOID_INPUT |%s%s"):format(not var and " var: nil (input-required)" or "", not reqsize and " reqsize: nil (input-required)" or ""))
         assert(tonumber(reqsize), ("[SEEK] INVALID_INPUT | reqsize: integer (not %s)"):format(type(reqsize)))
         reqsize = tonumber(reqsize)
@@ -365,7 +383,7 @@ master.concat = {
     end,
 
     left = function(self, x, y, ignore, shift, copy, force)
-        -- BUILD 3
+        -- BUILD 186.3
         assert(type(self) == "table" and self._creq and self:_creq(x, y, force), "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
         x = copy and master.copy(x) or x
         shift = max(tonumber(shift) or 0, 0)
@@ -403,7 +421,7 @@ master.concat = {
     end,
 
     right = function(self, x, y, ignore, shift, copy, force)
-        -- BUILD 3
+        -- BUILD 186.3
         assert(type(self) == "table" and self._creq and self:_creq(x, y, force), "[CONCAT] BAD_FUNCTIONCALL | can't include required function")
         x = copy and master.copy(x) or x
         shift = max(tonumber(shift) or 0, 0)
@@ -514,11 +532,12 @@ master.calculate = {
                     -- print(offset, ("%09d"):format(BA), ("%09d"):format(b[i2] or 0), "=", calcul, "+", result[offset] or 0, "=", chunk_data)
                     local next = floor(chunk_data / s)
                     chunk_data = chunk_data % s
-                    if not cd then
-                        cd = chunk_data ~= 0
-                    end
+                    cd = cd or chunk_data ~= 0
                     result[offset] = (offset > 0 or cd) and chunk_data or nil
-                    result[offset + 1], op = (next ~= 0 and (next + (result[offset + 1] or 0))) or ((offset > 0 or cd) and result[offset + 1] or 0) or result[offset + 1], result[offset] and min(op, offset) or op
+                    result[offset + 1] = (next ~= 0 and (next + (result[offset + 1] or 0))) or ((offset > 0 or cd) and result[offset + 1] or 0) or result[offset + 1]
+                    if offset < 1 and op == 1 then
+                        op = (result[offset] and offset) or (result[offset + 1] and offset + 1)
+                    end
                 end
                 if e and #result >= 1 then -- optimize zone for div function
                     if (#result == 1 and result[1] ~= 0) then
@@ -561,14 +580,14 @@ master.calculate = {
     div = function(self, a, b, s, f, l) -- _size maxiumum *1 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "DIV")
         assert(not master.equation.equal(b, masterC(0, b._size or 1)), "[DIV] INVALID_INPUT | divisor cannot be zero.")
-        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV
+        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or (not OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS and ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV or 0)
         local auto_acc, more, less, concat = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less, master.concat
         local one = masterC(1, s)
         local accuracy, uc = 0, 0
         local lastpoint, fin, mark
         b = self:mul(b, masterC("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
         local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT and (function(b)
-            local p = b == "1" and "1.0" or tostring("1" / b)
+            local p = b == "1" and "1" or tostring("1" / b)
             if p:find("e") then
                 local L, R = p:match("^[-+]?(%d-%.?%d+)e"), p:match("e[-+]?(%d+)$")
                 L, lastpoint = L:sub(1, -2), L:sub(-2, -2)
@@ -590,6 +609,7 @@ master.calculate = {
             local FLOAT = ((#b - 1) * s) + #tostring(b[#b]) - 2
             d = FLOAT > 0 and "0."..("0"):rep(FLOAT)
         end
+        local BUFF_ACCURATE_ENABLE = false
         if auto_acc then
             local function HF(x)
                 return (s - #tostring(x[#x])) + (x._dlen < 1 and s - #tostring(x[x._dlen] or "") or 0)
@@ -603,8 +623,12 @@ master.calculate = {
                 local MORE = more(AS, BS)
                 accuracy = self.add(self.add(self.sub(self:mul((MORE and AS or BS), masterC(s, s)), masterC(HF(MORE and a or b), s)), masterC(f, s)), masterC(s, s))
             end
+            if OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE then
+                BUFF_ACCURATE_ENABLE = true
+            end
         else
             accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_DIV_MAXITERATIONS) + 1
+            BUFF_ACCURATE_ENABLE = true
         end
         local function check(n)
             local dc = d and setmetatable({}, {__index = d, __len = function() return #d end}) or masterC(n, s)
@@ -666,7 +690,7 @@ master.calculate = {
                 end
             else
                 d = d:sub(1, auto_acc and masterD(accuracy) or accuracy)
-                accuracy = auto_acc and self.sub(accuracy, masterC(#d)) or accuracy - #d:match("%.(.+)$")
+                accuracy = auto_acc and self.sub(accuracy, masterC(#d)) or accuracy - #(d:match("%.(.+)") or "")
                 d, lastpoint = masterC(d, s), lastpoint or d:match("(%d)0*$")
             end
         end
@@ -695,17 +719,30 @@ master.calculate = {
                     if less(accuracy, one) then
                         break
                     end
-                    accuracy = self.sub(accuracy, one) or accuracy
+                    accuracy = self.sub(accuracy, one)
                 else
-                    accuracy = (accuracy - 1 or accuracy)
+                    accuracy = accuracy - 1
                 end
             end
         end
+        -- Newton-Raphson --
+        -- x = x * (2 - a * x)
+        if BUFF_ACCURATE_ENABLE then
+            local TWO = masterC(2, s)
+            for _ = 1, ACCURACY_LIMIT.MASTER_CALCULATE_DIV_BUFF_ACCURATE do
+                local rap = self:sub(TWO, self:mul(b, d))
+                if rap._dlen >= 1 then
+                    break
+                end
+                d = self:mul(d, rap)
+            end
+        end
+        --------------------
         if b_dlen < 1 then
             d = self:mul(d, masterC("1"..("0"):rep(math.abs(b_dlen - 1)), s))
         end
         local raw = self:mul(a, d)
-        if lastpoint and -raw._dlen >= floor(f / s) then
+        if f > 0 and lastpoint and -raw._dlen >= floor(f / s) then
             local shf = 0
             for i = 0, raw._dlen or 1, -1 do
                 local sel = raw[i]
