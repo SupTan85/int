@@ -164,12 +164,12 @@ master.deconvert = function(x)
 end
 
 master.copy = function(x)
-    if type(x) == 'table' then
+    if istableobj(x) then
         local copy = {}
         for key, value in next, x, nil do
-            copy[master.copy(key)] = master.copy(value)
+            copy[key] = value
         end
-        setmetatable(copy, master.copy(getmetatable(x)))
+        setmetatable(copy, getmetatable(x))
         return copy
     end
     return x
