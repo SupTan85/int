@@ -319,6 +319,6 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 > [!NOTE]
 reason why this module name is "int"? because in this module always use integer to calculate math,\
 and feel free to use!\
-**version: 186 - 5**
+**version: 186 - 6**
 
 ![bar](.doc/.assets/bar.png)
