@@ -149,10 +149,16 @@ end
 if not suite_select or suite_select == 1 then
     print("\nUsing CheckAccuracy-Suite")
     benchmark("add, sub", function(x, y)
+        -- print(1,(x + y))
+        -- print(2,(x + y) - x)
+        -- print(3,((x + y) - x) - y)
         return ((x + y) - x) - y
     end, farg)
 
     benchmark("sub, mul, div", function(x, y)
+        -- print(1,x / y)
+        -- print(2,(x / y) * y)
+        -- print(3,x - ((x / y) * y))
         return x - ((x / y) * y)
     end, farg)
 end

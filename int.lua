@@ -2,7 +2,7 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.6 (26/11/2025) dd:mm:yyyy
+-- BUILD  VERSION: 186.6 (28/11/2025) dd:mm:yyyy
 -- USER FEATURE: 26/11/2025
 -- DEV  FEATURE: 26/11/2025
 -- AUTHOR: SupTan85
@@ -274,16 +274,15 @@ master.equation = {
         return false
     end,
     less = function(x, y) -- chunk size should be same
+        -- BUILD 186.6
         assert((x._size or 1) == (y._size or 1), ("[EQUATION] INVALID_SIZE_PERCHUNK (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x < #y then
             return true
-        elseif #x == #y or x[#x] == 0 or y[#y] == 0 then
-            for i = #x, x._dlen or 1, -1 do
+        elseif #x == #y then
+            for i = #x, min((x._dlen or 1), (y._dlen or 1)) or 1, -1 do
                 local vx, vy = x[i] or 0, y[i] or 0
-                if vx < vy then
-                    return true
-                elseif vx > vy then
-                    return false
+                if vx ~= vy then
+                    return vx < vy
                 end
             end
         end
@@ -590,13 +589,13 @@ master.calculate = {
             local p = b == "1" and "1" or tostring("1" / b)
             if p:find("e") then
                 local L, R = p:match("^[-+]?(%d-%.?%d+)e"), p:match("e[-+]?(%d+)$")
-                L, lastpoint = L:sub(1, -2), L:sub(-2, -2)
-                local S = #L:match("^(%d+)%.")
+                L, lastpoint = #L > 1 and L:sub(1, -2) or L, #L > 1 and L:sub(-2, -2) or L
+                local S = #L:match("^(%d+)%.?")
                 if R > master._config.MAXIMUM_LUA_INTEGER then
                     return {L:gsub("%.", ""), self.sub(masterC(R, s), masterC(S, s))}
                 end
-                return "0."..("0"):rep(tonumber(R) - S)..L:gsub("%.", ""):sub(1, -4)
-            elseif p ~= "0.0" then
+                return "0."..("0"):rep(tonumber(R) - S)..(#L > 1 and L:gsub("%.", ""):sub(1, -2) or L)
+            elseif p ~= "0.0" and p ~= "0" then
                 lastpoint = p:sub(-1)
                 if #p > 13 then
                     p = p:sub(1, -2)
