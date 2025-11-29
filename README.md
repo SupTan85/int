@@ -312,7 +312,7 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 
 - some function won't support a extremely large values.
 
-- on Lua version `5.1` maximum value of `_size` is `8`.
+- on Lua version `5.1` maximum value of `_size` is `7`.
 
 ---
 
