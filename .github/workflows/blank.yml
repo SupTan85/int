@@ -9,8 +9,18 @@ on:
         default: false
   push:
     branches: ["main"]
+    paths-ignore:
+      - ".doc/*"
+      - ".vscode/*"
+      - ".gitignore"
+      - "README.md"
   pull_request:
     branches: ["main"]
+    paths-ignore:
+      - ".doc/*"
+      - ".vscode/*"
+      - ".gitignore"
+      - "README.md"
 
 jobs:
   safe-check:
