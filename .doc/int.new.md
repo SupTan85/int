@@ -1,6 +1,6 @@
 # int.new
 
-![https://github.com/SupTan85/int.lua](.assets/cover.png)
+![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
 ## function
 
@@ -37,4 +37,4 @@ you can use [**int.cnew**](int.cnew.md) function!
 
 [**function & methods**](../README.md#function--methods)
 
-![end](.assets/bar.png)
+![end](.assets/bar.svg)

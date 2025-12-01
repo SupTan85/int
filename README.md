@@ -1,6 +1,6 @@
 # int
 
-![https://github.com/SupTan85/int.lua](.doc/.assets/cover.png)
+![https://github.com/SupTan85/int.lua](.doc/.assets/cover.svg)
 
 ## Enable large-number arithmetic in pure Lua
 
@@ -321,4 +321,4 @@ reason why this module name is "int"? because in this module always use integer 
 and feel free to use!\
 **version: 186 - 6**
 
-![bar](.doc/.assets/bar.png)
+![bar](.doc/.assets/bar.svg)

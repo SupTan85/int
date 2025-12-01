@@ -1,6 +1,6 @@
 # int.abs
 
-![https://github.com/SupTan85/int.lua](.assets/cover.png)
+![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
 ## function
 
@@ -67,4 +67,4 @@ In this example, a function inside the object is called but a different object i
 
 [**function & methods**](../README.md#function--methods)
 
-![end](.assets/bar.png)
+![end](.assets/bar.svg)

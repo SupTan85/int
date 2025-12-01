@@ -1,6 +1,6 @@
 # table
 
-![https://github.com/SupTan85/int.lua](.assets/cover.png)
+![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
 >[!NOTE]
 In Lua, a **table** is the only built-in data structure and is highly flexible. It can be used to represent arrays, dictionaries, lists, sets, and more. Tables in Lua are associative arrays, meaning they can hold values with both integer and non-integer (key-value) indices.
@@ -39,4 +39,4 @@ end
 
 [**home**](../README.md)
 
-![end](.assets/bar.png)
+![end](.assets/bar.svg)

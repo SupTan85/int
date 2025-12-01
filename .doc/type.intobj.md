@@ -1,6 +1,6 @@
 # int object
 
-![https://github.com/SupTan85/int.lua](.assets/cover.png)
+![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
 > [!NOTE]
 A [**table**](type.table.md) that made for calculate, used with operators or use with [**function & methods**](../README.md#function--methods)\
@@ -39,4 +39,4 @@ end
 [**home**](../README.md)\
 [**design & inside object**](../README.md#design)
 
-![end](.assets/bar.png)
+![end](.assets/bar.svg)
