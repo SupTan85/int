@@ -9,6 +9,22 @@ The **int** module extends Lua capability to handle large numbers.
 > [!NOTE]
 This project is currently in beta.
 
+<div align="center">
+  <br>
+  
+  [![Static Badge](https://img.shields.io/badge/made_with-%E2%9D%A4%EF%B8%8E-orange?style=for-the-badge&logoColor=white&labelColor=aa3063&color=fc639b)](https://github.com/SupTan85/int)
+  [![Static Badge](https://img.shields.io/badge/made_for-lua-purple?style=for-the-badge&labelColor=5c389f&color=8250df)](https://www.lua.org/)
+  
+  <br><img src="https://counter.seku.su/cmoe?name=SupTan-uint&theme=r34" alt="SupTan-uint"/><br><br>
+
+  [![GitHub Downloads (specific asset, all releases)](https://img.shields.io/github/downloads/SupTan85/int/int.lua?style=for-the-badge&color=green)](https://github.com/SupTan85/int/blob/main/int.lua)
+  [![GitHub Release](https://img.shields.io/github/v/release/SupTan85/int?sort=date&display_name=tag&style=for-the-badge&color=blue)](https://github.com/SupTan85/int/releases/latest)
+  [![GitHub License](https://img.shields.io/github/license/SupTan85/int?style=for-the-badge&color=blue)](https://github.com/SupTan85/int/blob/main/LICENSE)
+  <br>
+  [![Static Badge](https://img.shields.io/badge/made_by-SupTan85-orange?style=for-the-badge)](https://github.com/SupTan85)
+  [![Static Badge](https://img.shields.io/badge/feedback-discord-blue?style=for-the-badge&logo=discord&logoColor=white&color=5865F2)](https://discord.com/users/888237066280923236)
+</div>
+
 Tested with: LuaJIT, Lua 5.1, Lua 5.2, Lua 5.3, Lua 5.4\
 Check by [**TestSuite**](testsuite.lua)
 
@@ -24,6 +40,7 @@ install with package manager:
 > ```bash
 > luarocks install uint
 > ```
+>
 
 **or download the [module](int.lua) and place it in the working directory or any directory in the package path.**
 
