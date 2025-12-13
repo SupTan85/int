@@ -45,7 +45,7 @@ local function create_simple()
             end
         end
     end
-    return int.new(table.concat(simple))
+    return table.concat(simple)
 end
 
 local function benchmark(head, function_call, function_arg)
@@ -83,8 +83,12 @@ local function benchmark(head, function_call, function_arg)
 end
 
 local function format_result(value)
-    local i, d = value:tostring():match("(%d+).?(%d*)")
-    return ("0"):rep(INT_LEN - #i)..i..(d ~= "" and "."..d..("0"):rep(DEC_LEN - #d) or "")
+    local i, d = value:match("(%d+).?(%d*)")
+    local result = ("0"):rep(INT_LEN - #i)..i..(d ~= "" and "."..d..("0"):rep(DEC_LEN - #d) or "")
+    if #result > 40 then
+        result = result:sub(1, 40).."..."
+    end
+    return result
 end
 
 local function farg(t)
@@ -105,50 +109,73 @@ local suite_select = tonumber(arg[5])
 if not suite_select or suite_select == 0 then
     print("\nUsing Calculate-Suite")
     benchmark("add", function(x, y)
+        local x, y = int.new(x, y)
         return x + y
     end)
     benchmark("sub", function(x, y)
+        local x, y = int.new(x, y)
         return x - y
     end)
     benchmark("mul", function(x, y)
+        local x, y = int.new(x, y)
         return x * y
     end)
     benchmark("div", function(x, y)
+        local x, y = int.new(x, y)
         return x / y
     end)
     benchmark("mod", function(x, y)
+        local x, y = int.new(x, y)
         return int.fmod(x, y)
     end)
     print("[POW] simple value: limit mode")
     benchmark("pow", function(x, y)
+        local x, y = int.new(x, y)
         x, y = int.new(tostring(x):sub(1, 4), tostring(y):sub(1, 4))
         return x:pow(x.sign == "+" and y or y:floor())
     end)
     benchmark("sqrt", function(x, _)
+        local x = int.new(x)
         return x:sqrt()
     end)
     benchmark("ln", function(x, _)
+        local x = int.new(x)
         return x:ln()
     end)
     benchmark("exp", function(x, _)
+        local x = int.new(x)
         return x:exp()
     end)
 
     print("\nUsing Equation-Suite")
     benchmark("equal", function(x, y)
+        local x, y = int.new(x, y)
         return x == y
     end)
     benchmark("less", function(x, y)
+        local x, y = int.new(x, y)
         return x < y
     end)
     benchmark("more", function(x, y)
+        local x, y = int.new(x, y)
         return x > y
     end)
 end
 
 if not suite_select or suite_select == 1 then
     print("\nUsing CheckAccuracy-Suite")
+    benchmark("tostring", function(x, y)
+        local x, y = x:match("^0*(%d-%.?%d-)0*$"), y:match("^0*(%d-%.?%d-)0*$")
+        local ix, iy = int.new(x, y)
+        local result = ix:tostring() == x and iy:tostring() == y
+        if not result then
+            error("\nfailed: deconvert result is incorrect!\n\n"..("\t%s =? %s\n\t%s =? %s\n"):format(ix:tostring(), x, iy:tostring(), y))
+        end
+        return result
+    end)
+
     benchmark("add, sub", function(x, y)
+        local x, y = int.new(x, y)
         -- print(1,(x + y))
         -- print(2,(x + y) - x)
         -- print(3,((x + y) - x) - y)
@@ -156,6 +183,7 @@ if not suite_select or suite_select == 1 then
     end, farg)
 
     benchmark("sub, mul, div", function(x, y)
+        local x, y = int.new(x, y)
         -- print(1,x / y)
         -- print(2,(x / y) * y)
         -- print(3,x - ((x / y) * y))

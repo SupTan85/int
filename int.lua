@@ -2,7 +2,7 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.6 (29/11/2025) dd:mm:yyyy
+-- BUILD  VERSION: 186.6 (13/12/2025) dd:mm:yyyy
 -- USER FEATURE: 26/11/2025
 -- DEV  FEATURE: 26/11/2025
 -- AUTHOR: SupTan85
@@ -521,8 +521,7 @@ master.calculate = {
     mul = function(self, a, b, s, e) -- _size maxiumum *1 (`e` switch for division process.) **chunk size should be same**
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "MUL")
         local result = {_size = a._size or s or 1}
-        local s, op = floor(10 ^ (result._size)), 1
-        local cd
+        local s, bottom = floor(10 ^ (result._size)), (a._dlen or 1) + (b._dlen or 1)
         for i = a._dlen or 1, #a do
             local BA = a[i]
             if BA and BA ~= 0 then
@@ -532,12 +531,8 @@ master.calculate = {
                     -- print(offset, ("%09d"):format(BA), ("%09d"):format(b[i2] or 0), "=", calcul, "+", result[offset] or 0, "=", chunk_data)
                     local next = floor(chunk_data / s)
                     chunk_data = chunk_data % s
-                    cd = cd or chunk_data ~= 0
-                    result[offset] = (offset > 0 or cd) and chunk_data or nil
-                    result[offset + 1] = (next ~= 0 and (next + (result[offset + 1] or 0))) or ((offset > 0 or cd) and result[offset + 1] or 0) or result[offset + 1]
-                    if offset < 1 and op == 1 then
-                        op = (result[offset] and offset) or (result[offset + 1] and offset + 1)
-                    end
+                    result[offset] = chunk_data
+                    result[offset + 1] = next + (result[offset + 1] or 0)
                 end
                 if e and #result >= 1 then -- optimize zone for div function
                     if (#result == 1 and result[1] ~= 0) then
@@ -561,12 +556,6 @@ master.calculate = {
                 result[i] = result[i] or 0
             end
         end
-        for i = 0, op, -1 do
-            if result[i] then
-                break
-            end
-            result[i] = 0
-        end
         for i = #result, 1, -1 do
             if result[i] == 0 then
                 result[i] = nil
@@ -574,7 +563,15 @@ master.calculate = {
                 break
             end
         end
-        result._dlen = op
+        for i = bottom, 0 do
+            if result[i] ~= 0 then
+                result._dlen = i
+                break
+            else
+                result[i] = nil
+            end
+        end
+        result._dlen = result._dlen or 1
         return result
     end,
     div = function(self, a, b, s, f, l) -- _size maxiumum *1 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
