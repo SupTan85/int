@@ -2,7 +2,7 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.6 (13/12/2025) dd:mm:yyyy
+-- BUILD  VERSION: 186.6 (15/12/2025) dd:mm:yyyy
 -- USER FEATURE: 26/11/2025
 -- DEV  FEATURE: 26/11/2025
 -- AUTHOR: SupTan85
@@ -521,7 +521,7 @@ master.calculate = {
     mul = function(self, a, b, s, e) -- _size maxiumum *1 (`e` switch for division process.) **chunk size should be same**
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "MUL")
         local result = {_size = a._size or s or 1}
-        local s, bottom = floor(10 ^ (result._size)), (a._dlen or 1) + (b._dlen or 1)
+        local s, bottom = floor(10 ^ (result._size)), (a._dlen or 1) + (b._dlen or 1) - 1
         for i = a._dlen or 1, #a do
             local BA = a[i]
             if BA and BA ~= 0 then
@@ -552,7 +552,7 @@ master.calculate = {
                         break
                     end
                 end
-            elseif i > 0 then
+            else
                 result[i] = result[i] or 0
             end
         end
@@ -592,12 +592,12 @@ master.calculate = {
                 if R > master._config.MAXIMUM_LUA_INTEGER then
                     return {L:gsub("%.", ""), self.sub(masterC(R, s), masterC(S, s))}
                 end
-                return "0."..("0"):rep(tonumber(R) - S)..(#L > 1 and L:gsub("%.", ""):sub(1, -2) or L)
+                return ("0."..("0"):rep(tonumber(R) - S)..(#L > 1 and L:gsub("%.", "") or L)):sub(1, -2)
             elseif p ~= "0.0" and p ~= "0" then
-                lastpoint = p:sub(-1)
                 if #p > 13 then
                     p = p:sub(1, -2)
                 end
+                lastpoint = p:sub(-1)
                 lastpoint = #lastpoint == 1 and lastpoint
                 return p
             end
@@ -628,9 +628,13 @@ master.calculate = {
             BUFF_ACCURATE_ENABLE = true
         end
         local function check(n)
+            -- print("d =", d and masterD(d) or "nil")
             local dc = d and setmetatable({}, {__index = d, __len = function() return #d end}) or masterC(n, s)
+            -- print(masterD(dc), masterD(d and concat:right(dc, n, false, uc, true) or dc))
+
             local nc = self:mul(b, d and concat:right(dc, n, false, uc) or dc, s, true)
-            -- print(n, masterD(nc))
+            -- print(("n:%d = %s"):format(n, masterD(nc)))
+            
             if more(nc, one) then
                 return 1
             elseif less(nc, one) then
@@ -695,8 +699,8 @@ master.calculate = {
             local dv, lp = calcu(lastpoint)
             -- issue checker >>
             if not lp and master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT then
-                print(("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n"):format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR", (d and masterD(d)) or "ERROR"))
-                print("[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result while using the option <MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT>.\nmodule will automatically disable this option permanent and recalculate the result again. some versions of Lua cannot using this option!\nset: master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false\n")
+                io.write(("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n"):format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR", (d and masterD(d)) or "ERROR"))
+                io.write("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result while using the option <MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT>.\nmodule will automatically disable this option permanent and recalculate the result again. some versions of Lua cannot using this option!\nset: master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false\n")
                 master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false
                 return master.calculate:div(a, b, s, f, l)
             end
@@ -1055,10 +1059,10 @@ function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumu
     -- Newton's Method --
     assert(tostring(x) >= "0", "[SQRT] INVALID_INPUT | Cannot compute the square root of a negative number.")
     assert(not f or type(f) == "number", ("[SQRT] INVALID_INPUT_TYPE | Type of maxiumum number of decimal part should be integer (not %s)"):format(type(f)))
-    local res = x / 2
+    local res = (x + (x / x)) * 0.5
     local TOLERANCE = f or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_TOLERANCE
     for _ = 1, l or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS do
-        local nes = 0.5 * (res + (x / res))
+        local nes = (res + (x / res)) * 0.5
         local dl, tl = media.vtype(media.decimallen(nes - res), TOLERANCE)
         if dl >= tl then
             return custom:cround(nes, TOLERANCE)
