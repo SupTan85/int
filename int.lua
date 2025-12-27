@@ -2,9 +2,9 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.6 (15/12/2025) dd:mm:yyyy
+-- BUILD  VERSION: 186.6 (27/12/2025) dd:mm:yyyy
 -- USER FEATURE: 26/11/2025
--- DEV  FEATURE: 26/11/2025
+-- DEV  FEATURE: 27/12/2025
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
@@ -178,38 +178,48 @@ end
 
 local masterC, masterD = master.convert, master.deconvert
 master.custom = {
-    _cfloor = function(x, length, resultonly)
-        local rev, dlen, prlen, s = length < 0, x._dlen or 1, nil, x._size or 1
-        length = rev and math.abs(((dlen - 1) * s) + (s - #(tostring(x[dlen]):match("^(%d-)0*$") or ""))) + length or length
-        local endp
-        if rev or ceil(-length / s) > dlen - 1 then
-            endp = ceil(-length / s)
-            for i = dlen, min(endp, 0) do
-                if i == endp then
-                    local shift = tostring(x[i]):sub(1, length % s)
-                    local hofu = tonumber(shift..("0"):rep(s - #shift))
-                    prlen = prlen or #(tostring(x[i]):match("^(%d-)0*$") or "") - (length % s)
-                    x[i] = hofu ~= 0 and hofu
-                    if not x[i] then
-                        endp = endp + 1
-                        for i = endp, 0 do
-                            if x[i] == 0 then
-                                endp, x[i] = endp + 1, nil
-                            else
-                                break
-                            end
-                        end
-                    end
-                else
+    _cfloor = function(x, length, resultonly, copy)
+        assert(type(length) == "number", ("[CFLOOR] INVALID_INPUT_TYPE | length: number (not %s)"):format(type(length)))
+        if length < 0 or length % 1 ~= 0 then
+            warn(("[CFLOOR] INVALID_INPUT | length: integer <positive> (current %s to %s)"):format(length, ceil(math.abs(length))))
+            length = ceil(math.abs(length))
+        end
+        local s, dlen, prlen = x._size or 1, x._dlen or 1, nil
+        local result = copy and {_size = s} or x
+        local new_dlen = floor(-length / s) + 1
+        if new_dlen >= dlen then
+            if copy then
+                for i = new_dlen, #x do
+                    result[i] = x[i]
+                end
+            else
+                for i = dlen, new_dlen - 1 do
                     x[i] = nil
                 end
             end
-            x._dlen = endp
+            local rem_space = length % s
+            local shift = s - rem_space
+            if not resultonly then
+                local f, b = tostring(result[new_dlen]):find("0*$")
+                prlen = shift - (b - f + 1)
+            end
+            if rem_space > 0 then
+                local new_value = floor(result[new_dlen] * (10 ^ -shift)) * floor(10 ^ shift)
+                if new_value == 0 then
+                    result[new_dlen] = nil
+                    new_dlen = new_dlen + 1
+                else
+                    result[new_dlen] = new_value
+                end
+            end
+        else
+            new_dlen = dlen
         end
+        result._dlen = new_dlen
         if resultonly then
-            return x
+            return result
         end
-        return x, endp or dlen, prlen
+        return result, new_dlen or dlen, prlen
     end,
 
     _refresh = function(x, lu, endp) -- refresh all chunk that should to be, by fast `ADD` process.
@@ -564,7 +574,7 @@ master.calculate = {
             end
         end
         for i = bottom, 0 do
-            if result[i] ~= 0 then
+            if (result[i] or 0) ~= 0 then
                 result._dlen = i
                 break
             else
@@ -582,7 +592,8 @@ master.calculate = {
         local one = masterC(1, s)
         local accuracy, uc = 0, 0
         local lastpoint, fin, mark
-        b = self:mul(b, masterC("1"..("0"):rep(math.abs(b_dlen - 1)), b._size))
+        local shift_mul = b_dlen < 1 and masterC("1"..("0"):rep((math.abs(min(b_dlen, 0)) * s) + #tostring(b[b_dlen])), s)
+        b = shift_mul and self:mul(b, shift_mul) or b
         local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT and (function(b)
             local p = b == "1" and "1" or tostring("1" / b)
             if p:find("e") then
@@ -699,7 +710,7 @@ master.calculate = {
             local dv, lp = calcu(lastpoint)
             -- issue checker >>
             if not lp and master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT then
-                io.write(("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n"):format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR", (d and masterD(d)) or "ERROR"))
+                io.write(("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result.\n\tFUNCTION LOG >>\nprocess: (%s / %s)\nraw_data: %s\n\n"):format((a and masterD(a)) or "ERROR", (b and masterD(b)) or "ERROR", (d and masterD(d)) or "ERROR"))
                 io.write("\n[DIV] VALIDATION_FAILED | issues detected in division function, main process is unable to find the correct result while using the option <MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT>.\nmodule will automatically disable this option permanent and recalculate the result again. some versions of Lua cannot using this option!\nset: master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false\n")
                 master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT = false
                 return master.calculate:div(a, b, s, f, l)
@@ -739,8 +750,8 @@ master.calculate = {
             end
         end
         --------------------
-        if b_dlen < 1 then
-            d = self:mul(d, masterC("1"..("0"):rep(math.abs(b_dlen - 1)), s))
+        if shift_mul then
+            d = self:mul(d, shift_mul)
         end
         local raw = self:mul(a, d)
         if f > 0 and lastpoint and -raw._dlen >= floor(f / s) then
@@ -1027,7 +1038,7 @@ function assets.vpow(self, x, y, l) -- pow function assets. `y >= 0`
             return custom:cfloor(x, l)
         end
         local result = media.convert(1, x._size)
-        local exp = y
+        local x, exp = x, y
         while master.equation.more(exp, masterC(0, x._size)) do
             if (exp[1] or 0) % 2 == 1 then
                 result = result * x
@@ -1059,15 +1070,18 @@ function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumu
     -- Newton's Method --
     assert(tostring(x) >= "0", "[SQRT] INVALID_INPUT | Cannot compute the square root of a negative number.")
     assert(not f or type(f) == "number", ("[SQRT] INVALID_INPUT_TYPE | Type of maxiumum number of decimal part should be integer (not %s)"):format(type(f)))
-    local res = (x + (x / x)) * 0.5
+    if #x >= 1 and (x[#x] or 0) == 0 and (x._dlen or 1) == 1 then
+        return x
+    end
+    local res = x
     local TOLERANCE = f or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_TOLERANCE
-    for _ = 1, l or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS do
-        local nes = (res + (x / res)) * 0.5
-        local dl, tl = media.vtype(media.decimallen(nes - res), TOLERANCE)
-        if dl >= tl then
-            return custom:cround(nes, TOLERANCE)
+    for _ = 1, max(l or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS, 1) do
+        local next_res = (res + custom:cround(x / res, max(0, TOLERANCE - 1))) * 0.5
+        local ave = next_res - res
+        if #ave <= 1 and (ave[1] or 0) == 0 and media.decimallen(ave) >= TOLERANCE then
+            return custom:cround(next_res, TOLERANCE)
         end
-        res = nes
+        res = next_res
     end
     return custom:cround(res, TOLERANCE)
 end
