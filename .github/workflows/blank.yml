@@ -1,12 +1,5 @@
 name: checker
 on:
-  workflow_dispatch:
-    inputs:
-      use_githubservice:
-        description: 'Use GitHub-hosted runner'
-        required: true
-        type: boolean
-        default: false
   push:
     branches: ["main"]
     paths-ignore:
@@ -24,7 +17,7 @@ on:
 
 jobs:
   safe-check:
-    runs-on: ${{ inputs.use_githubservice == true && 'ubuntu-slim' || 'self-hosted' }}
+    runs-on: 'ubuntu-slim'
     steps:
       - name: update package
         run: sudo apt-get update
@@ -41,7 +34,7 @@ jobs:
         run: luajit benchmark.lua nil nil nil true
   
   loss-check:
-    runs-on: ${{ inputs.use_githubservice == true && 'ubuntu-slim' || 'self-hosted' }}
+    runs-on: 'ubuntu-slim'
     needs: safe-check
     steps:
       - name: update package
