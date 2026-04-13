@@ -1015,7 +1015,7 @@ end
 
 function media.modf(x) -- Returns the integral part of `x` and the decimal part of `x`.
     x = media.vtype(x or error("[MODF] VOID_INPUT"))
-    local frac = {sign = x._sign or "+", _dlen = x._dlen or 1, _size = x._size}
+    local frac = {_sign = x._sign or "+", _dlen = x._dlen or 1, _size = x._size}
     for i = frac._dlen, 0 do
         frac[i] = x[i]
     end
@@ -1076,10 +1076,11 @@ function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumu
     end
     local res = x
     local TOLERANCE = f or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_TOLERANCE
+    local TOLERANCE_OBJINT = media.convert(TOLERANCE, x._size)
     for _ = 1, max(l or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_MAXITERATIONS, 1) do
         local next_res = (res + custom:cround(x / res, max(0, TOLERANCE - 1))) * 0.5
         local ave = next_res - res
-        if #ave <= 1 and (ave[1] or 0) == 0 and media.decimallen(ave) >= TOLERANCE then
+        if #ave <= 1 and (ave[1] or 0) == 0 and media.decimallen(ave):eqmore(TOLERANCE_OBJINT) then
             return custom:cround(next_res, TOLERANCE)
         end
         res = next_res
