@@ -2,9 +2,9 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.6 (27/12/2025) dd:mm:yyyy
+-- BUILD  VERSION: 186.7 (14/04/2026) dd:mm:yyyy
 -- USER FEATURE: 26/11/2025
--- DEV  FEATURE: 27/12/2025
+-- DEV  FEATURE: 14/04/2026
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
@@ -597,8 +597,9 @@ master.calculate = {
         local d = OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT and (function(b)
             local p = b == "1" and "1" or tostring("1" / b)
             if p:find("e") then
-                local L, R = p:match("^[-+]?(%d-%.?%d+)e"), p:match("e[-+]?(%d+)$")
-                L, lastpoint = #L > 1 and L:sub(1, -2) or L, #L > 1 and L:sub(-2, -2) or L
+                local L, R = p:match("^(%d-%.?%d+)e"), p:match("e%-?0*(%d+)$")
+                L, lastpoint = #L >= 4 and L:sub(1, -2) or L, #L >= 4 and L:sub(-2, -2) or (#L > 1 and L:sub(-1, -1) or L)
+                print(p, L, R, lastpoint)
                 local S = #L:match("^(%d+)%.?")
                 if R > master._config.MAXIMUM_LUA_INTEGER then
                     return {L:gsub("%.", ""), self.sub(masterC(R, s), masterC(S, s))}
@@ -777,7 +778,7 @@ local media = {
             local equal, pack, cahce = master.equation.equal, {...}, nil
             for i, v in ipairs(pack) do
                 cahce = cahce or masterC(0, v._size)
-                pack[i].sign = equal(v, cahce) and "+" or v.sign or "+"
+                pack[i]._sign = equal(v, cahce) and "+" or v._sign or "+"
             end
             return table.unpack(pack)
         end,
@@ -826,23 +827,23 @@ local media = {
                     fs = fs_sign..(f == "" and "0" or f)..(b ~= "" and "."..b or "")
                 end
                 local t = masterC(fs:match("^%s*[+-]?(%d+%.?%d*)%s*$"), size)
-                t.sign = fs:match("^%s*([+-]?)") or "+"
+                t._sign = fs:match("^%s*([+-]?)") or "+"
                 return setmetatable(t, master._metatable)
             end
             error(("[CONVERT] VALIDATION_FAILED | malformed number near '%s'"):format(n:match("^%s*(.-)%s*$")))
         end
         local t = masterC(n_type == "string" and n:match("^%s*[+-]?(%d+%.?%d*)%s*$") or math.abs(tonumber(n) or error(("[CONVERT] MALFORMED_NUMBER '%s'"):format(n))), size)
-        t.sign = n_type == "string" and (n:match("^%s*([+-])") or "+") or sign(n) < 0 and "-" or "+"
+        t._sign = n_type == "string" and (n:match("^%s*([+-])") or "+") or sign(n) < 0 and "-" or "+"
         return setmetatable(t, master._metatable)
     end,
     tostring = function(int) -- Deconvert table to string.
         local str = masterD(int)
-        return (int.sign == "-" and str ~= "0" and "-" or "")..str
+        return (int._sign == "-" and str ~= "0" and "-" or "")..str
     end,
 
     abs = function(x) -- Returns the absolute value of `x`.
         assert(istableobj(x), ("[ABS] INVALID_INPUT_TYPE | x: table/%s (not %s)"):format(OBJECT_PROFILE, type(x)))
-        x.sign = "+"
+        x._sign = "+"
         return setmetatable(x, master._metatable)
     end,
 
@@ -850,11 +851,11 @@ local media = {
         local result
         if istableobj(n) then
             result = setmetatable(masterC("1", n._size), master._metatable)
-            result.sign = "+"
+            result._sign = "+"
         else
             n = setmetatable(masterC(n, s or master._config.SETINTEGER_PERCHUNK.DEFAULT), master._metatable)
             result = setmetatable(masterC("1", s or master._config.SETINTEGER_PERCHUNK.DEFAULT), master._metatable)
-            n.sign, result.sign = "+", "+"
+            n._sign, result._sign = "+", "+"
         end
         if n:eqmore(master._config.MAXIMUM_LUA_INTEGER) then
             while n > 0 do
@@ -870,7 +871,7 @@ local media = {
     end,
 
     floor = function(x, length) -- Returns the largest integral value smaller than or equal to `x`, or Custom a `x` decimal part.
-        if x.sign == "-" then
+        if x._sign == "-" then
             if length then
                 ---@diagnostic disable-next-line: param-type-mismatch
                 return setmetatable(custom:cround(x, length, 0), master._metatable)
@@ -885,24 +886,24 @@ local media = {
     end,
 
     ceil = function(x) -- Returns the smallest integral value larger than or equal to `x`.
-        return ((x.sign or "+") == "+" and (x._dlen or 1) < 1 and 1 or 0) + setmetatable(custom._floor(x), master._metatable)
+        return ((x._sign or "+") == "+" and (x._dlen or 1) < 1 and 1 or 0) + setmetatable(custom._floor(x), master._metatable)
     end
 }
 
 local assets = media.assets
 function media.equal(x, y) -- work same `equation.equal` but support sign config.
     local ze, equal = masterC(0, x._size), master.equation.equal
-    return (equal(x, ze) and "+" or x.sign) == (equal(y, ze) and "+" or y.sign) and equal(x, y)
+    return (equal(x, ze) and "+" or x._sign) == (equal(y, ze) and "+" or y._sign) and equal(x, y)
 end
 function media.less(x, y) -- work same `equation.less` but support sign config.
     local xs, ys = assets.FSZero(x, y)
-    xs, ys = xs.sign, ys.sign
+    xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
     return nox and ys == "+" or (not nox and master.equation.less(x, y))
 end
 function media.more(x, y) -- work same `equation.more` but support sign config.
     local xs, ys = assets.FSZero(x, y)
-    xs, ys = xs.sign, ys.sign
+    xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
     return nox and ys == "-" or (not nox and master.equation.more(x, y))
 end
@@ -954,8 +955,8 @@ function media.cdiv(x, y, f, l) -- Custom division function. (`f` The maxiumum n
     assert(x and y, "[CDIV] VOID_INPUT")
     x, y = media.vtype(x, y)
     local raw = master.calculate:div(x, y, x._size, f, l)
-    local x_sign, y_sign = x.sign or "+", y.sign or "+"
-    raw.sign = (#x_sign == 1 and x_sign or "+") == (#y_sign == 1 and y_sign or "+") and "+" or "-"
+    local x_sign, y_sign = x._sign or "+", y._sign or "+"
+    raw._sign = (#x_sign == 1 and x_sign or "+") == (#y_sign == 1 and y_sign or "+") and "+" or "-"
     ---@diagnostic disable-next-line: param-type-mismatch
     return setmetatable(raw, master._metatable)
 end
@@ -966,7 +967,7 @@ function media.sign(x) -- Returns -1 if x < 0, 0 if x == 0, or 1 if x > 0.
     local zeo = media.convert(0, siz)
     local reg, req = media.more(x, zeo), media.equal(x, zeo)
     local t = req and zeo or media.convert(1, siz)
-    t.sign = reg or req and "+" or "-"
+    t._sign = reg or req and "+" or "-"
     return t
 end
 
@@ -993,7 +994,7 @@ function media.ln(x, l) -- Returns the Natural logarithm of `x` in the given bas
         error("[IN] INVALID_INPUT | Natural logarithm function return non-positive value.")
     end
     local result = masterC(0, x._size)
-    result.sign = "+"
+    result._sign = "+"
     -- taylor series of logarithms --
     local X1 = (x - 1) / (x + 1)
     for n = 1, 1 + (2 * (l or ACCURACY_LIMIT.MEDIA_DEFAULT_NATURAL_LOGARITHM_MAXITERATIONS)), 2 do
@@ -1005,7 +1006,7 @@ end
 function media.exp(x, l) -- Exponential function. `l` The maximum number of iterations to perform.
     x = media.vtype(x) or error("[EXP] VOID_INPUT")
     local result = setmetatable(masterC(0, x._size), master._metatable)
-    result.sign = "+"
+    result._sign = "+"
     for n = 0, (l or ACCURACY_LIMIT.MEDIA_DEFAULT_EXPONENTIAL_MAXITERATIONS) - 1 do
         result = result + ((x ^ n) / media.fact(n, x._size))
     end
@@ -1014,7 +1015,7 @@ end
 
 function media.modf(x) -- Returns the integral part of `x` and the decimal part of `x`.
     x = media.vtype(x or error("[MODF] VOID_INPUT"))
-    local frac = {sign = x.sign or "+", _dlen = x._dlen or 1, _size = x._size}
+    local frac = {sign = x._sign or "+", _dlen = x._dlen or 1, _size = x._size}
     for i = frac._dlen, 0 do
         frac[i] = x[i]
     end
@@ -1030,7 +1031,7 @@ end
 
 function assets.vpow(self, x, y, l) -- pow function assets. `y >= 0`
     assert(x and y, "[VPOW] VOID_INPUT")
-    assert(y.sign == "+" or (y._dlen >= 1 and #y <= 1 and (y[1] or 0) == 0), ("[VPOW] FUNCTION_NOT_SUPPORT | y (%s) is less then 0."):format(tostring(y)))
+    assert(y._sign == "+" or (y._dlen >= 1 and #y <= 1 and (y[1] or 0) == 0), ("[VPOW] FUNCTION_NOT_SUPPORT | y (%s) is less then 0."):format(tostring(y)))
     if y._dlen >= 1 then
         if self.EQMatch(y, 0) then
             return media.convert(1, x._size)
@@ -1054,14 +1055,14 @@ end
 function media.pow(x, y, f, l) -- Returns `x ^ y`. (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.)
     assert(x and y, "[POW] VOID_INPUT")
     x, y = media.vtype(x, y)
-    if x.sign == "-" then
+    if x._sign == "-" then
         assert(y._dlen >= 1, ("[POW] INVALID_INPUT | A negative base can only be raised to an integer exponent. (%s)"):format(tostring(y)))
         if (y[1] or 0) % 2 == 0 then
             x = media.unm(x)
         end
     end
-    local y_sign = y.sign
-    y.sign, l = "+", l or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_ACCURATE_LIMIT
+    local y_sign = y._sign
+    y._sign, l = "+", l or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_ACCURATE_LIMIT
     return y_sign == "-" and media.cdiv(1, assets:vpow(x, y, l), f or ACCURACY_LIMIT.MEDIA_DEFAULT_POWER_FRACT_LIMIT, l) or custom:cfloor(assets:vpow(x, y, l), l)
 end
 
@@ -1087,7 +1088,7 @@ function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumu
 end
 
 function media.unm(x) -- reverses the sign.
-    x.sign = x.sign == "+" and "-" or "+"
+    x._sign = x._sign == "+" and "-" or "+"
     return x
 end
 
@@ -1132,7 +1133,7 @@ do
     -- Build ENV --
     local _ENV = {
         smul = function(x, y)
-            local x_sign, y_sign = x.sign or "+", y.sign or "+"
+            local x_sign, y_sign = x._sign or "+", y._sign or "+"
             return (#x_sign == 1 and x_sign or "+") == (#y_sign == 1 and y_sign or "+") and "+" or "-"
         end,
         vtype = media.vtype,
@@ -1155,27 +1156,27 @@ do
         -- Calculation operators --
         __add = function(x, y)
             x, y = _ENV.vtype(x, y)
-            if x.sign == y.sign then
+            if x._sign == y._sign then
                 local raw = _ENV.cal:add(x, y)
-                raw.sign = x.sign or "+"
+                raw._sign = x._sign or "+"
                 return setmetatable(raw, master._metatable)
             end
             local reg = _ENV.more(x, y)
             local raw = _ENV.cal:sub(reg and x or y, reg and y or x)
-            raw.sign = (reg and x or y).sign or "+"
+            raw._sign = (reg and x or y)._sign or "+"
             return setmetatable(raw, master._metatable)
         end,
         __sub = function (x, y)
             x, y = _ENV.vtype(x, y)
             local reg = _ENV.more(x, y)
-            local raw = (x.sign == y.sign) and _ENV.cal:sub(reg and x or y, reg and y or x) or _ENV.cal:add(x, y)
-            raw.sign = ((y.sign == "+" and reg) or (y.sign == "-" and not reg)) and "+" or "-"
+            local raw = (x._sign == y._sign) and _ENV.cal:sub(reg and x or y, reg and y or x) or _ENV.cal:add(x, y)
+            raw._sign = ((y._sign == "+" and reg) or (y._sign == "-" and not reg)) and "+" or "-"
             return setmetatable(raw, master._metatable)
         end,
         __mul = function(x, y)
             x, y = _ENV.vtype(x, y)
             local raw = _ENV.cal:mul(x, y)
-            raw.sign = _ENV.smul(x, y)
+            raw._sign = _ENV.smul(x, y)
             return setmetatable(raw, master._metatable)
         end,
         __div = _ENV.div,
@@ -1187,7 +1188,7 @@ do
             local d, f = _ENV.modf(_ENV.div(x, y))
             local sign = _ENV.smul(x, y)
             local raw = sign == "-" and _ENV.more(f, _ENV.vtype(0)) and _ENV.cal:add(d, _ENV.vtype(1)) or d
-            raw.sign = sign
+            raw._sign = sign
             return setmetatable(raw, master._metatable)
         end,
 

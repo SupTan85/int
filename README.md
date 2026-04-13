@@ -135,7 +135,7 @@ local example_intobj_table = {
       TONUMBER: 1.01
     ]]
     -- data --
-    sign = "+",
+    _sign = "+",
 
     _dlen = -1, -- digit of fraction *this for calculate a fraction* **Internal use only, Do not modify.**
     _size = 1 -- per number size of chunk *just maximum digit per value in the digit chunk* **Internal use only, Do not modify.**
