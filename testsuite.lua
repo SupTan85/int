@@ -28,9 +28,9 @@ print(([[SETTING INFOMATION:
 
     SIMPLE_PERSUITE = %d]]):format(INT_LEN, DEC_LEN, SIMPLE_PERSUITE))
 
-local function create_simple()
+local function create_simple(override_int, override_dec)
     local simple = {}
-    for _ = 1, INT_LEN do
+    for _ = 1, override_int or INT_LEN do
         local ran_num = math.random(0, 9)
         if #simple ~= 0 or ran_num ~= 0 then
             simple[#simple+1] = ran_num
@@ -38,7 +38,7 @@ local function create_simple()
     end
     if DEC_LEN > 0 then
         simple[#simple+1] = "."
-        for _ = 1, DEC_LEN do
+        for _ = 1, override_dec or DEC_LEN do
             local ran_num = math.random(0, 9)
             if #simple ~= 0 or ran_num ~= 0 then
                 simple[#simple+1] = ran_num
@@ -48,13 +48,19 @@ local function create_simple()
     return table.concat(simple)
 end
 
-local function benchmark(head, function_call, function_arg)
+local function benchmark(head, function_call, function_arg, override_int, override_dec)
     print("SELECT FUNCTION: "..string.upper(head))
+    if override_int then
+        print("INT_LEN OVERRIDE! SET TO: "..tostring(override_int))
+    end
+    if override_dec then
+        print("INT_DEC OVERRIDE! SET TO: "..tostring(override_dec))
+    end
     local avg = {i = 0, avg = 0}
     local operation_start = os.clock()
     local result_table = function_arg and {}
     for i = 1, SIMPLE_PERSUITE do
-        local x, y = create_simple(), create_simple()
+        local x, y = create_simple(override_int, override_dec), create_simple(override_int, override_dec)
         local start = os.clock()
         if result_table then
             result_table[(#result_table % 20) + 1] = {x, y, int.tonumber(function_call(x, y))}
@@ -62,7 +68,7 @@ local function benchmark(head, function_call, function_arg)
             function_call(x, y)
         end
         -- loading bar --
-        local bar, res = ("|"):rep(math.floor((i / SIMPLE_PERSUITE) * 50)), os.clock() - start
+        local bar, res = ("|"):rep(math.floor((i / (SIMPLE_PERSUITE)) * 50)), os.clock() - start
         if avg.i >= 10 then
             avg.i = 0
         end
@@ -128,10 +134,11 @@ if not suite_select or suite_select == 0 then
         local x, y = int.new(x, y)
         return int.fmod(x, y)
     end)
+    print("[NOTE] int.pow() function has been override because it take too much time and can be overflow!")
     benchmark("pow", function(x, y)
         local x, y = int.new(x, y)
         return x:pow(x.sign == "+" and y or y:floor())
-    end)
+    end, nil, 4, 2)
     benchmark("sqrt", function(x, _)
         local x = int.new(x)
         return x:sqrt()
