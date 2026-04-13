@@ -74,7 +74,7 @@ local master = {
     },
 
     _VERSION = "186",
-    _BUILD = "186.6"
+    _BUILD = "186.7"
 }
 
 local OPTION = master._config.OPTION
@@ -599,7 +599,7 @@ master.calculate = {
             if p:find("e") then
                 local L, R = p:match("^(%d-%.?%d+)e"), p:match("e%-?0*(%d+)$")
                 L, lastpoint = #L >= 4 and L:sub(1, -2) or L, #L >= 4 and L:sub(-2, -2) or (#L > 1 and L:sub(-1, -1) or L)
-                print(p, L, R, lastpoint)
+                -- print(p, L, R, lastpoint)
                 local S = #L:match("^(%d+)%.?")
                 if R > master._config.MAXIMUM_LUA_INTEGER then
                     return {L:gsub("%.", ""), self.sub(masterC(R, s), masterC(S, s))}
