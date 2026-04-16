@@ -2,9 +2,9 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.7 (14/04/2026) dd:mm:yyyy
+-- BUILD  VERSION: 186.7 (16/04/2026) dd:mm:yyyy
 -- USER FEATURE: 26/11/2025
--- DEV  FEATURE: 14/04/2026
+-- DEV  FEATURE: 27/12/2025
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
@@ -48,7 +48,7 @@ local master = {
                 By SupTan85
             << BUILD-IN >>]]
             MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS = true,
-            MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE = true, -- use buff-accurate for more accuracy. note: very slow but high accuracy!
+            MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE = false, -- use buff-accurate for more accuracy. note: very slow but high accuracy!
         },
 
         ACCURACY_LIMIT = {
@@ -539,10 +539,16 @@ master.calculate = {
                     local calcul, offset = BA * (b[i2] or 0), i + i2 - 1
                     local chunk_data = (calcul + (result[offset] or 0))
                     -- print(offset, ("%09d"):format(BA), ("%09d"):format(b[i2] or 0), "=", calcul, "+", result[offset] or 0, "=", chunk_data)
-                    local next = floor(chunk_data / s)
-                    chunk_data = chunk_data % s
-                    result[offset] = chunk_data
-                    result[offset + 1] = next + (result[offset + 1] or 0)
+                    local carry = floor(chunk_data / s)
+                    result[offset] = chunk_data % s
+
+                    local carry_i = 1
+                    while carry > 0 do
+                        local chunk_data = carry + (result[offset + carry_i] or 0)
+                        carry = floor(chunk_data / s)
+                        result[offset + carry_i] = chunk_data % s
+                        carry_i = carry_i + 1
+                    end
                 end
                 if e and #result >= 1 then -- optimize zone for div function
                     if (#result == 1 and result[1] ~= 0) then
@@ -562,9 +568,8 @@ master.calculate = {
                         break
                     end
                 end
-            else
-                result[i] = result[i] or 0
             end
+            result[i] = result[i] or 0
         end
         for i = #result, 1, -1 do
             if result[i] == 0 then
@@ -899,13 +904,13 @@ function media.less(x, y) -- work same `equation.less` but support sign config.
     local xs, ys = assets.FSZero(x, y)
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
-    return nox and ys == "+" or (not nox and master.equation.less(x, y))
+    return nox and xs == "-" or (not nox and (xs == "-" and master.equation.more(x, y) or (xs ~= "-" and master.equation.less(x, y))))
 end
 function media.more(x, y) -- work same `equation.more` but support sign config.
     local xs, ys = assets.FSZero(x, y)
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
-    return nox and ys == "-" or (not nox and master.equation.more(x, y))
+    return nox and xs == "+" or (not nox and (xs == "+" and master.equation.more(x, y) or (xs ~= "+" and master.equation.less(x, y))))
 end
 
 function media.integerlen(x) -- Returns number integer digits, that was in object.
@@ -1144,9 +1149,9 @@ do
         div = media.cdiv,
         unm = media.unm,
 
-        equal = master.equation.equal,
-        less = master.equation.less,
-        more = master.equation.more,
+        equal = media.equal,
+        less = media.less,
+        more = media.more,
         
         setmetatable = setmetatable
     }
