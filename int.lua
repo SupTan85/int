@@ -2,9 +2,9 @@
 --                 ULTIMATE INT                   --
 ----------------------------------------------------
 -- MODULE VERSION: 186
--- BUILD  VERSION: 186.7 (14/04/2026) dd:mm:yyyy
+-- BUILD  VERSION: 186.7 (17/04/2026) dd:mm:yyyy
 -- USER FEATURE: 26/11/2025
--- DEV  FEATURE: 14/04/2026
+-- DEV  FEATURE: 27/12/2025
 -- AUTHOR: SupTan85
 -- LICENSE: MIT (the same license as Lua itself)
 -- LINK: https://github.com/SupTan85/int.lua
@@ -48,7 +48,7 @@ local master = {
                 By SupTan85
             << BUILD-IN >>]]
             MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS = true,
-            MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE = true, -- use buff-accurate for more accuracy. note: very slow but high accuracy!
+            MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE = false, -- use buff-accurate for more accuracy. note: very slow but high accuracy!
         },
 
         ACCURACY_LIMIT = {
@@ -272,7 +272,7 @@ master.custom = {
 
 local custom = master.custom
 master.equation = {
-    equal = function(x, y) -- chunk size should be same
+    equal = function(self, x, y) -- chunk size should be same
         assert((x._size or 1) == (y._size or 1), ("[EQUATION] INVALID_SIZE_PERCHUNK (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x == #y and (x._dlen or 1) == (y._dlen or 1) then
             for i = x._dlen or 1, #x do
@@ -284,7 +284,7 @@ master.equation = {
         end
         return false
     end,
-    less = function(x, y) -- chunk size should be same
+    less = function(self, x, y) -- chunk size should be same
         -- BUILD 186.6
         assert((x._size or 1) == (y._size or 1), ("[EQUATION] INVALID_SIZE_PERCHUNK (%s, %s)"):format(x._size or 1, y._size or 1))
         if #x < #y then
@@ -299,8 +299,8 @@ master.equation = {
         end
         return false
     end,
-    more = function(x, y) -- chunk size should be same
-        return not master.equation.less(x, y) and not master.equation.equal(x, y)
+    more = function(self, x, y) -- chunk size should be same
+        return not self:less(x, y) and not self:equal(x, y)
     end
 }
 
@@ -529,6 +529,7 @@ master.calculate = {
         return result
     end,
     mul = function(self, a, b, s, e) -- _size maxiumum *1 (`e` switch for division process.) **chunk size should be same**
+        -- BUILD 186.7
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "MUL")
         local result = {_size = a._size or s or 1}
         local s, bottom = floor(10 ^ (result._size)), (a._dlen or 1) + (b._dlen or 1) - 1
@@ -539,10 +540,16 @@ master.calculate = {
                     local calcul, offset = BA * (b[i2] or 0), i + i2 - 1
                     local chunk_data = (calcul + (result[offset] or 0))
                     -- print(offset, ("%09d"):format(BA), ("%09d"):format(b[i2] or 0), "=", calcul, "+", result[offset] or 0, "=", chunk_data)
-                    local next = floor(chunk_data / s)
-                    chunk_data = chunk_data % s
-                    result[offset] = chunk_data
-                    result[offset + 1] = next + (result[offset + 1] or 0)
+                    local carry = floor(chunk_data / s)
+                    result[offset] = chunk_data % s
+
+                    local carry_i = 1
+                    while carry > 0 do
+                        local chunk_data = carry + (result[offset + carry_i] or 0)
+                        carry = floor(chunk_data / s)
+                        result[offset + carry_i] = chunk_data % s
+                        carry_i = carry_i + 1
+                    end
                 end
                 if e and #result >= 1 then -- optimize zone for div function
                     if (#result == 1 and result[1] ~= 0) then
@@ -562,9 +569,8 @@ master.calculate = {
                         break
                     end
                 end
-            else
-                result[i] = result[i] or 0
             end
+            result[i] = result[i] or 0
         end
         for i = #result, 1, -1 do
             if result[i] == 0 then
@@ -585,10 +591,11 @@ master.calculate = {
         return result
     end,
     div = function(self, a, b, s, f, l) -- _size maxiumum *1 (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.) **chunk size should be same**
+        -- BUILD 186.7
         self._verify(a, b, master._config.MAXIMUM_SIZE_PERCHUNK, "DIV")
-        assert(not master.equation.equal(b, masterC(0, b._size or 1)), "[DIV] INVALID_INPUT | divisor cannot be zero.")
-        local s, b_dlen, f = a._size or s or 1, b._dlen or 1, f or (not OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS and ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV or 0)
-        local auto_acc, more, less, concat = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation.more, master.equation.less, master.concat
+        assert(not master.equation:equal(b, masterC(0, b._size or 1)), "[DIV] INVALID_INPUT | divisor cannot be zero.")
+        local s, b_dlen, fv = a._size or s or 1, b._dlen or 1, f or (not OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS and ACCURACY_LIMIT.MASTER_DEFAULT_FRACT_LIMIT_DIV or 0)
+        local auto_acc, equation, concat = not l and OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS, master.equation, master.concat
         local one = masterC(1, s)
         local accuracy, uc = 0, 0
         local lastpoint, fin, mark
@@ -602,7 +609,7 @@ master.calculate = {
                 -- print(p, L, R, lastpoint)
                 local S = #L:match("^(%d+)%.?")
                 if R > master._config.MAXIMUM_LUA_INTEGER then
-                    return {L:gsub("%.", ""), self.sub(masterC(R, s), masterC(S, s))}
+                    error("[DIV] OVERFLOW | division function can't handle this number, or something went wrong.")
                 end
                 return ("0."..("0"):rep(tonumber(R) - S)..(#L > 1 and L:gsub("%.", "") or L)):sub(1, -2)
             elseif p ~= "0.0" and p ~= "0" then
@@ -618,6 +625,7 @@ master.calculate = {
             local FLOAT = ((#b - 1) * s) + #tostring(b[#b]) - 2
             d = FLOAT > 0 and "0."..("0"):rep(FLOAT)
         end
+
         local BUFF_ACCURATE_ENABLE = false
         if auto_acc then
             local function HF(x)
@@ -626,19 +634,19 @@ master.calculate = {
             local AN, BN = (#a + math.abs((a._dlen or 1) - 1)) * s, (#b + math.abs(b_dlen - 1)) * s
             local NV = AN > BN
             if (NV and AN or BN) < tonumber(master._config.MAXIMUM_LUA_INTEGER) then
-                accuracy, auto_acc = (NV and AN or BN) - HF(NV and a or b) + f + s, false
+                accuracy = (NV and AN or BN) - HF(NV and a or b) + fv + s + 2
             else
-                local AS, BS = self.add(masterC(#a, s), masterC(math.abs((a._dlen or 1) - 1), s)), self.add(masterC(#b, s), masterC(math.abs(b_dlen - 1), s))
-                local MORE = more(AS, BS)
-                accuracy = self.add(self.add(self.sub(self:mul((MORE and AS or BS), masterC(s, s)), masterC(HF(MORE and a or b), s)), masterC(f, s)), masterC(s, s))
+                error("[DIV] OVERFLOW | division function can't handle this number, or something went wrong.")
             end
             if OPTION.MASTER_CALCULATE_DIV_AUTO_CONFIG_ITERATIONS_BUFF_MODE then
                 BUFF_ACCURATE_ENABLE = true
             end
         else
-            accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_DIV_MAXITERATIONS) + 1
+            accuracy = (l or ACCURACY_LIMIT.MASTER_CALCULATE_DIV_MAXITERATIONS) + 2
             BUFF_ACCURATE_ENABLE = true
         end
+
+        local F_LIMIT = f or accuracy - 2
         local function check(n)
             -- print("d =", d and masterD(d) or "nil")
             local dc = d and setmetatable({}, {__index = d, __len = function() return #d end}) or masterC(n, s)
@@ -647,9 +655,9 @@ master.calculate = {
             local nc = self:mul(b, d and concat:right(dc, n, false, uc) or dc, s, true)
             -- print(("n:%d = %s"):format(n, masterD(nc)))
             
-            if more(nc, one) then
+            if equation:more(nc, one) then
                 return 1
-            elseif less(nc, one) then
+            elseif equation:less(nc, one) then
                 return 0
             end
         end
@@ -686,12 +694,12 @@ master.calculate = {
         if d then
             if istableobj(d) then
                 local fp, bp = d[2], d[1]
-                accuracy = auto_acc and self.sub(accuracy, bp) or accuracy - masterD(bp)
+                accuracy = accuracy - masterD(bp)
                 d = {0, _size = s, _dlen = 1}
                 local SIZE = masterC(s, s)
-                while less(bp, one) do
-                    bp = self.sub(bp, SIZE)
-                    if less(bp, one) then
+                while equation:less(bp, one) do
+                    bp = self:sub(bp, SIZE)
+                    if equation:less(bp, one) then
                         for v in fp:gmatch(("."):rep(s)) do
                             d._dlen = d._dlen - 1
                             d[d._dlen] = tonumber(v)
@@ -702,12 +710,12 @@ master.calculate = {
                     d[d._dlen] = 0
                 end
             else
-                d = d:sub(1, auto_acc and masterD(accuracy) or accuracy)
-                accuracy = auto_acc and self.sub(accuracy, masterC(#d)) or accuracy - #(d:match("%.(.+)") or "")
+                d = d:sub(1, accuracy)
+                accuracy = accuracy - #(d:match("%.(.+)") or "")
                 d, lastpoint = masterC(d, s), lastpoint or d:match("(%d)0*$")
             end
         end
-        while auto_acc and more(accuracy, masterC(0, s)) or not auto_acc and accuracy > 0 do
+        while accuracy > 0 do
             local dv, lp = calcu(lastpoint)
             -- issue checker >>
             if not lp and master._config.OPTION.MASTER_CALCULATE_DIV_BYPASS_GEN_FLOATING_POINT then
@@ -728,14 +736,7 @@ master.calculate = {
             end
             fin = fin or (masterD(d) or ""):match("^0*%.?0*$") == nil
             if fin then
-                if auto_acc then
-                    if less(accuracy, one) then
-                        break
-                    end
-                    accuracy = self.sub(accuracy, one)
-                else
-                    accuracy = accuracy - 1
-                end
+                accuracy = accuracy - 1
             end
         end
         -- Newton-Raphson --
@@ -755,18 +756,8 @@ master.calculate = {
             d = self:mul(d, shift_mul)
         end
         local raw = self:mul(a, d)
-        if f > 0 and lastpoint and -raw._dlen >= floor(f / s) then
-            local shf = 0
-            for i = 0, raw._dlen or 1, -1 do
-                local sel = raw[i]
-                if sel == 0 then
-                    shf = shf + s
-                else
-                    shf = shf + s - #tostring(sel)
-                    break
-                end
-            end
-            raw = custom:cround(raw, shf + f)
+        if F_LIMIT > 0 and lastpoint then
+            raw = custom:cround(raw, F_LIMIT)
         end
         return raw
     end,
@@ -775,10 +766,10 @@ master.calculate = {
 local media = {
     assets = {
         FSZero = function(...) -- update sign to plus when number is zero, for fix issue *zero*
-            local equal, pack, cahce = master.equation.equal, {...}, nil
+            local pack, cahce = {...}, nil
             for i, v in ipairs(pack) do
                 cahce = cahce or masterC(0, v._size)
-                pack[i]._sign = equal(v, cahce) and "+" or v._sign or "+"
+                pack[i]._sign = master.equation:equal(v, cahce) and "+" or v._sign or "+"
             end
             return table.unpack(pack)
         end,
@@ -891,21 +882,21 @@ local media = {
 }
 
 local assets = media.assets
-function media.equal(x, y) -- work same `equation.equal` but support sign config.
-    local ze, equal = masterC(0, x._size), master.equation.equal
-    return (equal(x, ze) and "+" or x._sign) == (equal(y, ze) and "+" or y._sign) and equal(x, y)
+function media.equal(x, y) -- work same `equation:equal` but support sign config.
+    local ze, equation = masterC(0, x._size), master.equation
+    return (equation:equal(x, ze) and "+" or x._sign) == (equation:equal(y, ze) and "+" or y._sign) and equation:equal(x, y)
 end
-function media.less(x, y) -- work same `equation.less` but support sign config.
+function media.less(x, y) -- work same `equation:less` but support sign config.
     local xs, ys = assets.FSZero(x, y)
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
-    return nox and ys == "+" or (not nox and master.equation.less(x, y))
+    return nox and xs == "-" or (not nox and (xs == "-" and master.equation:more(x, y) or (xs ~= "-" and master.equation:less(x, y))))
 end
-function media.more(x, y) -- work same `equation.more` but support sign config.
+function media.more(x, y) -- work same `equation:more` but support sign config.
     local xs, ys = assets.FSZero(x, y)
     xs, ys = xs._sign, ys._sign
     local nox = xs ~= ys
-    return nox and ys == "-" or (not nox and master.equation.more(x, y))
+    return nox and xs == "+" or (not nox and (xs == "+" and master.equation:more(x, y) or (xs ~= "+" and master.equation:less(x, y))))
 end
 
 function media.integerlen(x) -- Returns number integer digits, that was in object.
@@ -1019,7 +1010,6 @@ function media.modf(x) -- Returns the integral part of `x` and the decimal part 
     for i = frac._dlen, 0 do
         frac[i] = x[i]
     end
-    frac[1] = 0
     return setmetatable(custom._floor(x), master._metatable), setmetatable(frac, master._metatable)
 end
 
@@ -1040,7 +1030,7 @@ function assets.vpow(self, x, y, l) -- pow function assets. `y >= 0`
         end
         local result = media.convert(1, x._size)
         local x, exp = x, y
-        while master.equation.more(exp, masterC(0, x._size)) do
+        while master.equation:more(exp, masterC(0, x._size)) do
             if (exp[1] or 0) % 2 == 1 then
                 result = result * x
             end
@@ -1068,11 +1058,12 @@ end
 
 function media.sqrt(x, f, l) -- Returns the Square root of `x`. (`f` The maxiumum number of decimal part, `l` The maximum number of iterations to perform.)
     x = media.vtype(x or error("[SQRT] VOID_INPUT"))
+    local zero = media.convert(0, x._size)
     -- Newton's Method --
-    assert(tostring(x) >= "0", "[SQRT] INVALID_INPUT | Cannot compute the square root of a negative number.")
+    assert(x:eqmore(zero), "[SQRT] INVALID_INPUT | Cannot compute the square root of a negative number.")
     assert(not f or type(f) == "number", ("[SQRT] INVALID_INPUT_TYPE | Type of maxiumum number of decimal part should be integer (not %s)"):format(type(f)))
-    if #x >= 1 and (x[#x] or 0) == 0 and (x._dlen or 1) == 1 then
-        return x
+    if #x <= 1 and (x[#x] or 0) == 0 and (x._dlen or 1) == 1 then
+        return zero
     end
     local res = x
     local TOLERANCE = f or ACCURACY_LIMIT.MEDIA_DEFAULT_SQRTROOT_TOLERANCE
@@ -1141,14 +1132,17 @@ do
         modf = media.modf,
 
         cal = master.calculate,
+        equ = master.equation,
+        
         div = media.cdiv,
         unm = media.unm,
 
-        equal = master.equation.equal,
-        less = master.equation.less,
-        more = master.equation.more,
+        -- this not include sign --
+        equal = media.equal,
+        less = media.less,
         
-        setmetatable = setmetatable
+        setmetatable = setmetatable,
+        print = print
     }
 
     -- Build metatable --
@@ -1162,16 +1156,20 @@ do
                 raw._sign = x._sign or "+"
                 return setmetatable(raw, master._metatable)
             end
-            local reg = _ENV.more(x, y)
+            local reg = _ENV.equ:more(x, y)
             local raw = _ENV.cal:sub(reg and x or y, reg and y or x)
             raw._sign = (reg and x or y)._sign or "+"
             return setmetatable(raw, master._metatable)
         end,
         __sub = function (x, y)
             x, y = _ENV.vtype(x, y)
-            local reg = _ENV.more(x, y)
-            local raw = (x._sign == y._sign) and _ENV.cal:sub(reg and x or y, reg and y or x) or _ENV.cal:add(x, y)
-            raw._sign = ((y._sign == "+" and reg) or (y._sign == "-" and not reg)) and "+" or "-"
+            local reg = _ENV.equ:more(x, y)
+            local raw = x._sign == y._sign and _ENV.cal:sub(reg and x or y, reg and y or x) or _ENV.cal:add(x, y)
+            if x._sign == y._sign or not reg then
+                raw._sign = ((y._sign == "+" and reg) or (y._sign == "-" and not reg)) and "+" or "-"
+            else
+                raw._sign = ((y._sign == "-" and reg) or (y._sign == "+" and not reg)) and "+" or "-"
+            end
             return setmetatable(raw, master._metatable)
         end,
         __mul = function(x, y)
@@ -1188,7 +1186,7 @@ do
             x, y = _ENV.vtype(x, y)
             local d, f = _ENV.modf(_ENV.div(x, y))
             local sign = _ENV.smul(x, y)
-            local raw = sign == "-" and _ENV.more(f, _ENV.vtype(0)) and _ENV.cal:add(d, _ENV.vtype(1)) or d
+            local raw = sign == "-" and _ENV.equ:more(f, _ENV.vtype(0)) and _ENV.cal:add(d, _ENV.vtype(1)) or d
             raw._sign = sign
             return setmetatable(raw, master._metatable)
         end,
