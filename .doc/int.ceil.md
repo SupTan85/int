@@ -1,21 +1,20 @@
-# int.floor
+# int.ceil
 
 ![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
 ## Syntax & Usage
 
 > [!NOTE]
-This function returns the integral value without decimal of the given number, while you can custom decimal places in same time.\
-**When inputting negative numbers, the function will behave oppositely (floor -> ceil).**
+This function returns the smallest integer value of the given number.\
+**When inputting negative numbers, the function will behave oppositely (ceil -> floor).**
 
 ```lua
-function int.floor(x, length) -- Returns the largest integer less than or equal to `x`, optionally truncated to `length` decimal places.
+function int.ceil(x) -- Returns the smallest integer greater than or equal to `x`.
 ```
 
 | Parameter | Type                                  | Description                                 |
 | :-------: | :------------------------------------ | :------------------------------------------ |
 |     x     | [**int object**](type.intobj.md) only | Required. The value to be processed.        |
-|  length   | number only (integer)                 | Required. Number of decimal places to keep. |
 
 **Return Value:**
 
@@ -27,8 +26,8 @@ function int.floor(x, length) -- Returns the largest integer less than or equal 
 local int = require("int") -- import module
 
 local x, y = int.new("-12.2", "12.3456")
-print(int.floor(x)) -- output: -13
-print(int.floor(y, 2)) -- output: 12.34
+print(int.ceil(x)) -- output: -12
+print(int.ceil(y)) -- output: 13
 ```
 
 ---
@@ -41,8 +40,8 @@ This feature lets you to call functions on an object.
 local int = require("int") -- import module
 
 local x, y = int.new("-12.2", "12.3456")
-print(x:floor()) -- output: -13
-print(y:floor(2)) -- output: 12.34
+print(x:ceil()) -- output: -12
+print(y:ceil()) -- output: 13
 ```
 
 > [!TIP]
@@ -55,11 +54,11 @@ local int = require("int") -- import module
 
 local x, y = int.new("-12.2", "12.3456")
 
--- this works like "print(int.floor(x))"
-print(y.floor(x)) -- output: -13
+-- this works like "print(int.ceil(x))"
+print(y.ceil(x)) -- output: -12
 
--- this works like "print(int.floor(y, 2))"
-print(x.floor(y, 2)) -- output: 12.34
+-- this works like "print(int.ceil(y))"
+print(x.ceil(y, 2)) -- output: 13
 ```
 
 > [!TIP]

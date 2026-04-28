@@ -2,22 +2,23 @@
 
 ![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
-## function
+## Syntax & Usage
 
 > [!NOTE]
-This function is made for a **unary operator**, so it reverses the sign of a number.
-
-**Input type:**
-
-- **x** -- [**int object**](type.intobj.md) only.
-
-**Output type:**
-
-- [**int object**](type.intobj.md)
+This function handles the **unary minus operator**, it negates the value of the given number.
 
 ```lua
-function int.unm(x) -- reverses the sign.
+function int.unm(x, self_changed) -- reverses the sign.
 ```
+
+|  Parameter   | Type                                  | Description                                                                                                  |
+| :----------: | :------------------------------------ | :----------------------------------------------------------------------------------------------------------- |
+|      x       | [**int object**](type.intobj.md) only | Required. The value whose sign will be reversed.                                                             |
+| self_changed | boolean (default: false)              | Optional. Enable if you want to change the value in this object only.<br>(disable copy object for optimization) |
+
+**Return Value:**
+
+1. [**int object**](type.intobj.md)
 
 **Example:**
 

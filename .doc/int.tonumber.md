@@ -2,7 +2,7 @@
 
 ![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
-## function
+## Syntax & Usage
 
 > [!NOTE]
 This function converts an [**int object**](type.intobj.md) to number.
@@ -11,17 +11,17 @@ This function converts an [**int object**](type.intobj.md) to number.
 We do **not recommend** using this function with large numbers, because they may be represented in scientific notation or lose precision.<br>
 please use [**tostring**](int.tostring.md) instead of tonumber!
 
-**Input type:**
-
-- **x** -- [**int object**](type.intobj.md) only.
-
-**Output type:**
-
-- **number**
-
 ```lua
 function int.tonumber(x) -- Deconvert table to number. *not recommend*
 ```
+
+| Parameter | Type                                  | Description                                         |
+| :-------: | :------------------------------------ | :-------------------------------------------------- |
+|     x     | [**int object**](type.intobj.md) only | Required. The object to be converted to **number**. |
+
+**Return Value:**
+
+1. **number**
 
 **Example:**
 

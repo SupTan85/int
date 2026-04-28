@@ -2,22 +2,22 @@
 
 ![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
-## function
+## Syntax & Usage
 
 > [!NOTE]
 This function converts an [**int object**](type.intobj.md) to number but on string type, to handle a large number.
 
-**Input type:**
-
-- **x** -- [**int object**](type.intobj.md) only.
-
-**Output type:**
-
-- **string**
-
 ```lua
 function int.tostring(x) -- Deconvert table to string.
 ```
+
+| Parameter | Type                                  | Description                                         |
+| :-------: | :------------------------------------ | :-------------------------------------------------- |
+|     x     | [**int object**](type.intobj.md) only | Required. The object to be converted to **string**. |
+
+**Return Value:**
+
+1. **string**
 
 **Example:**
 

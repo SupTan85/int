@@ -2,22 +2,23 @@
 
 ![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
-## function
+## Syntax & Usage
 
 > [!NOTE]
-This function always set the sign of a number to positive.
-
-**Input type:**
-
-- **x** -- [**int object**](type.intobj.md) only.
-
-**Output type:**
-
-- [**int object**](type.intobj.md)
+This function ensures the sign of a number is always positive by returning its magnitude.
 
 ```lua
-function int.abs(x) -- Returns the absolute value of `x`.
+function int.abs(x, self_changed) -- Returns the absolute value of `x`.
 ```
+
+|  Parameter   | Type                                  | Description                                                                                                  |
+| :----------: | :------------------------------------ | :----------------------------------------------------------------------------------------------------------- |
+|      x       | [**int object**](type.intobj.md) only | Required. The value to calculate the absolute value of.                                                      |
+| self_changed | boolean (default: false)              | Optional. Enable if you want to change the value in this object only.<br>(disable copy object for optimization) |
+
+**Return Value:**
+
+1. [**int object**](type.intobj.md)
 
 **Example:**
 
@@ -31,7 +32,7 @@ print(int.abs(y)) -- output: 12.3456
 
 ---
 
-## methods
+## Methods
 
 This feature lets you to call functions on an object.
 

@@ -2,22 +2,22 @@
 
 ![https://github.com/SupTan85/int.lua](.assets/cover.svg)
 
-## function
+## Syntax & Usage
 
 > [!NOTE]
 The [**int object**](../README.md#int-object) is represented as a table in Lua, designed for calculation purposes within the int module. This table includes numerical data and calculation-related information, and it supports a metatable to facilitate ease of use.
 
-**Input type:**
-
-- [**arg(...)**](type.vararg.md) -- either a string or a number.
-
-**Output type:**
-
-- [**int object**](type.intobj.md)
-
 ```lua
 function int.new(...) -- (string|number) For only create. alway use default size! **CHUNK SIZE SHOULD BE SAME WHEN CALCULATE**
 ```
+
+**Parameter:**
+
+- [**arg(...)**](type.vararg.md) -- either a string or a number.
+
+**Return Value:**
+
+- [**int object**](type.intobj.md)
 
 **Example:**
 

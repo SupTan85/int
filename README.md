@@ -113,7 +113,7 @@ Before using any function, make sure to read about its [**performance**](#perfor
 
 ## design
 
-![design](.doc/.assets/design.png)
+![image1](.doc/.assets/image1.png)
 
 ### inside object
 
@@ -130,9 +130,6 @@ local example_intobj_table = {
         << fraction | digit >>
       INDEX: -1 | 0 | 1
       VALUE:  1 : 0 : 1
-
-      TOSTRING: "1.01"
-      TONUMBER: 1.01
     ]]
     -- data --
     _sign = "+",
@@ -143,8 +140,6 @@ local example_intobj_table = {
 ```
 
 ### inside module
-
-![image1](.doc/.assets/image1.png)
 
 - **master** library for build-in function.
 - **media** library for other build-in function. *-- require master*
@@ -158,14 +153,14 @@ the module will return only [**table**](.doc/type.table.md) that name **int** on
 
 ## function & methods
 
-all function is in version: **186**
+all function is in module version: **186**
 
 >[!NOTE]
 Recommend to read in visual studio code.
 
 - **module function**
   - [int.abs](.doc/int.abs.md)
-  - int.ceil
+  - [int.ceil](.doc/int.ceil.md)
   - [int.cnew](.doc/int.cnew.md) *-- custom int.new function*
   - int.cround
   - int.eqless *-- equal or less than*
@@ -207,9 +202,13 @@ print(int.floor(x, 2)) -- output: 14.69
 
 ---
 
+>[!IMPORTANT]
+> **Intuitive Method Access**\
+> All mathematical operations are bound directly to the int object. Using the colon (`:`) operator automatically handles the object reference, providing a shorter syntax and eliminating the need for repetitive variable passing.
+
 - **methods**
   - [abs](.doc/int.abs.md)
-  - ceil
+  - [ceil](.doc/int.ceil.md)
   - cround
   - eqless *-- equal or less than*
   - eqmore *-- equal or more than*
@@ -217,7 +216,7 @@ print(int.floor(x, 2)) -- output: 14.69
   - exp
   - fact
   - fdigitlen *-- return sum of number integer digits and number decimal digits.*
-  - [floor](.doc/int.floor.md#methods)
+  - [floor](.doc/int.floor.md)
   - fmod *-- modulo function*
   - decimallen *-- return number of decimal digits*
   - integerlen *-- return number of integer digits*
@@ -336,6 +335,6 @@ Lua didn't support hyper threading system, mean we can't use full performance of
 > [!NOTE]
 reason why this module name is "int"? because in this module always use integer to calculate math,\
 and feel free to use!\
-**version: 186 - 6**
+**version: 186 - 7**
 
 ![bar](.doc/.assets/bar.svg)
